@@ -1,0 +1,24 @@
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: lightrag-neo4j
+    ports:
+      - "7474:7474"   # Neo4j Browser UI
+      - "7687:7687"   # Bolt protocol
+    environment:
+      # Username is always "neo4j". Password must match NEO4J_PASSWORD in backend/.env
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:-please-change-me}"
+      NEO4J_PLUGINS: '["apoc"]'
+      # Allow APOC procedures used by LightRAG's Neo4j storage
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+    volumes:
+      - ./neo4j_data:/data
+      - ./neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped

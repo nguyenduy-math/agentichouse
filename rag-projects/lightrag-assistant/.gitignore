@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Environment / secrets
+.env
+backend/.env
+
+# LightRAG persistence (file-based KV + vector stores)
+rag_storage/
+backend/rag_storage/
+
+# Neo4j Docker volume
+neo4j_data/
+
+# Ingested documents (keep the folder, not the contents)
+backend/data/documents/*
+!backend/data/documents/.gitkeep
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

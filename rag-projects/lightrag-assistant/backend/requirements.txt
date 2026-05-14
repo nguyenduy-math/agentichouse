@@ -1,0 +1,23 @@
+# Core RAG engine
+lightrag-hku==1.4.16
+
+# Google Gemini (modern SDK — LightRAG's gemini binding uses this)
+google-genai>=1.0.0
+
+# Neo4j graph storage backend
+neo4j>=5.20.0
+
+# Web service
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+python-dotenv>=1.0.1
+python-multipart>=0.0.9
+
+# Document text extraction
+pypdf>=5.0.0
+python-docx>=1.1.2
+
+# Used directly by the embedding wrapper
+numpy>=1.26.0
