@@ -1,0 +1,7 @@
+fraud-risks-system/frontend/node_modules/*
+fraud-risks-system/neo4j_data/*
+fraud-risks-system/postgres_data/*
+rag-projects/lightrag-assistant/neo4j_logs/*
+fraud-risks-system/backend/app/__pycache__/*.pyc
+fraud-risks-system/backend/app/routers/__pycache__/*.pyc
+fraud-risks-system/neo4j_logs/*

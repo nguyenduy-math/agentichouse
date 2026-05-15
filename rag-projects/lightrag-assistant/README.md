@@ -109,6 +109,10 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 Invoke-RestMethod -Method Post http://127.0.0.1:8000/ingest `
   -ContentType "application/json" -Body '{}'
 
+curl -X POST http://127.0.0.1:8000/ingest \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
 Invoke-RestMethod -Method Post http://127.0.0.1:8000/query `
   -ContentType "application/json" `
   -Body '{"question":"Phạm vi bảo hiểm của sản phẩm này là gì?","mode":"hybrid"}'

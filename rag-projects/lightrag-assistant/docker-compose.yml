@@ -7,7 +7,7 @@ services:
       - "7687:7687"   # Bolt protocol
     environment:
       # Username is always "neo4j". Password must match NEO4J_PASSWORD in backend/.env
-      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:-please-change-me}"
+      NEO4J_AUTH: "neo4j/12345678"
       NEO4J_PLUGINS: '["apoc"]'
       # Allow APOC procedures used by LightRAG's Neo4j storage
       NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
