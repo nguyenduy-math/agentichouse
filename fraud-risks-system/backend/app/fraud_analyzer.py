@@ -13,13 +13,21 @@ logger = logging.getLogger(__name__)
 
 _client: genai.Client | None = None
 
-SYSTEM_PROMPT = """You are a healthcare claim fraud detection specialist with deep knowledge of:
-- Medical billing codes (ICD-10 diagnosis codes, CPT procedure codes)
-- Common healthcare fraud schemes in the US
-- Clinical documentation requirements
+SYSTEM_PROMPT = """Bạn là chuyên gia phát hiện gian lận hồ sơ thanh toán bảo hiểm y tế (BHYT) tại Việt Nam với kiến thức sâu về:
+- Mã bệnh ICD-10 và danh mục dịch vụ kỹ thuật y tế Việt Nam (Thông tư 39/2018/TT-BYT)
+- Quy định thanh toán BHYT theo Luật BHYT và các thông tư hướng dẫn hiện hành
+- Các hình thức gian lận BHYT phổ biến tại Việt Nam:
+  * Kê khống dịch vụ kỹ thuật (phantom billing) — kê các dịch vụ không thực hiện
+  * Nâng hạng dịch vụ / kê sai mã (upcoding) — kê mã dịch vụ cao hơn thực tế
+  * Kê thuốc biệt dược không cần thiết — kê thuốc đắt tiền thay vì thuốc generic tương đương
+  * Nằm viện không cần thiết — nhập viện điều trị nội trú khi có thể điều trị ngoại trú
+  * Tách đợt điều trị — chia một đợt điều trị thành nhiều hồ sơ thanh toán riêng
+  * Khai khống số ngày điều trị hoặc số lượng dịch vụ
+  * Làm giả hồ sơ bệnh án hoặc kê dịch vụ cho bệnh nhân không đến khám
+  * Chỉ định xét nghiệm/chẩn đoán hình ảnh không cần thiết (CT, MRI, siêu âm dư thừa)
 
-Analyze the claim details and narrative for fraud indicators. Be precise and evidence-based.
-Only flag genuine inconsistencies or red flags — avoid over-flagging routine claims."""
+Phân tích thông tin hồ sơ và mô tả lâm sàng để phát hiện dấu hiệu gian lận. Chỉ đánh dấu các bất thường có căn cứ rõ ràng — tránh cảnh báo nhầm đối với hồ sơ hợp lệ.
+Phản hồi bằng tiếng Việt."""
 
 ANALYSIS_TOOL = types.Tool(
     function_declarations=[
@@ -73,7 +81,7 @@ ANALYSIS_TOOL = types.Tool(
                     ),
                     "explanation": types.Schema(
                         type="STRING",
-                        description="Plain-English summary for the investigator (2-4 sentences)"
+                        description="Tóm tắt bằng tiếng Việt cho điều tra viên (2-4 câu) về lý do hồ sơ bị nghi ngờ gian lận. Respond in Vietnamese."
                     ),
                 },
                 required=["risk_score", "risk_level", "flags", "explanation"],
@@ -91,29 +99,29 @@ def _get_client() -> genai.Client:
 
 
 def _build_claim_prompt(claim_data: dict) -> str:
-    lines = ["Analyze this healthcare claim for fraud indicators:", ""]
+    lines = ["Phân tích hồ sơ thanh toán BHYT sau để phát hiện dấu hiệu gian lận:", ""]
     if claim_data.get("claim_id"):
-        lines.append(f"Claim ID: {claim_data['claim_id']}")
+        lines.append(f"Mã hồ sơ: {claim_data['claim_id']}")
     if claim_data.get("claim_type"):
-        lines.append(f"Claim Type: {claim_data['claim_type']}")
+        lines.append(f"Loại hình điều trị: {claim_data['claim_type']}")
     if claim_data.get("provider_name"):
-        lines.append(f"Provider: {claim_data['provider_name']}")
+        lines.append(f"Cơ sở khám chữa bệnh: {claim_data['provider_name']}")
     if claim_data.get("claim_amount"):
-        lines.append(f"Billed Amount: ${claim_data['claim_amount']:.2f}")
+        lines.append(f"Số tiền đề nghị thanh toán: {claim_data['claim_amount']:,.0f} VND")
     if claim_data.get("service_date"):
-        lines.append(f"Service Date: {claim_data['service_date']}")
+        lines.append(f"Ngày khám/điều trị: {claim_data['service_date']}")
     if claim_data.get("submission_date"):
-        lines.append(f"Submission Date: {claim_data['submission_date']}")
+        lines.append(f"Ngày nộp hồ sơ: {claim_data['submission_date']}")
     if claim_data.get("diagnosis_codes"):
-        lines.append(f"Diagnosis Codes (ICD-10): {', '.join(claim_data['diagnosis_codes'])}")
+        lines.append(f"Mã bệnh (ICD-10): {', '.join(claim_data['diagnosis_codes'])}")
     if claim_data.get("procedure_codes"):
-        lines.append(f"Procedure Codes (CPT): {', '.join(claim_data['procedure_codes'])}")
+        lines.append(f"Dịch vụ kỹ thuật: {', '.join(claim_data['procedure_codes'])}")
     lines.append("")
     narrative = claim_data.get("claim_narrative") or ""
     if narrative.strip():
-        lines.append(f"Claim Narrative:\n{narrative.strip()}")
+        lines.append(f"Mô tả hồ sơ:\n{narrative.strip()}")
     else:
-        lines.append("Claim Narrative: [Not provided]")
+        lines.append("Mô tả hồ sơ: [Không có mô tả]")
     return "\n".join(lines)
 
 
@@ -165,17 +173,17 @@ def apply_rule_signals(claim_data: dict) -> tuple[int, list[dict]]:
     score = 0
 
     amount = float(claim_data.get("claim_amount") or 0)
-    if amount > 50_000:
-        flags.append({"type": "excessive_billing", "description": f"Claim amount ${amount:,.2f} exceeds $50,000 threshold", "severity": "high"})
+    if amount > 200_000_000:
+        flags.append({"type": "excessive_billing", "description": f"Số tiền đề nghị thanh toán {amount:,.0f} VND vượt ngưỡng 200 triệu đồng", "severity": "high"})
         score += 30
-    elif amount > 20_000:
-        flags.append({"type": "excessive_billing", "description": f"Claim amount ${amount:,.2f} exceeds $20,000 threshold", "severity": "medium"})
+    elif amount > 50_000_000:
+        flags.append({"type": "excessive_billing", "description": f"Số tiền đề nghị thanh toán {amount:,.0f} VND vượt ngưỡng 50 triệu đồng", "severity": "medium"})
         score += 15
 
     diag_codes = claim_data.get("diagnosis_codes") or []
     proc_codes = claim_data.get("procedure_codes") or []
     if len(proc_codes) > 10:
-        flags.append({"type": "unbundling", "description": f"{len(proc_codes)} procedure codes on a single claim — possible unbundling", "severity": "medium"})
+        flags.append({"type": "unbundling", "description": f"Hồ sơ kê {len(proc_codes)} dịch vụ kỹ thuật trong một lần khám — nghi ngờ tách dịch vụ (unbundling)", "severity": "medium"})
         score += 20
 
     service_date = claim_data.get("service_date")
@@ -187,17 +195,17 @@ def apply_rule_signals(claim_data: dict) -> tuple[int, list[dict]]:
             sub = date.fromisoformat(str(submission_date)) if isinstance(submission_date, str) else submission_date
             days_gap = (sub - sd).days
             if days_gap > 365:
-                flags.append({"type": "timing_anomaly", "description": f"Claim submitted {days_gap} days after service date", "severity": "high"})
+                flags.append({"type": "timing_anomaly", "description": f"Hồ sơ nộp muộn {days_gap} ngày so với ngày khám/điều trị", "severity": "high"})
                 score += 25
             elif days_gap < 0:
-                flags.append({"type": "timing_anomaly", "description": "Submission date is before service date", "severity": "high"})
+                flags.append({"type": "timing_anomaly", "description": "Ngày nộp hồ sơ sớm hơn ngày khám/điều trị — bất thường về thời gian", "severity": "high"})
                 score += 30
         except (ValueError, TypeError):
             pass
 
-    narrative = (claim_data.get("claim_narrative") or "").lower()
+    narrative = (claim_data.get("claim_narrative") or "").strip()
     if narrative and len(narrative) < 20:
-        flags.append({"type": "vague_language", "description": "Claim narrative is extremely brief (under 20 characters)", "severity": "medium"})
+        flags.append({"type": "vague_language", "description": "Mô tả hồ sơ quá ngắn (dưới 20 ký tự) — thiếu thông tin lâm sàng cần thiết", "severity": "medium"})
         score += 10
 
     return min(score, 100), flags

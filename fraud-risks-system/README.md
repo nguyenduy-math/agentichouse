@@ -1,6 +1,10 @@
-# Healthcare Claim Fraud Detection System
+# Hệ Thống Phát Hiện Gian Lận Hồ Sơ BHYT (Healthcare Claim Fraud Detection)
 
-A hybrid fraud detection system for healthcare claims combining LLM-powered narrative analysis, rule-based signals, a Neo4j patient profile graph, and a human-in-the-loop review workflow. Designed to operate without labeled fraud data on day one, accumulating investigator decisions as a labeled dataset for Phase 2 ML training.
+Hệ thống phát hiện gian lận bảo hiểm y tế (BHYT) cho thị trường Việt Nam, kết hợp phân tích mô tả lâm sàng bằng LLM, tín hiệu dựa trên quy tắc, đồ thị mạng lưới bệnh nhân Neo4j và vòng lặp xem xét của con người (human-in-the-loop). Hệ thống hoạt động ngay từ ngày đầu mà không cần dữ liệu gian lận đã được gán nhãn, tích lũy quyết định của điều tra viên làm tập dữ liệu huấn luyện cho giai đoạn ML sau này.
+
+> **Ngôn ngữ phân tích:** Tiếng Việt — LLM trả về giải thích và cờ cảnh báo bằng tiếng Việt.
+> **Đơn vị tiền tệ:** VND (Đồng Việt Nam).
+> **Khung pháp lý tham chiếu:** Luật BHYT, Thông tư 39/2018/TT-BYT.
 
 ---
 
@@ -36,31 +40,34 @@ CSV Upload → Claims DB (PostgreSQL)
 
 ---
 
-## Fraud Patterns Detected
+## Các Hình Thức Gian Lận Được Phát Hiện
 
-### Per-Claim (LLM + Rules)
+### Cấp Độ Hồ Sơ — LLM + Quy Tắc (Per-Claim)
 
-| Pattern | Description |
+| Hình thức | Mô tả (Vietnam BHYT context) |
 |---|---|
-| **Upcoding** | Narrative describes lower complexity than billed CPT codes |
-| **Phantom billing** | Service in narrative doesn't match procedure codes |
-| **Unbundling** | Multiple CPT codes that should be a single billable unit |
-| **Medical necessity** | Diagnosis codes don't support the billed treatment |
-| **Vague language** | Extremely brief or non-clinical claim narratives |
-| **Rehearsed language** | Overly precise, template-like, or emotionally manipulative text |
-| **Timing anomaly** | Submission date before service date, or >1 year gap |
-| **Excessive billing** | Claim amount far exceeds thresholds for the billed service type |
+| **Kê sai mã / Nâng hạng dịch vụ** | Mô tả lâm sàng thấp hơn mã dịch vụ kỹ thuật được kê (upcoding) |
+| **Kê khống dịch vụ** | Dịch vụ được kê không khớp với mô tả lâm sàng trong hồ sơ (phantom billing) |
+| **Tách dịch vụ** | Kê nhiều mã dịch vụ lẽ ra phải tính chung một lần (unbundling) |
+| **Không có chỉ định y tế** | Mã bệnh không hỗ trợ điều trị hoặc xét nghiệm được kê |
+| **Mô tả mơ hồ** | Mô tả hồ sơ quá ngắn hoặc thiếu thông tin lâm sàng cần thiết |
+| **Ngôn ngữ soạn sẵn** | Mô tả rập khuôn, không thực tế hoặc có yếu tố gây áp lực |
+| **Bất thường thời gian** | Ngày nộp hồ sơ trước ngày khám, hoặc chênh lệch >1 năm |
+| **Số tiền bất thường** | Số tiền đề nghị thanh toán vượt ngưỡng: >200 triệu VND (cao), >50 triệu VND (trung bình) |
+| **Kê thuốc biệt dược không cần** | Kê thuốc nhập khẩu đắt tiền khi có thuốc generic tương đương |
+| **Nằm viện không cần thiết** | Nhập viện điều trị nội trú khi hoàn toàn có thể điều trị ngoại trú |
+| **Tách đợt điều trị** | Chia một đợt điều trị thành nhiều hồ sơ BHYT riêng biệt |
 
-### Network-Level (Patient Profile Graph)
+### Cấp Độ Mạng Lưới — Đồ Thị Neo4j (Network-Level)
 
-| Pattern | Description |
+| Hình thức | Mô tả |
 |---|---|
-| **Provider concentration** | Provider where >40% of claims are high-risk, min 2 claims |
-| **Fraud ring** | ≥2 distinct patients sharing the same provider and procedure code |
-| **Patient velocity** | Patient with ≥5 claims across ≥3 different providers |
-| **Procedure dominance** | Provider billing the same CPT code on >70% of claims, min 2 claims |
+| **Tập trung rủi ro cơ sở y tế** | Cơ sở y tế có >40% hồ sơ nguy cơ cao, tối thiểu 2 hồ sơ |
+| **Vòng gian lận** | ≥2 bệnh nhân cùng cơ sở y tế và cùng mã dịch vụ |
+| **Bệnh nhân đi nhiều cơ sở** | Bệnh nhân có ≥5 hồ sơ tại ≥3 cơ sở khác nhau |
+| **Dịch vụ thống trị** | Cơ sở y tế kê cùng 1 mã dịch vụ >70% hồ sơ, tối thiểu 2 hồ sơ |
 
-Network-flagged claims show a purple **Network Risk** badge in the review queue and a dedicated **Network Signals** section in the claim detail drawer.
+Hồ sơ bị gắn cờ mạng lưới hiển thị huy hiệu tím **Network Risk** trong hàng đợi xem xét và mục **Network Signals** riêng biệt trong ngăn chi tiết hồ sơ.
 
 ---
 
@@ -152,32 +159,32 @@ Open **http://localhost:5173** in your browser.
 
 Go to the **Upload Claims** tab and drop a CSV file. The only required column is `claim_id`.
 
-**Supported columns:**
+**Các cột hỗ trợ:**
 
-| Column | Description |
+| Cột | Mô tả |
 |---|---|
-| `claim_id` | Unique claim identifier (required) |
-| `patient_id` | De-identified patient ID |
-| `provider_id` | Provider identifier |
-| `provider_name` | Provider name |
-| `claim_amount` | Billed dollar amount |
-| `service_date` | Date of service (`YYYY-MM-DD` or `MM/DD/YYYY`) |
-| `submission_date` | Date claim was submitted |
-| `claim_type` | `inpatient`, `outpatient`, `pharmacy`, `lab` |
-| `diagnosis_codes` | ICD-10 codes separated by `\|` (e.g. `M17.11\|M17.31`) |
-| `procedure_codes` | CPT codes separated by `\|` (e.g. `27447\|27446`) |
-| `claim_narrative` | Free-text description — the primary field analyzed by the LLM |
+| `claim_id` | Mã hồ sơ (bắt buộc) |
+| `patient_id` | Mã bệnh nhân (đã ẩn danh) |
+| `provider_id` | Mã cơ sở khám chữa bệnh |
+| `provider_name` | Tên cơ sở khám chữa bệnh |
+| `claim_amount` | Số tiền đề nghị thanh toán **(đơn vị: VND)** |
+| `service_date` | Ngày khám/điều trị (`YYYY-MM-DD` hoặc `MM/DD/YYYY`) |
+| `submission_date` | Ngày nộp hồ sơ |
+| `claim_type` | `inpatient` (nội trú), `outpatient` (ngoại trú), `pharmacy` (dược), `lab` (xét nghiệm) |
+| `diagnosis_codes` | Mã bệnh ICD-10, phân cách bằng `\|` (ví dụ: `J06.9\|J02.9`) |
+| `procedure_codes` | Mã dịch vụ kỹ thuật, phân cách bằng `\|` (ví dụ: `KT-001\|XN-002`) |
+| `claim_narrative` | **Mô tả hồ sơ bằng tiếng Việt** — trường chính được LLM phân tích |
 
-A sample file with 25 synthetic claims is provided at `backend/data/sample_claims.csv`.
+Bộ dữ liệu mẫu với 25 hồ sơ BHYT Việt Nam tổng hợp tại `backend/data/sample_claims.csv`.
 
 ### Step 2 — Run Batch Analysis
 
 Click **Run Batch Now** in the Review Queue tab, or wait for the nightly run at 2:00 AM. The batch runs in two passes:
 
-**Pass 1 — Per-claim analysis** (runs in parallel per claim)
-- Gemini LLM analyzes the claim narrative → risk score + flags + plain-English explanation
-- Rule engine checks amounts, code counts, and submission timing
-- Combined score written to `fraud_analyses`
+**Pass 1 — Phân tích từng hồ sơ** (runs in parallel per claim)
+- Gemini LLM phân tích mô tả hồ sơ → điểm rủi ro + cờ cảnh báo + giải thích **bằng tiếng Việt**
+- Rule engine kiểm tra số tiền VND, số lượng dịch vụ, và thời gian nộp hồ sơ
+- Combined score ghi vào `fraud_analyses`
 
 **Pass 2 — Graph enrichment** (runs once after all claims are scored)
 - All claims synced to the Neo4j patient profile graph as nodes and edges
@@ -185,18 +192,18 @@ Click **Run Batch Now** in the Review Queue tab, or wait for the nightly run at 
 - Graph flags appended to `rule_flags`; combined score boosted by up to +20 per high-severity graph flag
 
 ```
-Combined Score = 0.7 × LLM Score + 0.3 × max(Rule Score, Graph Score)
-                                    + graph severity boost (capped at 100)
+Điểm kết hợp = 0.7 × Điểm LLM + 0.3 × max(Điểm quy tắc, Điểm đồ thị)
+                                 + phần thưởng mức độ nghiêm trọng đồ thị (tối đa 100)
 ```
 
-Risk levels:
+Ngưỡng phân loại rủi ro:
 
-| Score | Level |
-|---|---|
-| 0–25 | Low |
-| 26–50 | Medium |
-| 51–75 | High |
-| 76–100 | Critical |
+| Điểm | Mức | Ngưỡng quy tắc VND |
+|---|---|---|
+| 0–25 | Thấp (Low) | — |
+| 26–50 | Trung bình (Medium) | > 50,000,000 VND |
+| 51–75 | Cao (High) | — |
+| 76–100 | Nghiêm trọng (Critical) | > 200,000,000 VND |
 
 ### Step 3 — Review Claims
 
@@ -204,17 +211,17 @@ The **Review Queue** shows analyzed claims sorted by risk score. Claims with net
 
 Click any row to open the claim detail drawer:
 
-- Claim fields and billing codes
-- Original claim narrative
-- AI explanation (plain English)
-- **Network Signals** section (purple) — graph-detected patterns, shown separately from per-claim flags
-- Per-claim fraud flags with severity
+- Thông tin hồ sơ và mã dịch vụ kỹ thuật
+- Mô tả hồ sơ gốc (tiếng Việt)
+- **Giải thích AI bằng tiếng Việt** — tóm tắt lý do nghi ngờ gian lận
+- Mục **Network Signals** (màu tím) — cờ phát hiện từ đồ thị mạng lưới
+- Danh sách cờ cảnh báo từng hồ sơ kèm mức độ nghiêm trọng
 
-Submit an investigator decision:
+Quyết định của điều tra viên:
 
-- **Legitimate** — claim looks valid
-- **Suspicious** — needs further investigation
-- **Confirmed Fraud** — escalate for action
+- **Legitimate** — hồ sơ hợp lệ
+- **Suspicious** — cần điều tra thêm
+- **Confirmed Fraud** — xác nhận gian lận, chuyển xử lý
 
 Each decision is stored and contributes to your labeled dataset.
 
@@ -286,6 +293,29 @@ All settings are in `backend/.env`:
 
 ---
 
+## Dữ Liệu Mẫu (Sample Claims)
+
+File `backend/data/sample_claims.csv` chứa 25 hồ sơ BHYT Việt Nam tổng hợp với các bệnh viện thực tế:
+
+| Hồ sơ | Cơ sở y tế | Hình thức gian lận |
+|---|---|---|
+| VN-001 – VN-009 | BV Bạch Mai, BV Chợ Rẫy, BV Việt Đức... | Hồ sơ hợp lệ (baseline) |
+| VN-010 | Phòng Khám Thái Bình | Kê khống 15 xét nghiệm cho cảm cúm thông thường |
+| VN-011 | BV Tư Nhân Phú Nhuận | Nâng hạng phẫu thuật — u nang nhỏ khai là phẫu thuật nội soi phức tạp |
+| VN-012 | BV Khu Vực Miền Núi | Nằm viện 10 ngày không cần thiết cho viêm họng |
+| VN-013 | Phòng Khám Minh Đức | Kê 8 loại thuốc biệt dược đắt tiền cho cảm lạnh |
+| VN-014 | BV Phục Hồi Chức Năng | Khai khống 30 ngày điều trị (thực tế 3 ngày) |
+| VN-015 | BV Đa Khoa Tỉnh Thanh Hóa | Phantom claim — mô tả hồ sơ trống hoàn toàn |
+| VN-016/B/C | Phòng Khám Tim Mạch | Tách 1 đợt điều trị thành 3 hồ sơ riêng biệt |
+| VN-017 | Trung Tâm Chẩn Đoán HN | CT scan 3 lần không cần thiết cho đau đầu |
+| VN-018 | BV Tư Nhân Phú Nhuận | Khai phòng dịch vụ VIP cho bệnh nhân phòng thường |
+| VN-019 | BV Hữu Nghị Việt Đức | Trùng lặp hồ sơ — cùng bệnh nhân + chẩn đoán |
+| VN-020 | Phòng Khám Nam Định | 20 dịch vụ kỹ thuật cho khám sức khỏe bình thường |
+| VN-021 | Phòng Khám Thái Bình | Nhập viện viêm phổi cho ca cảm cúm nhẹ |
+| VN-022 – VN-025 | Các BV tuyến TW | Hồ sơ bình thường — sinh thường, tái khám, xét nghiệm, chấn thương |
+
+---
+
 ## Project Structure
 
 ```
@@ -295,14 +325,14 @@ fraud-risks-system/
 │   ├── .env.example                # Configuration template
 │   ├── requirements.txt
 │   ├── data/
-│   │   └── sample_claims.csv       # 25 synthetic test claims
+│   │   └── sample_claims.csv       # 25 hồ sơ BHYT Việt Nam tổng hợp
 │   └── app/
 │       ├── main.py                 # FastAPI entry point + lifespan
 │       ├── config.py               # Pydantic settings
 │       ├── database.py             # SQLAlchemy async engine
 │       ├── models.py               # ORM: Claim, FraudAnalysis, Review, BatchRun
 │       ├── schemas.py              # Pydantic request/response models
-│       ├── fraud_analyzer.py       # Gemini LLM analysis engine
+│       ├── fraud_analyzer.py       # Gemini LLM — prompt + phân tích bằng tiếng Việt, ngưỡng VND
 │       ├── batch_pipeline.py       # APScheduler nightly job + graph enrichment trigger
 │       ├── graph_engine.py         # Neo4j patient profile graph sync + 4 Cypher fraud queries
 │       ├── feature_extractor.py    # ML feature extraction (Phase 2 prep)
@@ -361,11 +391,14 @@ Train an XGBoost/LightGBM classifier on structured features extracted by `featur
 
 ---
 
-## HIPAA Note
+## Bảo Mật & Tuân Thủ Pháp Luật Việt Nam
 
-This system uses the Google Gemini cloud API. Healthcare claims may contain Protected Health Information (PHI). Before processing real patient data:
+Hệ thống sử dụng Google Gemini API (cloud). Hồ sơ BHYT chứa thông tin sức khỏe cá nhân thuộc phạm vi bảo vệ theo pháp luật Việt Nam.
 
-- Obtain a **HIPAA Business Associate Agreement (BAA)** with Google, or
-- Switch to a **local LLM** (e.g., Llama 3 via Ollama) by replacing `fraud_analyzer.py`'s Gemini client — the structured output interface is the same
-- Consider **de-identifying** narratives before sending to any external API
-- Neo4j runs entirely on-premises — no PHI leaves your infrastructure via the graph layer
+**Trước khi xử lý dữ liệu bệnh nhân thực:**
+
+- Tuân thủ **Nghị định 13/2023/NĐ-CP** về bảo vệ dữ liệu cá nhân và **Luật An toàn thông tin mạng 2015**
+- Ký **thỏa thuận bảo mật dữ liệu** với Google Cloud (Data Processing Amendment)
+- Hoặc chuyển sang **LLM cục bộ** (Llama 3, Qwen2.5 via Ollama) bằng cách thay thế Gemini client trong `fraud_analyzer.py` — giao diện structured output giữ nguyên
+- **Ẩn danh hóa** thông tin định danh bệnh nhân (họ tên, số CMND, địa chỉ) trong narrative trước khi gửi lên API
+- Neo4j chạy hoàn toàn on-premises — không có dữ liệu bệnh nhân rời khỏi hạ tầng nội bộ qua tầng đồ thị
