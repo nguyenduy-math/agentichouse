@@ -30,8 +30,8 @@ class Claim(Base):
     raw_csv_row: Mapped[dict | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    analyses: Mapped[list[FraudAnalysis]] = relationship(back_populates="claim")
-    reviews: Mapped[list[Review]] = relationship(back_populates="claim")
+    analyses: Mapped[list[FraudAnalysis]] = relationship(back_populates="claim", lazy="raise")
+    reviews: Mapped[list[Review]] = relationship(back_populates="claim", lazy="raise")
 
 
 class FraudAnalysis(Base):
@@ -48,8 +48,8 @@ class FraudAnalysis(Base):
     model_version: Mapped[str | None] = mapped_column(String(100))
     analyzed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    claim: Mapped[Claim] = relationship(back_populates="analyses")
-    reviews: Mapped[list[Review]] = relationship(back_populates="analysis")
+    claim: Mapped[Claim] = relationship(back_populates="analyses", lazy="raise")
+    reviews: Mapped[list[Review]] = relationship(back_populates="analysis", lazy="raise")
 
 
 class Review(Base):
@@ -63,8 +63,8 @@ class Review(Base):
     notes: Mapped[str | None] = mapped_column(Text)
     reviewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    claim: Mapped[Claim] = relationship(back_populates="reviews")
-    analysis: Mapped[FraudAnalysis | None] = relationship(back_populates="reviews")
+    claim: Mapped[Claim] = relationship(back_populates="reviews", lazy="raise")
+    analysis: Mapped[FraudAnalysis | None] = relationship(back_populates="reviews", lazy="raise")
 
 
 class BatchRun(Base):
