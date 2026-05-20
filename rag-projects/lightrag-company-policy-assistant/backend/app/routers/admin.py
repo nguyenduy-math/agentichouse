@@ -40,7 +40,7 @@ async def list_agents(request: Request) -> AdminAgentsResponse:
 
 async def _reindex_all(orchestrator) -> None:
     """Background task: walk data/documents/ and re-index every file."""
-    from app.routers.ingest import DOC_TYPE_TO_DOMAIN
+    from app.domains import DOC_TYPE_TO_DOMAIN
 
     base = Path(settings.document_folder)
     for doc_type, domain in DOC_TYPE_TO_DOMAIN.items():

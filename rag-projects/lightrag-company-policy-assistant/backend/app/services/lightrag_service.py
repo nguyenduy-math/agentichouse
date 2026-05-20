@@ -9,8 +9,10 @@ The Gemini wrappers are lifted verbatim from lightrag-assistant's rag_engine.py.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+import re
 
 import numpy as np
 from google import genai
@@ -155,6 +157,25 @@ class LightRAGService:
         )
         return str(await self._rag.aquery(question, param=param))
 
+    async def retrieve_entities(self, question: str, mode: str = "hybrid", limit: int = 12) -> list[str]:
+        """Return the knowledge-graph entity names backing an answer.
+
+        Uses a retrieval-only query (``only_need_context=True`` — no generation, so
+        it's cheaper than answering) and defensively parses whatever shape LightRAG
+        returns. Any failure yields an empty list; this never raises.
+
+        Audit ref: B3 (the API advertised ``entities`` but it was always empty).
+        """
+        if self._rag is None:
+            return []
+        try:
+            param = QueryParam(mode=mode, only_need_context=True)
+            context = str(await self._rag.aquery(question, param=param))
+            return _parse_entity_names(context)[:limit]
+        except Exception as exc:  # noqa: BLE001 - entities are best-effort
+            logger.warning("retrieve_entities failed (%s)", exc)
+            return []
+
     async def check_neo4j(self) -> bool:
         from neo4j import AsyncGraphDatabase
 
@@ -172,3 +193,53 @@ class LightRAGService:
         finally:
             if driver is not None:
                 await driver.close()
+
+
+# Keys LightRAG has used for the entity name across versions, in priority order.
+_ENTITY_NAME_KEYS = ("entity", "entity_name", "name", "entity_id")
+
+
+def _parse_entity_names(context: str) -> list[str]:
+    """Extract distinct entity names from a LightRAG ``only_need_context`` payload.
+
+    Handles both the JSON shape (``{"entities": [{...}], ...}``) used by recent
+    versions and the older ``-----Entities-----`` CSV block, degrading to [] if the
+    format is unrecognized. De-dupes while preserving order.
+    """
+    names: list[str] = []
+
+    # 1) Modern JSON payload.
+    try:
+        data = json.loads(context)
+        entities = data.get("entities") if isinstance(data, dict) else None
+        if isinstance(entities, list):
+            for ent in entities:
+                if isinstance(ent, dict):
+                    for key in _ENTITY_NAME_KEYS:
+                        if ent.get(key):
+                            names.append(str(ent[key]).strip())
+                            break
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        pass
+
+    # 2) Fallback: legacy "-----Entities-----" CSV block.
+    if not names and "Entities" in context:
+        block = re.split(r"-+\s*Entities\s*-+", context, maxsplit=1)
+        if len(block) > 1:
+            tail = re.split(r"-+\s*(Relationships|Relations|Sources)\s*-+", block[1])[0]
+            for line in tail.splitlines():
+                cells = [c.strip().strip('"') for c in line.split(",")]
+                # Skip header / id rows; take the first non-numeric, non-keyword cell.
+                for cell in cells[1:]:
+                    if cell and not cell.isdigit() and cell.lower() not in {"entity", "name", "type"}:
+                        names.append(cell)
+                        break
+
+    # De-dupe, preserve order, drop empties.
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in names:
+        if n and n not in seen:
+            seen.add(n)
+            out.append(n)
+    return out

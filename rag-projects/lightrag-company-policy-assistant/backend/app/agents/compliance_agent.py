@@ -11,23 +11,23 @@ from pathlib import Path
 
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
+from app.prompts import compose_system_prompt
 from app.schemas import Citation
 from app.services.pageindex_service import PageIndexService
 
-COMPLIANCE_SYSTEM_PROMPT = """\
-Bạn là chuyên gia tư vấn tuân thủ pháp lý và quy định của công ty. \
-Hãy trả lời bằng tiếng Việt, trích dẫn chính xác số trang, điều khoản, và số hiệu văn bản pháp luật. \
-Nêu rõ nghĩa vụ pháp lý, hậu quả vi phạm, và quy trình báo cáo. \
-Nếu cần tư vấn pháp lý chuyên sâu, hướng dẫn liên hệ phòng Pháp chế hoặc luật sư của công ty.
-"""
+COMPLIANCE_PERSONA = (
+    "Bạn là chuyên gia tư vấn tuân thủ pháp lý và quy định của công ty. "
+    "Hãy nêu rõ nghĩa vụ pháp lý, hậu quả vi phạm và quy trình báo cáo; "
+    "với tư vấn pháp lý chuyên sâu, hướng dẫn liên hệ phòng Pháp chế."
+)
 
 
 class ComplianceAgent(BaseAgent):
     domain = "COMPLIANCE"
     engine_type = "pageindex"
-    system_prompt = COMPLIANCE_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(COMPLIANCE_PERSONA)
         index_dir = Path(settings.pageindex_base_dir) / "compliance"
         self._engine = PageIndexService(index_dir=index_dir, domain=self.domain)
 
@@ -44,7 +44,7 @@ class ComplianceAgent(BaseAgent):
         return self._engine.indexed_count()
 
     async def answer(self, question: str, history: list[dict]) -> AgentResponse:
-        result = await self._engine.query(question)
+        result = await self._engine.query(question, history=history, system_prompt=self.system_prompt)
         citations = [
             Citation(
                 document=c["document"],

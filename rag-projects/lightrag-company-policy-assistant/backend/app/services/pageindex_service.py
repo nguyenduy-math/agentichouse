@@ -5,14 +5,22 @@ PageIndex (VectifyAI) converts PDFs/Markdown into hierarchical tree structures
 instead of vector similarity. This service wraps that workflow:
 
   1. index_document() — runs PageIndex CLI (via subprocess) to produce a JSON tree
-  2. query()         — loads JSON trees + uses Gemini to navigate and answer
+  2. query()          — loads JSON trees + uses Gemini to navigate and answer
+
+Context-engineering notes (audit refs):
+  * Prompts come from app.prompts and respect settings.response_language (A2, A3).
+  * The agent's own persona threads into the answer prompt (D3) and conversation
+    history threads into navigation + answering (D1).
+  * Citations are taken from the structured answer (GroundedAnswer) so they reflect
+    the text the model actually used, not the navigation step's guesses (B4).
+  * Truncation is token-aware via app.context_budget; depth / section caps come from
+    settings instead of inline magic numbers (C1, C3, C4).
 
 PageIndex is sync-heavy (LLM calls during indexing) so we wrap with
 asyncio.to_thread() to avoid blocking the FastAPI event loop.
 
 Installation:
     pip install git+https://github.com/VectifyAI/PageIndex.git
-    (or clone the repo and install via: pip install -e .)
 """
 
 from __future__ import annotations
@@ -29,64 +37,25 @@ from pathlib import Path
 from google import genai
 from google.genai import types
 
+from app import prompts
 from app.config import settings
+from app.context_budget import fit_sections, log_prompt_size, truncate_to_tokens
+from app.schemas import GroundedAnswer, TreeNavigation
 
 logger = logging.getLogger(__name__)
 
 _REGISTRY_FILE = "registry.json"
 
-_JSON_CONFIG = types.GenerateContentConfig(
+_NAV_CONFIG = types.GenerateContentConfig(
     response_mime_type="application/json",
+    response_schema=TreeNavigation,
     temperature=0.0,
 )
-
-_SYNTHESIS_PROMPT = """\
-You are answering an employee question using content retrieved from company policy documents.
-
-Below are answers from {n} different policy documents, each with page references.
-
-{answers_block}
-
-Employee question: {question}
-
-Synthesize a single clear answer. Preserve all page references (e.g. "Page 4") from the source answers. If documents contradict each other, note the discrepancy. If the answer is not found in any document, say so clearly.
-"""
-
-_TREE_NAV_PROMPT = """\
-You are navigating a company policy document index (table of contents) to find information relevant to an employee question.
-
-Document: {document_name}
-Question: {question}
-
-Document index (JSON tree with section titles, summaries, and page ranges):
-{tree_json}
-
-Instructions:
-1. Identify the most relevant sections for this question.
-2. Return the node_ids and page ranges of sections to read.
-3. If no sections are relevant, return an empty list.
-
-Respond with JSON only:
-{{
-  "relevant_nodes": [
-    {{"node_id": "0001", "start_page": 3, "end_page": 5, "reason": "why relevant"}}
-  ]
-}}
-"""
-
-_ANSWER_PROMPT = """\
-You are a company policy specialist. Answer the employee question based only on the provided document excerpts. Cite page numbers where applicable (e.g. "According to page 4...").
-
-Document: {document_name}
-Relevant pages: {page_range}
-
-Content:
-{content}
-
-Question: {question}
-
-Answer (be precise and cite page numbers):
-"""
+_ANSWER_CONFIG = types.GenerateContentConfig(
+    response_mime_type="application/json",
+    response_schema=GroundedAnswer,
+    temperature=0.2,
+)
 
 
 class PageIndexResult:
@@ -212,20 +181,30 @@ class PageIndexService:
         return "\n".join((reader.pages[i].extract_text() or "") for i in range(s, e))
 
     def _navigate_tree_sync(
-        self, tree: dict, question: str, source_file: Path
+        self,
+        tree: dict,
+        question: str,
+        source_file: Path,
+        history_block: str,
+        persona: str,
     ) -> tuple[str, list[dict]]:
         """Use Gemini to navigate a single document tree and answer the question."""
-        # Step 1: ask Gemini which nodes to read
+        # Step 1: ask Gemini which nodes to read (token-budgeted tree)
         tree_summary = json.dumps(self._compact_tree(tree), ensure_ascii=False, indent=2)
-        nav_prompt = _TREE_NAV_PROMPT.format(
+        tree_summary = truncate_to_tokens(
+            tree_summary, settings.tree_nav_budget_tokens, label="pageindex tree"
+        )
+        nav_prompt = prompts.build_tree_nav_prompt(
             document_name=source_file.name,
             question=question,
-            tree_json=tree_summary[:8000],  # cap to avoid token overflow
+            tree_json=tree_summary,
+            history_block=history_block,
         )
+        log_prompt_size("pageindex.nav", nav_prompt)
         nav_response = self._gemini_client().models.generate_content(
             model=settings.gemini_llm_model,
             contents=nav_prompt,
-            config=_JSON_CONFIG,
+            config=_NAV_CONFIG,
         )
         try:
             nav_data = json.loads(nav_response.text or "{}")
@@ -236,41 +215,64 @@ class PageIndexService:
         if not relevant_nodes:
             return "", []
 
-        # Step 2: read the actual page text for relevant nodes
-        citations: list[dict] = []
+        # Step 2: read the actual page text for the top sections (capped)
         content_parts: list[str] = []
-        for node in relevant_nodes[:3]:  # limit to 3 sections per document
+        page_map: dict[int, str] = {}  # page → section label, for citation enrichment
+        for node in relevant_nodes[: settings.max_sections_per_doc]:
             start_p = node.get("start_page", 1)
             end_p = node.get("end_page", start_p + 1)
             text = self._load_source_text_by_pages(source_file, start_p, end_p)
             if text.strip():
-                content_parts.append(f"[Pages {start_p}-{end_p}]\n{text.strip()}")
-                citations.append({
-                    "document": source_file.name,
-                    "page": start_p,
-                    "section": node.get("reason", ""),
-                    "domain": self._domain,
-                })
+                content_parts.append(f"[Trang {start_p}-{end_p}]\n{text.strip()}")
+                page_map[start_p] = node.get("reason", "")
 
         if not content_parts:
             return "", []
 
-        # Step 3: generate the answer
-        page_range = f"pages {relevant_nodes[0].get('start_page', '?')}-{relevant_nodes[-1].get('end_page', '?')}"
+        # Budget the combined excerpts: drop whole sections rather than slice (C1/C3).
+        content = fit_sections(
+            content_parts, settings.answer_content_budget_tokens, label="pageindex excerpts"
+        )
+
+        # Step 3: generate a grounded answer; citations come from the answer itself (B4)
+        page_range = (
+            f"trang {relevant_nodes[0].get('start_page', '?')}–"
+            f"{relevant_nodes[-1].get('end_page', '?')}"
+        )
+        answer_prompt = prompts.build_answer_prompt(
+            persona=persona,
+            document_name=source_file.name,
+            page_range=page_range,
+            content=content,
+            question=question,
+            history_block=history_block,
+        )
+        log_prompt_size("pageindex.answer", answer_prompt)
         ans_response = self._gemini_client().models.generate_content(
             model=settings.gemini_llm_model,
-            contents=_ANSWER_PROMPT.format(
-                document_name=source_file.name,
-                page_range=page_range,
-                content="\n\n".join(content_parts)[:6000],
-                question=question,
-            ),
-            config=types.GenerateContentConfig(temperature=0.2),
+            contents=answer_prompt,
+            config=_ANSWER_CONFIG,
         )
-        return (ans_response.text or "").strip(), citations
+        try:
+            parsed = json.loads(ans_response.text or "{}")
+        except Exception:
+            return "", []
+
+        answer_text = (parsed.get("answer") or "").strip()
+        citations = [
+            {
+                "document": source_file.name,
+                "page": c.get("page", 0),
+                "section": c.get("section") or page_map.get(c.get("page", 0), ""),
+                "domain": self._domain,
+            }
+            for c in parsed.get("citations", [])
+            if c.get("page")
+        ]
+        return answer_text, citations
 
     def _compact_tree(self, node: dict, depth: int = 0) -> dict:
-        """Strip large fields from the tree for the navigation prompt."""
+        """Strip large fields from the tree for the navigation prompt (C4)."""
         out: dict = {
             "node_id": node.get("node_id", ""),
             "title": node.get("title", ""),
@@ -278,29 +280,39 @@ class PageIndexService:
             "end_index": node.get("end_index", 0),
         }
         if node.get("summary"):
-            out["summary"] = node["summary"][:200]
-        if node.get("nodes") and depth < 3:
+            out["summary"] = node["summary"][: settings.tree_summary_char_cap]
+        if node.get("nodes") and depth < settings.tree_max_depth:
             out["nodes"] = [self._compact_tree(c, depth + 1) for c in node["nodes"]]
         return out
 
-    async def query(self, question: str) -> PageIndexResult:
+    async def query(
+        self,
+        question: str,
+        history: list[dict] | None = None,
+        system_prompt: str | None = None,
+    ) -> PageIndexResult:
         if not self._registry:
             return PageIndexResult(
-                answer="No documents have been indexed for this domain yet.",
+                answer="Chưa có tài liệu nào được nạp cho lĩnh vực này.",
                 citations=[],
             )
 
-        # Fan-out: query all indexed trees in parallel
-        tasks = []
-        for orig_path, json_path in self._registry.items():
-            tasks.append(
-                asyncio.to_thread(
-                    self._query_one_sync,
-                    Path(json_path),
-                    Path(orig_path),
-                    question,
-                )
+        history_block = prompts.format_history(history, settings.default_history_turns)
+        persona = system_prompt or "Bạn là chuyên gia tư vấn chính sách của công ty."
+
+        # Cap the number of trees we fan out to, to bound cost/context (C3).
+        items = list(self._registry.items())[: settings.max_docs_per_synthesis]
+        tasks = [
+            asyncio.to_thread(
+                self._query_one_sync,
+                Path(json_path),
+                Path(orig_path),
+                question,
+                history_block,
+                persona,
             )
+            for orig_path, json_path in items
+        ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         answers: list[tuple[str, list[dict]]] = []
@@ -314,23 +326,23 @@ class PageIndexService:
 
         if not answers:
             return PageIndexResult(
-                answer="The relevant documents did not contain an answer to this question.",
+                answer="Các tài liệu liên quan không chứa câu trả lời cho câu hỏi này.",
                 citations=[],
             )
 
         if len(answers) == 1:
             return PageIndexResult(answer=answers[0][0], citations=answers[0][1])
 
-        # Synthesize multiple answers
-        answers_block = "\n\n".join(
-            f"Document {i + 1}:\n{ans}" for i, (ans, _) in enumerate(answers)
+        # Synthesize multiple answers (token-budgeted, language-driven — A2, C1)
+        sections = [f"Tài liệu {i + 1}:\n{ans}" for i, (ans, _) in enumerate(answers)]
+        answers_block = fit_sections(
+            sections, settings.synthesis_input_budget_tokens, label="pageindex answers"
         )
         all_citations = [c for _, cits in answers for c in cits]
-        synth_prompt = _SYNTHESIS_PROMPT.format(
-            n=len(answers),
-            answers_block=answers_block[:8000],
-            question=question,
+        synth_prompt = prompts.build_pageindex_synthesis_prompt(
+            n=len(answers), answers_block=answers_block, question=question
         )
+        log_prompt_size("pageindex.synthesize", synth_prompt)
         synth = self._gemini_client().models.generate_content(
             model=settings.gemini_llm_model,
             contents=synth_prompt,
@@ -342,7 +354,12 @@ class PageIndexService:
         )
 
     def _query_one_sync(
-        self, json_path: Path, source_path: Path, question: str
+        self,
+        json_path: Path,
+        source_path: Path,
+        question: str,
+        history_block: str,
+        persona: str,
     ) -> tuple[str, list[dict]]:
         if not json_path.exists():
             return "", []
@@ -351,7 +368,7 @@ class PageIndexService:
         except Exception as exc:
             logger.warning("Failed to load index %s: %s", json_path, exc)
             return "", []
-        return self._navigate_tree_sync(tree, question, source_path)
+        return self._navigate_tree_sync(tree, question, source_path, history_block, persona)
 
     # ------------------------------------------------------------------
     # Introspection

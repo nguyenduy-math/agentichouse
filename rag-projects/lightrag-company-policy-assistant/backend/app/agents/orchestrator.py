@@ -1,12 +1,13 @@
 """OrchestratorAgent — routes employee questions to domain specialist agents.
 
 Flow:
-  1. classify_domains()  — LLM classifies question into 1-3 domain keys
+  1. classify_domains()  — LLM classifies question (+ recent history) into domain keys
   2. single domain       — direct route, no synthesis needed
   3. cross-domain        — asyncio.gather fan-out → _synthesize() merges answers
 
-The JSON classification pattern is lifted from graphrag-assistant's
-llm_service.classify_query() (temperature=0, response_mime_type=application/json).
+Classification uses a Gemini response_schema (DomainClassification) so the model can
+only emit valid domain keys — no manual validate-and-default dance (audit ref: B2).
+Prompts live in app.prompts; the domain set comes from app.domains.
 """
 
 from __future__ import annotations
@@ -18,62 +19,25 @@ import logging
 from google import genai
 from google.genai import types
 
+from app import prompts
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
-from app.schemas import AgentHealth, ChatTurn, Citation
+from app.context_budget import estimate_tokens, fit_sections, log_prompt_size
+from app.domains import is_valid_domain
+from app.schemas import AgentHealth, ChatTurn, Citation, DomainClassification
 
 logger = logging.getLogger(__name__)
 
-_JSON_CONFIG = types.GenerateContentConfig(
+# Safe fallback when classification fails: a small, broadly-useful set rather than
+# fanning out to all 10 agents (which spikes cost/latency exactly when failing).
+# Audit ref: A5.
+_FALLBACK_DOMAINS = ["HR_POLICY", "HANDBOOK"]
+
+_CLASSIFY_CONFIG = types.GenerateContentConfig(
     response_mime_type="application/json",
+    response_schema=DomainClassification,
     temperature=0.0,
 )
-
-_DOMAIN_CLASSIFY_PROMPT = """\
-Phân loại câu hỏi của nhân viên vào một hoặc nhiều lĩnh vực chính sách của công ty.
-
-Các lĩnh vực:
-  HR_POLICY   — Nội quy lao động, hợp đồng, nghỉ phép, giờ làm việc, đánh giá hiệu suất
-  BENEFITS    — Lương thưởng, bảo hiểm sức khỏe, hưu trí, phụ cấp, đãi ngộ
-  CONDUCT     — Quy tắc ứng xử, đạo đức, quy trình kỷ luật, trang phục
-  PROCEDURES  — Quy trình từng bước, phê duyệt, onboarding, đề xuất
-  HANDBOOK    — Tổng quan công ty, văn hóa, sứ mệnh, thông tin chung nhân viên
-  MEDICAL     — Chính sách y tế, bảo hiểm sức khỏe, danh sách bệnh viện, quy trình khám chữa bệnh
-  IT_SECURITY — Chính sách CNTT, bảo mật thông tin, sử dụng thiết bị, mật khẩu, quyền truy cập
-  COMPLIANCE  — Tuân thủ pháp luật, quy định lao động, bảo vệ dữ liệu, phòng chống tham nhũng
-  FINANCE     — Chính sách tài chính, hạn mức chi phí, hoàn ứng, phê duyệt ngân sách
-  TRAINING    — Đào tạo, phát triển nhân sự, lộ trình sự nghiệp, học bổng, chứng chỉ
-
-Câu hỏi: "{question}"
-
-Quy tắc:
-- Trả về 1 đến 3 lĩnh vực theo thứ tự ưu tiên (liên quan nhất trước)
-- Chỉ dùng đúng các tên lĩnh vực như liệt kê trên
-
-Chỉ trả về JSON: {{"domains": ["HR_POLICY"]}}
-"""
-
-_SYNTHESIZE_PROMPT = """\
-Bạn đang tổng hợp câu trả lời từ nhiều chuyên gia tư vấn chính sách công ty để trả lời một câu hỏi của nhân viên.
-
-Câu hỏi của nhân viên: {question}
-
-Câu trả lời từ các chuyên gia:
-{answers_block}
-
-Hướng dẫn:
-- Kết hợp các câu trả lời thành một câu trả lời mạch lạc bằng tiếng Việt
-- Giữ nguyên tất cả trích dẫn trang (ví dụ: "Trang 4 của benefits_guide.pdf")
-- Nếu các chuyên gia có câu trả lời mâu thuẫn nhau, hãy ghi chú rõ
-- Ngắn gọn, chính xác và thực tế
-
-Câu trả lời tổng hợp:
-"""
-
-ALL_DOMAINS = [
-    "HR_POLICY", "BENEFITS", "CONDUCT", "PROCEDURES", "HANDBOOK",
-    "MEDICAL", "IT_SECURITY", "COMPLIANCE", "FINANCE", "TRAINING",
-]
 
 
 class OrchestratorResponse:
@@ -92,6 +56,26 @@ class OrchestratorResponse:
         self.history: list[ChatTurn] = history or []
 
 
+def _trim_history(history: list[dict], turns: int) -> list[dict]:
+    """Keep the last ``turns`` user/assistant exchanges.
+
+    Counts from the Nth-last *user* message rather than assuming strict
+    user/assistant alternation, so a malformed history can't skew the window.
+    Audit ref: D4.
+    """
+    if not turns or not history:
+        return history if not turns else []
+    user_seen = 0
+    start = 0
+    for i in range(len(history) - 1, -1, -1):
+        if history[i].get("role") != "assistant":
+            user_seen += 1
+            if user_seen == turns:
+                start = i
+                break
+    return history[start:]
+
+
 class OrchestratorAgent:
     def __init__(self, agents: dict[str, BaseAgent]) -> None:
         self._agents = agents
@@ -102,22 +86,27 @@ class OrchestratorAgent:
     # Domain classification
     # ------------------------------------------------------------------
 
-    async def classify_domains(self, question: str) -> list[str]:
-        prompt = _DOMAIN_CLASSIFY_PROMPT.format(question=question)
+    async def classify_domains(self, question: str, history: list[dict] | None = None) -> list[str]:
+        history_block = prompts.format_history(history, settings.classify_history_turns)
+        prompt = prompts.build_classification_prompt(question, history_block)
+        log_prompt_size("classify", prompt)
         try:
             response = await self._client.aio.models.generate_content(
                 model=self._model,
                 contents=prompt,
-                config=_JSON_CONFIG,
+                config=_CLASSIFY_CONFIG,
             )
             data = json.loads(response.text or "{}")
             domains = data.get("domains", [])
-            # Validate — only accept known domain keys
-            valid = [d for d in domains if d in ALL_DOMAINS]
-            return valid if valid else ["HR_POLICY"]
+            # Schema already constrains values, but validate defensively.
+            valid = [d for d in domains if is_valid_domain(d)]
+            return valid  # may be empty — caller handles "no domain matched"
         except Exception as exc:
-            logger.warning("Domain classification failed (%s), defaulting to all domains", exc)
-            return ALL_DOMAINS
+            logger.warning(
+                "Domain classification failed (%s), using safe fallback %s",
+                exc, _FALLBACK_DOMAINS,
+            )
+            return list(_FALLBACK_DOMAINS)
 
     # ------------------------------------------------------------------
     # Main entry point
@@ -129,24 +118,33 @@ class OrchestratorAgent:
         history: list[dict],
         history_turns: int,
     ) -> OrchestratorResponse:
-        # Trim history to requested turns
-        trimmed_history = history[-history_turns * 2:] if history_turns else history
+        trimmed_history = _trim_history(history, history_turns)
 
-        domains = await self.classify_domains(message)
+        domains = await self.classify_domains(message, trimmed_history)
+
+        # No policy domain matched (greeting, thanks, off-topic).
+        if not domains:
+            return OrchestratorResponse(
+                answer=(
+                    "Xin chào! Tôi là trợ lý chính sách của công ty. "
+                    "Bạn có thể hỏi tôi về nội quy lao động, phúc lợi, quy trình, "
+                    "y tế, bảo mật CNTT, tài chính, đào tạo và nhiều lĩnh vực khác."
+                ),
+                domains_consulted=[],
+            )
+
         ready_domains = [d for d in domains if d in self._agents and self._agents[d].is_ready()]
 
         logger.info(
             "Orchestrator: question=%r, classified=%s, ready=%s",
-            message[:80],
-            domains,
-            ready_domains,
+            message[:80], domains, ready_domains,
         )
 
         if not ready_domains:
             return OrchestratorResponse(
                 answer=(
-                    "No documents have been indexed yet for the relevant policy domains "
-                    f"({', '.join(domains)}). Please upload policy documents first."
+                    "Chưa có tài liệu nào được nạp cho các lĩnh vực liên quan "
+                    f"({', '.join(domains)}). Vui lòng tải lên tài liệu chính sách trước."
                 ),
                 domains_consulted=domains,
             )
@@ -162,9 +160,7 @@ class OrchestratorAgent:
             )
 
         # Cross-domain: fan-out in parallel
-        tasks = [
-            self._agents[d].answer(message, trimmed_history) for d in ready_domains
-        ]
+        tasks = [self._agents[d].answer(message, trimmed_history) for d in ready_domains]
         results: list[AgentResponse] = await asyncio.gather(*tasks)  # type: ignore[assignment]
 
         synthesized = await self._synthesize(message, results)
@@ -182,13 +178,17 @@ class OrchestratorAgent:
     # ------------------------------------------------------------------
 
     async def _synthesize(self, question: str, responses: list[AgentResponse]) -> str:
-        answers_block = "\n\n".join(
-            f"[{r.domain} specialist]:\n{r.answer}" for r in responses
+        # Rank by answer length as a cheap relevance proxy, cap the number of
+        # contributing answers, then fit them to the token budget by dropping whole
+        # answers rather than slicing one mid-citation. Audit refs: C1, C3.
+        ranked = sorted(responses, key=lambda r: estimate_tokens(r.answer), reverse=True)
+        capped = ranked[: settings.max_docs_per_synthesis]
+        sections = [f"[Chuyên gia {r.domain}]:\n{r.answer}" for r in capped]
+        answers_block = fit_sections(
+            sections, settings.synthesis_input_budget_tokens, label="specialist answers"
         )
-        prompt = _SYNTHESIZE_PROMPT.format(
-            question=question,
-            answers_block=answers_block[:8000],
-        )
+        prompt = prompts.build_synthesis_prompt(question, answers_block)
+        log_prompt_size("synthesize", prompt)
         try:
             response = await self._client.aio.models.generate_content(
                 model=self._model,

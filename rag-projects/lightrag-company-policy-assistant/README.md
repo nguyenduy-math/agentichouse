@@ -223,6 +223,7 @@ Returns per-agent readiness.
     "CONDUCT":     { "ready": false, "engine_type": "pageindex",  "indexed_docs": 0 },
     "PROCEDURES":  { "ready": true,  "engine_type": "lightrag",   "indexed_docs": 2 },
     "HANDBOOK":    { "ready": false, "engine_type": "lightrag",   "indexed_docs": 0 }
+    // … all 10 domains (MEDICAL, IT_SECURITY, COMPLIANCE, FINANCE, TRAINING) appear here too
   },
   "neo4j_connected": true,
   "llm_model": "gemini-2.5-flash",
@@ -240,7 +241,9 @@ curl -X POST http://localhost:8000/api/ingest/upload \
   -F "doc_type=benefits"
 ```
 
-Valid `doc_type` values: `hr_policies`, `benefits`, `conduct`, `procedures`, `handbooks`.
+Valid `doc_type` values: `hr_policies`, `benefits`, `conduct`, `procedures`, `handbooks`, `medical`, `it_security`, `compliance`, `finance`, `training`.
+
+> The full list is derived from a single source of truth — [`backend/app/domains.py`](backend/app/domains.py). Adding a domain there (and registering its agent in `main.py`) updates the API schema, classifier prompt, and ingest map together.
 
 ### `POST /api/chat`
 
@@ -259,7 +262,9 @@ Valid `doc_type` values: `hr_policies`, `benefits`, `conduct`, `procedures`, `ha
   "citations": [
     { "document": "benefits_guide.pdf", "page": 4, "section": "sick leave eligibility", "domain": "BENEFITS" }
   ],
-  "entities": [],
+  // Populated for LightRAG-backed domains (HR_POLICY, PROCEDURES, HANDBOOK, TRAINING)
+  // with the knowledge-graph entities behind the answer; empty for PageIndex domains.
+  "entities": ["Nghỉ ốm", "Kỹ sư", "Phòng Nhân sự"],
   "history": [
     { "role": "user",      "content": "How many sick days do junior engineers get?" },
     { "role": "assistant", "content": "Junior engineers receive 12 sick days per year..." }

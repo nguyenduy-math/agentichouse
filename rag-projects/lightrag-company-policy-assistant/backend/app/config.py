@@ -48,6 +48,21 @@ class Settings(BaseSettings):
     # --- Domain / query ---
     default_history_turns: int = 3
     response_language: str = "Vietnamese"
+    # Turns of history fed to the classifier so elliptical follow-ups route
+    # correctly ("what about for contractors?"). Audit ref: D2.
+    classify_history_turns: int = 2
+
+    # --- Context-window budgets (token estimates, not characters) ---
+    # Truncation happens on token boundaries via app.context_budget; these caps
+    # replace the old scattered character slices ([:8000], [:6000], …).
+    # Audit refs: C1, C3, C4.
+    synthesis_input_budget_tokens: int = 4000   # merged specialist answers → synthesis prompt
+    tree_nav_budget_tokens: int = 4000          # compacted PageIndex tree → navigation prompt
+    answer_content_budget_tokens: int = 3000    # extracted page text → answer prompt
+    max_docs_per_synthesis: int = 5             # cap fan-out before synthesis (C3)
+    max_sections_per_doc: int = 3               # cap sections read per document
+    tree_max_depth: int = 3                     # how deep to walk the PageIndex tree (C4)
+    tree_summary_char_cap: int = 200            # per-node summary trim in the nav prompt (C4)
 
     # --- Server ---
     host: str = "127.0.0.1"

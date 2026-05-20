@@ -12,6 +12,7 @@ from pathlib import Path
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
 from app.ingestion import extract_text
+from app.prompts import compose_system_prompt
 from app.services.lightrag_service import LightRAGService
 
 TRAINING_ENTITY_TYPES = [
@@ -28,21 +29,19 @@ TRAINING_ENTITY_TYPES = [
     "ngay_thang",              # date / deadline
 ]
 
-TRAINING_SYSTEM_PROMPT = """\
-Bạn là chuyên gia tư vấn đào tạo và phát triển nhân sự của công ty. \
-Hãy trả lời bằng tiếng Việt, giải thích lộ trình sự nghiệp, các chương trình đào tạo phù hợp \
-với từng vai trò và phòng ban, điều kiện tham gia và ngân sách học bổng. \
-Chỉ sử dụng thông tin từ tài liệu được cung cấp. \
-Nếu câu hỏi vượt ngoài phạm vi tài liệu, hướng dẫn liên hệ phòng Nhân sự hoặc Trưởng phòng.
-"""
+TRAINING_PERSONA = (
+    "Bạn là chuyên gia tư vấn đào tạo và phát triển nhân sự của công ty. "
+    "Hãy giải thích lộ trình sự nghiệp, các chương trình đào tạo phù hợp với từng vai trò "
+    "và phòng ban, điều kiện tham gia và ngân sách học bổng."
+)
 
 
 class TrainingAgent(BaseAgent):
     domain = "TRAINING"
     engine_type = "lightrag"
-    system_prompt = TRAINING_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(TRAINING_PERSONA)
         working_dir = str(Path(settings.lightrag_base_dir) / "training")
         self._engine = LightRAGService(
             working_dir=working_dir,
@@ -66,7 +65,8 @@ class TrainingAgent(BaseAgent):
         answer = await self._engine.query(
             question, mode="hybrid", history=history, user_prompt=self.system_prompt
         )
-        return AgentResponse(domain=self.domain, answer=answer)
+        entities = await self._engine.retrieve_entities(question, mode="hybrid")
+        return AgentResponse(domain=self.domain, answer=answer, entities=entities)
 
     async def index_document(self, file_path: Path) -> None:
         text = extract_text(file_path).strip()

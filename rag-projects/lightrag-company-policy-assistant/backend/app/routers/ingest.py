@@ -9,27 +9,15 @@ from pathlib import Path
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
 from app.config import settings
+from app.domains import DOC_TYPE_TO_DOMAIN, VALID_DOC_TYPES
 from app.ingestion import SUPPORTED_EXTENSIONS, collect_documents
 from app.schemas import IngestFolderRequest, IngestResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 
-# Maps data/documents sub-folder names → agent domain keys
-DOC_TYPE_TO_DOMAIN: dict[str, str] = {
-    "hr_policies": "HR_POLICY",
-    "benefits": "BENEFITS",
-    "conduct": "CONDUCT",
-    "procedures": "PROCEDURES",
-    "handbooks": "HANDBOOK",
-    "medical": "MEDICAL",
-    "it_security": "IT_SECURITY",
-    "compliance": "COMPLIANCE",
-    "finance": "FINANCE",
-    "training": "TRAINING",
-}
-
-VALID_DOC_TYPES = set(DOC_TYPE_TO_DOMAIN.keys())
+# DOC_TYPE_TO_DOMAIN / VALID_DOC_TYPES now live in app.domains (single source of
+# truth) and are re-exported here for backwards-compatible imports.
 
 
 def _infer_domain(path: Path, base: Path) -> str | None:

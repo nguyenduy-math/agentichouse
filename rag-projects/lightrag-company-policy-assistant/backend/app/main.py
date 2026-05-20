@@ -41,6 +41,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(_app: FastAPI):
     logger.info("Startup: initializing domain specialist agents…")
 
+    # Fail fast if the API schema's domain list drifts from the domain registry.
+    from app.domains import _assert_schema_in_sync
+
+    _assert_schema_in_sync()
+
     agents = {
         # Chính sách nội bộ công ty
         "HR_POLICY":   HRPolicyAgent(),

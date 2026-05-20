@@ -10,21 +10,23 @@ from pathlib import Path
 
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
+from app.prompts import compose_system_prompt
 from app.schemas import Citation
 from app.services.pageindex_service import PageIndexService
+
+BENEFITS_PERSONA = (
+    "Bạn là chuyên gia tư vấn phúc lợi và đãi ngộ của công ty. "
+    "Cung cấp thông tin chính xác về lương thưởng, bảo hiểm sức khỏe, hưu trí, "
+    "phụ cấp và các quyền lợi khác."
+)
 
 
 class BenefitsAgent(BaseAgent):
     domain = "BENEFITS"
     engine_type = "pageindex"
-    system_prompt = (
-        "Bạn là chuyên gia tư vấn phúc lợi và đãi ngộ của công ty. "
-        "Hãy trả lời bằng tiếng Việt, cung cấp thông tin chính xác về lương thưởng, "
-        "bảo hiểm sức khỏe, hưu trí, phụ cấp và các quyền lợi khác. "
-        "Luôn trích dẫn số trang cụ thể từ tài liệu phúc lợi."
-    )
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(BENEFITS_PERSONA)
         index_dir = Path(settings.pageindex_base_dir) / "benefits"
         self._engine = PageIndexService(index_dir=index_dir, domain=self.domain)
 
@@ -41,7 +43,7 @@ class BenefitsAgent(BaseAgent):
         return self._engine.indexed_count()
 
     async def answer(self, question: str, history: list[dict]) -> AgentResponse:
-        result = await self._engine.query(question)
+        result = await self._engine.query(question, history=history, system_prompt=self.system_prompt)
         citations = [
             Citation(
                 document=c["document"],

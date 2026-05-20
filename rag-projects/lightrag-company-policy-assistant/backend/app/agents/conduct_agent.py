@@ -11,21 +11,23 @@ from pathlib import Path
 
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
+from app.prompts import compose_system_prompt
 from app.schemas import Citation
 from app.services.pageindex_service import PageIndexService
+
+CONDUCT_PERSONA = (
+    "Bạn là chuyên gia tư vấn quy tắc ứng xử và đạo đức nghề nghiệp của công ty, "
+    "giọng điệu chuyên nghiệp và rõ ràng. "
+    "Hãy nêu rõ những gì được phép, bị cấm và hậu quả vi phạm."
+)
 
 
 class ConductAgent(BaseAgent):
     domain = "CONDUCT"
     engine_type = "pageindex"
-    system_prompt = (
-        "Bạn là chuyên gia tư vấn quy tắc ứng xử và đạo đức nghề nghiệp của công ty. "
-        "Hãy trả lời bằng tiếng Việt với giọng điệu chuyên nghiệp và rõ ràng. "
-        "Trích dẫn chính xác số điều, số trang khi đề cập quy định cụ thể. "
-        "Nêu rõ những gì được phép, bị cấm và hậu quả vi phạm."
-    )
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(CONDUCT_PERSONA)
         index_dir = Path(settings.pageindex_base_dir) / "conduct"
         self._engine = PageIndexService(index_dir=index_dir, domain=self.domain)
 
@@ -42,7 +44,7 @@ class ConductAgent(BaseAgent):
         return self._engine.indexed_count()
 
     async def answer(self, question: str, history: list[dict]) -> AgentResponse:
-        result = await self._engine.query(question)
+        result = await self._engine.query(question, history=history, system_prompt=self.system_prompt)
         citations = [
             Citation(
                 document=c["document"],

@@ -85,6 +85,8 @@ flowchart TD
 
 ## Domain → Engine Mapping
 
+All 10 domains are declared in one place — [`backend/app/domains.py`](backend/app/domains.py) — which the API schema, classifier prompt, and ingest map all derive from.
+
 | Agent | Domain Key | Engine | Best For |
 |-------|-----------|--------|----------|
 | HRPolicyAgent | `HR_POLICY` | LightRAG (hybrid) | Relational: leave, hours, entitlements, roles |
@@ -92,6 +94,22 @@ flowchart TD
 | ConductAgent | `CONDUCT` | PageIndex | Precise: exact rules, prohibited behaviors, section refs |
 | ProceduresAgent | `PROCEDURES` | LightRAG (hybrid) | Relational: steps, approval chains, responsible roles |
 | HandbookAgent | `HANDBOOK` | LightRAG (global) | Broad: culture, mission, company overview |
+| MedicalAgent | `MEDICAL` | PageIndex | Precise: reimbursement, coverage limits, hospital lists |
+| ITSecurityAgent | `IT_SECURITY` | PageIndex | Precise: device use, passwords, access rules |
+| ComplianceAgent | `COMPLIANCE` | PageIndex | Precise: labor law, PDPA, anti-corruption clauses |
+| FinanceAgent | `FINANCE` | PageIndex | Precise: expense caps, reimbursement, approval limits |
+| TrainingAgent | `TRAINING` | LightRAG (hybrid) | Relational: career paths, programs, eligibility, budgets |
+
+## Context-Engineering Layer
+
+Cross-cutting modules that shape what reaches the LLM and how its output is consumed:
+
+| Module | Responsibility |
+|--------|----------------|
+| [`app/domains.py`](backend/app/domains.py) | Single source of truth for the domain set; startup invariant keeps `schemas.DomainKey` in sync |
+| [`app/prompts.py`](backend/app/prompts.py) | All prompts; shared grounding + citation contract; output language driven by `settings.response_language` |
+| [`app/context_budget.py`](backend/app/context_budget.py) | Token-aware truncation / section-dropping + prompt-size logging (replaces ad-hoc char slices) |
+| `schemas.DomainClassification` / `GroundedAnswer` / `TreeNavigation` | Gemini `response_schema`s — the model can only emit valid shapes/domain keys |
 
 ## Query Flow
 

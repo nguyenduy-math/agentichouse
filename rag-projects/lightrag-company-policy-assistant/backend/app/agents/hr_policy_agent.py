@@ -12,6 +12,7 @@ from pathlib import Path
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
 from app.ingestion import extract_text
+from app.prompts import compose_system_prompt
 from app.services.lightrag_service import LightRAGService
 
 HR_ENTITY_TYPES = [
@@ -29,21 +30,21 @@ HR_ENTITY_TYPES = [
     "ngay_thang",       # ngày / thời hạn
 ]
 
-HR_SYSTEM_PROMPT = """\
-Bạn là chuyên gia tư vấn nội quy lao động của công ty. \
-Hãy trả lời bằng tiếng Việt, giọng điệu thân thiện và chuyên nghiệp như một đồng nghiệp HR nhiệt tình. \
-Trích dẫn theo định dạng [Tên Chính sách - Điều X] khi đề cập quy định cụ thể. \
-Nếu quy định khác nhau theo phòng ban hoặc vai trò, nêu rõ từng trường hợp. \
-Nếu câu hỏi ngoài phạm vi tài liệu, hướng dẫn liên hệ phòng Nhân sự.
-"""
+# Persona only — shared grounding + citation + language are added by
+# compose_system_prompt() so every agent answers under the same contract.
+HR_PERSONA = (
+    "Bạn là chuyên gia tư vấn nội quy lao động của công ty, "
+    "giọng điệu thân thiện và chuyên nghiệp như một đồng nghiệp HR nhiệt tình. "
+    "Nếu quy định khác nhau theo phòng ban hoặc vai trò, hãy nêu rõ từng trường hợp."
+)
 
 
 class HRPolicyAgent(BaseAgent):
     domain = "HR_POLICY"
     engine_type = "lightrag"
-    system_prompt = HR_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(HR_PERSONA)
         working_dir = str(Path(settings.lightrag_base_dir) / "hr_policy")
         self._engine = LightRAGService(
             working_dir=working_dir,
@@ -67,7 +68,8 @@ class HRPolicyAgent(BaseAgent):
         answer = await self._engine.query(
             question, mode="hybrid", history=history, user_prompt=self.system_prompt
         )
-        return AgentResponse(domain=self.domain, answer=answer)
+        entities = await self._engine.retrieve_entities(question, mode="hybrid")
+        return AgentResponse(domain=self.domain, answer=answer, entities=entities)
 
     async def index_document(self, file_path: Path) -> None:
         text = extract_text(file_path).strip()

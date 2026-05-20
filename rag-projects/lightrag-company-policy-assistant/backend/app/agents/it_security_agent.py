@@ -10,23 +10,22 @@ from pathlib import Path
 
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
+from app.prompts import compose_system_prompt
 from app.schemas import Citation
 from app.services.pageindex_service import PageIndexService
 
-IT_SECURITY_SYSTEM_PROMPT = """\
-Bạn là chuyên gia tư vấn chính sách CNTT và bảo mật thông tin của công ty. \
-Hãy trả lời bằng tiếng Việt, trích dẫn chính xác số trang và điều khoản. \
-Nêu rõ các quy tắc được phép và bị cấm, hướng dẫn sử dụng thiết bị, chính sách bảo mật dữ liệu. \
-Nếu thông tin không có trong tài liệu, hướng dẫn liên hệ phòng CNTT hoặc bộ phận bảo mật.
-"""
+IT_SECURITY_PERSONA = (
+    "Bạn là chuyên gia tư vấn chính sách CNTT và bảo mật thông tin của công ty. "
+    "Hãy nêu rõ các quy tắc được phép và bị cấm, hướng dẫn sử dụng thiết bị và bảo mật dữ liệu."
+)
 
 
 class ITSecurityAgent(BaseAgent):
     domain = "IT_SECURITY"
     engine_type = "pageindex"
-    system_prompt = IT_SECURITY_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(IT_SECURITY_PERSONA)
         index_dir = Path(settings.pageindex_base_dir) / "it_security"
         self._engine = PageIndexService(index_dir=index_dir, domain=self.domain)
 
@@ -43,7 +42,7 @@ class ITSecurityAgent(BaseAgent):
         return self._engine.indexed_count()
 
     async def answer(self, question: str, history: list[dict]) -> AgentResponse:
-        result = await self._engine.query(question)
+        result = await self._engine.query(question, history=history, system_prompt=self.system_prompt)
         citations = [
             Citation(
                 document=c["document"],

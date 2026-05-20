@@ -11,23 +11,23 @@ from pathlib import Path
 
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
+from app.prompts import compose_system_prompt
 from app.schemas import Citation
 from app.services.pageindex_service import PageIndexService
 
-FINANCE_SYSTEM_PROMPT = """\
-Bạn là chuyên gia tư vấn chính sách tài chính và kế toán của công ty. \
-Hãy trả lời bằng tiếng Việt, trích dẫn chính xác số trang, hạn mức và điều khoản từ tài liệu. \
-Nêu rõ mức trần chi phí, danh mục được phép hoàn ứng, quy trình phê duyệt và thời hạn nộp hồ sơ. \
-Nếu thông tin không có trong tài liệu, hướng dẫn liên hệ phòng Tài chính - Kế toán.
-"""
+FINANCE_PERSONA = (
+    "Bạn là chuyên gia tư vấn chính sách tài chính và kế toán của công ty. "
+    "Hãy nêu rõ mức trần chi phí, danh mục được phép hoàn ứng, quy trình phê duyệt "
+    "và thời hạn nộp hồ sơ."
+)
 
 
 class FinanceAgent(BaseAgent):
     domain = "FINANCE"
     engine_type = "pageindex"
-    system_prompt = FINANCE_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(FINANCE_PERSONA)
         index_dir = Path(settings.pageindex_base_dir) / "finance"
         self._engine = PageIndexService(index_dir=index_dir, domain=self.domain)
 
@@ -44,7 +44,7 @@ class FinanceAgent(BaseAgent):
         return self._engine.indexed_count()
 
     async def answer(self, question: str, history: list[dict]) -> AgentResponse:
-        result = await self._engine.query(question)
+        result = await self._engine.query(question, history=history, system_prompt=self.system_prompt)
         citations = [
             Citation(
                 document=c["document"],

@@ -12,6 +12,7 @@ from pathlib import Path
 from app.agents.base_agent import AgentResponse, BaseAgent
 from app.config import settings
 from app.ingestion import extract_text
+from app.prompts import compose_system_prompt
 from app.services.lightrag_service import LightRAGService
 
 HANDBOOK_ENTITY_TYPES = [
@@ -26,20 +27,19 @@ HANDBOOK_ENTITY_TYPES = [
     "ngay_thang",        # date
 ]
 
-HANDBOOK_SYSTEM_PROMPT = """\
-Bạn là hướng dẫn viên thân thiện của sổ tay nhân viên công ty. \
-Hãy trả lời bằng tiếng Việt với giọng điệu ấm áp, chào đón và dễ hiểu. \
-Giải thích văn hóa, giá trị, sứ mệnh và thông tin chung dựa chặt chẽ vào nội dung sổ tay. \
-Đặc biệt hữu ích cho nhân viên mới cần hiểu tổng quan về công ty.
-"""
+HANDBOOK_PERSONA = (
+    "Bạn là hướng dẫn viên thân thiện của sổ tay nhân viên công ty, "
+    "giọng điệu ấm áp, chào đón và dễ hiểu. "
+    "Giải thích văn hóa, giá trị, sứ mệnh và thông tin chung — đặc biệt hữu ích cho nhân viên mới."
+)
 
 
 class HandbookAgent(BaseAgent):
     domain = "HANDBOOK"
     engine_type = "lightrag"
-    system_prompt = HANDBOOK_SYSTEM_PROMPT
 
     def __init__(self) -> None:
+        self.system_prompt = compose_system_prompt(HANDBOOK_PERSONA)
         working_dir = str(Path(settings.lightrag_base_dir) / "handbook")
         self._engine = LightRAGService(
             working_dir=working_dir,
@@ -63,7 +63,8 @@ class HandbookAgent(BaseAgent):
         answer = await self._engine.query(
             question, mode="global", history=history, user_prompt=self.system_prompt
         )
-        return AgentResponse(domain=self.domain, answer=answer)
+        entities = await self._engine.retrieve_entities(question, mode="global")
+        return AgentResponse(domain=self.domain, answer=answer, entities=entities)
 
     async def index_document(self, file_path: Path) -> None:
         text = extract_text(file_path).strip()
