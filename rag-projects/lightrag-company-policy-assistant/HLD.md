@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-```
+```mermaid
 flowchart TD
     subgraph Client["Client Layer"]
         FE["React SPA\n(Vite :5173 dev / static prod)"]
@@ -19,31 +19,46 @@ flowchart TD
             R5["GET /admin/stats"]
         end
 
-        subgraph Orchestrator["OrchestratorAgent"]
-            CLS["classify_domains()\nGemini JSON call → domain keys"]
-            ROUTE["Route: single → direct\nCross-domain → fan-out"]
-            SYNTH["_synthesize()\nmerge agent answers"]
+        subgraph CtxEng["Context-Engineering Layer (cross-cutting)"]
+            DOM["domains.py\nsingle source of truth\n(10 domains, schema invariant)"]
+            PRM["prompts.py\ncentral prompts · grounding +\ncitation contract · language"]
+            BUD["context_budget.py\ntoken-aware truncation\n+ prompt-size logging"]
         end
 
-        subgraph Agents["Domain Specialist Agents"]
-            HR["HRPolicyAgent\nLightRAG · hr_policies/"]
-            BEN["BenefitsAgent\nPageIndex · benefits/"]
-            CON["ConductAgent\nPageIndex · conduct/"]
-            PRO["ProceduresAgent\nLightRAG · procedures/"]
-            HB["HandbookAgent\nLightRAG · handbooks/"]
+        subgraph Orchestrator["OrchestratorAgent"]
+            CLS["classify_domains()\nGemini response_schema\n+ recent history → domain keys"]
+            ROUTE["Route: none → greeting\nsingle → direct\ncross-domain → fan-out"]
+            SYNTH["_synthesize()\nbudgeted merge of answers"]
+        end
+
+        subgraph Agents["Domain Specialist Agents (10)"]
+            subgraph LAgents["LightRAG (hybrid/global)"]
+                HR["HRPolicyAgent · hr_policies/"]
+                PRO["ProceduresAgent · procedures/"]
+                HB["HandbookAgent · handbooks/"]
+                TRN["TrainingAgent · training/"]
+            end
+            subgraph PAgents["PageIndex (tree navigation)"]
+                BEN["BenefitsAgent · benefits/"]
+                CON["ConductAgent · conduct/"]
+                MED["MedicalAgent · medical/"]
+                ITS["ITSecurityAgent · it_security/"]
+                CMP["ComplianceAgent · compliance/"]
+                FIN["FinanceAgent · finance/"]
+            end
         end
 
         subgraph Services["Services"]
-            LSVC["LightRAGService\n(per-domain instance)"]
-            PSVC["PageIndexService\n(per-domain index dir)"]
+            LSVC["LightRAGService\nquery + retrieve_entities()\n(per-domain instance)"]
+            PSVC["PageIndexService\nnav → grounded answer\n(history + persona threaded)"]
         end
     end
 
     subgraph Storage["Storage Layer"]
-        NEO4J[("Neo4j\nGraph DB\nEntities + Relations\n(shared, one per domain working_dir)")]
-        LDIR[("rag_storage/lightrag/\n{hr_policy, procedures, handbook}/")]
-        PDIR[("rag_storage/pageindex/\n{benefits, conduct}/\n*.json trees + registry.json")]
-        DOCS[("data/documents/\n{hr_policies, benefits, conduct,\nprocedures, handbooks}/")]
+        NEO4J[("Neo4j\nGraph DB · Entities + Relations\n(shared, one per domain working_dir)")]
+        LDIR[("rag_storage/lightrag/\n{hr_policy, procedures,\nhandbook, training}/")]
+        PDIR[("rag_storage/pageindex/\n{benefits, conduct, medical, it_security,\ncompliance, finance}/ · *.json + registry.json")]
+        DOCS[("data/documents/\n10 doc_type sub-folders")]
     end
 
     subgraph Gemini["Google Gemini API"]
@@ -55,6 +70,11 @@ flowchart TD
     FE -->|"HTTP /api/*"| MW
     MW --> Routers
 
+    %% Context-engineering layer feeds orchestrator + agents
+    DOM -.->|"domain keys"| CLS
+    PRM -.->|"prompts + grounding"| CLS & SYNTH & Agents & PSVC
+    BUD -.->|"budget + log"| SYNTH & PSVC
+
     %% Ingest
     R1 --> Agents
     R2 -->|"doc_type → domain"| Agents
@@ -62,10 +82,11 @@ flowchart TD
 
     %% Chat
     R3 --> CLS
-    CLS -->|"Gemini JSON"| GLLM
-    ROUTE --> HR & BEN & CON & PRO & HB
-    HR & PRO & HB --> LSVC
-    BEN & CON --> PSVC
+    CLS -->|"response_schema JSON"| GLLM
+    CLS --> ROUTE
+    ROUTE --> LAgents & PAgents
+    HR & PRO & HB & TRN --> LSVC
+    BEN & CON & MED & ITS & CMP & FIN --> PSVC
     SYNTH -->|"Gemini merge"| GLLM
 
     %% Storage
@@ -113,21 +134,34 @@ Cross-cutting modules that shape what reaches the LLM and how its output is cons
 
 ## Query Flow
 
-```
+```text
 POST /chat { message, history }
   │
   ▼
 OrchestratorAgent.process_message()
   │
-  ├── classify_domains() → ["BENEFITS"] or ["HR_POLICY", "BENEFITS"]
-  │     └── Gemini JSON call (temperature=0)
+  ├── _trim_history()  (count user turns, not blind slice)
   │
-  ├── single domain ──→ agent.answer() ──→ ChatResponse
+  ├── classify_domains(message, history)
+  │     └── Gemini response_schema=DomainClassification (temp=0)
+  │           → ["BENEFITS"] | ["HR_POLICY","BENEFITS"] | []
+  │           (on error → safe fallback ["HR_POLICY","HANDBOOK"])
+  │
+  ├── no domain (greeting / off-topic) ──→ friendly prompt
+  ├── domains not yet indexed           ──→ "please upload docs"
+  │
+  ├── single domain ──→ agent.answer(q, history) ──→ ChatResponse
   │
   └── cross-domain
-        ├── asyncio.gather(agent1.answer(), agent2.answer())
-        └── _synthesize() ──→ Gemini merge ──→ ChatResponse
-              { answer, domains_consulted, citations, entities }
+        ├── asyncio.gather(agent.answer(q, history) …)
+        └── _synthesize() → rank · cap (max_docs) · fit_sections(budget)
+              → Gemini merge → ChatResponse
+                 { answer, domains_consulted, citations, entities }
+
+agent.answer():
+  • LightRAG → query(history, system_prompt) + retrieve_entities()  → entities
+  • PageIndex → nav (TreeNavigation schema) → grounded answer
+               (GroundedAnswer schema, persona + history threaded)  → citations
 ```
 
 ## Ingestion Flow
