@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Request
 
 from app.config import settings
+from app.domains import DOMAIN_BY_KEY
 from app.ingestion import collect_documents
 from app.schemas import AdminAgentsResponse, AdminStatsResponse
 
@@ -28,7 +30,7 @@ async def stats(request: Request) -> AdminStatsResponse:
 async def list_agents(request: Request) -> AdminAgentsResponse:
     orchestrator = request.app.state.orchestrator
     result = []
-    for domain, agent in orchestrator._agents.items():
+    for domain, agent in orchestrator.agent_items():
         result.append({
             "domain": domain,
             "engine_type": agent.engine_type,
@@ -40,15 +42,14 @@ async def list_agents(request: Request) -> AdminAgentsResponse:
 
 async def _reindex_all(orchestrator) -> None:
     """Background task: walk data/documents/ and re-index every file."""
-    from app.domains import DOC_TYPE_TO_DOMAIN
-
+    agent_map = dict(orchestrator.agent_items())
     base = Path(settings.document_folder)
-    for doc_type, domain in DOC_TYPE_TO_DOMAIN.items():
-        sub = base / doc_type
-        if not sub.exists():
+    for domain, agent in agent_map.items():
+        info = DOMAIN_BY_KEY.get(domain)
+        if info is None:
             continue
-        agent = orchestrator._agents.get(domain)
-        if agent is None:
+        sub = base / info.doc_type
+        if not sub.exists():
             continue
         try:
             texts, sources, _ = collect_documents(sub)
@@ -58,8 +59,68 @@ async def _reindex_all(orchestrator) -> None:
                 except Exception as exc:
                     logger.warning("Reindex failed for %s: %s", source, exc)
         except Exception as exc:
-            logger.warning("Reindex failed for %s: %s", doc_type, exc)
+            logger.warning("Reindex failed for %s: %s", domain, exc)
     logger.info("Reindex complete.")
+
+
+async def _reset_all(orchestrator) -> dict:
+    """Wipe Neo4j graph + local LightRAG storage, then return a summary."""
+    from neo4j import AsyncGraphDatabase
+
+    # 1. Shut down all LightRAG instances so file handles are released.
+    for _domain, agent in orchestrator.agent_items():
+        try:
+            await agent.shutdown()
+        except Exception as exc:
+            logger.warning("Shutdown error during reset: %s", exc)
+
+    # 2. Clear Neo4j — delete all nodes and relationships.
+    neo4j_cleared = False
+    driver = None
+    try:
+        driver = AsyncGraphDatabase.driver(
+            settings.neo4j_uri,
+            auth=(settings.neo4j_username, settings.neo4j_password),
+        )
+        async with driver.session(database=settings.neo4j_database) as session:
+            await session.run("MATCH (n) DETACH DELETE n")
+        neo4j_cleared = True
+        logger.info("Neo4j graph cleared.")
+    except Exception as exc:
+        logger.error("Failed to clear Neo4j: %s", exc)
+    finally:
+        if driver:
+            await driver.close()
+
+    # 3. Delete local LightRAG storage dirs (KV + vector stores).
+    storage_dir = Path(settings.lightrag_base_dir)
+    if storage_dir.exists():
+        shutil.rmtree(storage_dir)
+        logger.info("Deleted LightRAG storage: %s", storage_dir)
+
+    # 4. Re-initialize all agents with fresh (empty) storage.
+    for _domain, agent in orchestrator.agent_items():
+        try:
+            await agent.initialize()
+            agent.reset_doc_count()
+        except Exception as exc:
+            logger.error("Re-init error after reset: %s", exc)
+
+    return {"neo4j_cleared": neo4j_cleared, "storage_deleted": str(storage_dir)}
+
+
+@router.post("/reset")
+async def reset(request: Request) -> dict:
+    """Wipe all Neo4j nodes and local LightRAG storage, then re-initialize.
+
+    Call POST /admin/reindex afterwards to re-insert documents in Vietnamese.
+    """
+    orchestrator = request.app.state.orchestrator
+    result = await _reset_all(orchestrator)
+    return {
+        "message": "Reset complete. Call POST /admin/reindex to re-insert documents.",
+        **result,
+    }
 
 
 @router.post("/reindex")

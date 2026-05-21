@@ -125,11 +125,7 @@ class OrchestratorAgent:
         # No policy domain matched (greeting, thanks, off-topic).
         if not domains:
             return OrchestratorResponse(
-                answer=(
-                    "Xin chào! Tôi là trợ lý chính sách của công ty. "
-                    "Bạn có thể hỏi tôi về nội quy lao động, phúc lợi, quy trình, "
-                    "y tế, bảo mật CNTT, tài chính, đào tạo và nhiều lĩnh vực khác."
-                ),
+                answer=prompts.NO_POLICY_DOMAIN_RESPONSE,
                 domains_consulted=[],
             )
 
@@ -142,10 +138,7 @@ class OrchestratorAgent:
 
         if not ready_domains:
             return OrchestratorResponse(
-                answer=(
-                    "Chưa có tài liệu nào được nạp cho các lĩnh vực liên quan "
-                    f"({', '.join(domains)}). Vui lòng tải lên tài liệu chính sách trước."
-                ),
+                answer=prompts.no_documents_response(domains),
                 domains_consulted=domains,
             )
 
@@ -203,6 +196,9 @@ class OrchestratorAgent:
     # ------------------------------------------------------------------
     # Introspection
     # ------------------------------------------------------------------
+
+    def agent_items(self) -> list[tuple[str, BaseAgent]]:
+        return list(self._agents.items())
 
     def agent_health_map(self) -> dict[str, AgentHealth]:
         return {domain: agent.health() for domain, agent in self._agents.items()}

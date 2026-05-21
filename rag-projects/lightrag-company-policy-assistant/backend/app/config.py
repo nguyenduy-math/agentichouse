@@ -59,7 +59,10 @@ class Settings(BaseSettings):
     synthesis_input_budget_tokens: int = 4000   # merged specialist answers → synthesis prompt
     tree_nav_budget_tokens: int = 4000          # compacted PageIndex tree → navigation prompt
     answer_content_budget_tokens: int = 3000    # extracted page text → answer prompt
-    max_docs_per_synthesis: int = 5             # cap fan-out before synthesis (C3)
+    # Cap on specialist answers fed into synthesis. The classifier prompt instructs
+    # the model to return 1–3 domains, so in practice this rarely exceeds 3; the
+    # cap here is a safety net for callers that bypass the prompt constraint (C3).
+    max_docs_per_synthesis: int = 5
     max_sections_per_doc: int = 3               # cap sections read per document
     tree_max_depth: int = 3                     # how deep to walk the PageIndex tree (C4)
     tree_summary_char_cap: int = 200            # per-node summary trim in the nav prompt (C4)

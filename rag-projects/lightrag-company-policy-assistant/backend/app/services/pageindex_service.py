@@ -297,8 +297,9 @@ class PageIndexService:
                 citations=[],
             )
 
-        history_block = prompts.format_history(history, settings.default_history_turns)
-        persona = system_prompt or "Bạn là chuyên gia tư vấn chính sách của công ty."
+        # History is already pre-trimmed by the orchestrator — no second trim here.
+        history_block = prompts.format_history(history)
+        persona = system_prompt or prompts.DEFAULT_PAGEINDEX_PERSONA
 
         # Cap the number of trees we fan out to, to bound cost/context (C3).
         items = list(self._registry.items())[: settings.max_docs_per_synthesis]
@@ -343,7 +344,9 @@ class PageIndexService:
             n=len(answers), answers_block=answers_block, question=question
         )
         log_prompt_size("pageindex.synthesize", synth_prompt)
-        synth = self._gemini_client().models.generate_content(
+        # Use asyncio.to_thread to avoid blocking the event loop with a sync SDK call.
+        synth = await asyncio.to_thread(
+            self._gemini_client().models.generate_content,
             model=settings.gemini_llm_model,
             contents=synth_prompt,
             config=types.GenerateContentConfig(temperature=0.2),

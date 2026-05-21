@@ -1,0 +1,25 @@
+stateDiagram-v2
+    [*] --> pending : CSV upload\nPOST /claims/upload
+
+    pending --> analyzing : Batch job picks up\n(nightly 2AM or manual trigger)
+
+    analyzing --> analyzed : LLM + Rule scoring\n+ Graph enrichment complete\nFraudAnalysis row written
+
+    analyzing --> pending : LLM call failed\n(retry next batch)
+
+    analyzed --> reviewed : Investigator submits decision\nPOST /review/{id}/decision
+
+    reviewed --> [*]
+
+    state analyzed {
+        [*] --> low_risk    : combined_score 0–30
+        [*] --> medium_risk : combined_score 31–60
+        [*] --> high_risk   : combined_score 61–80
+        [*] --> critical    : combined_score 81–100
+    }
+
+    state reviewed {
+        [*] --> legitimate
+        [*] --> suspicious
+        [*] --> confirmed_fraud
+    }

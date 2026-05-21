@@ -1,0 +1,430 @@
+{
+  "doc-caf21e8a249d00b3005282c846d4037a": {
+    "relation_pairs": [
+      [
+        "Email Ethics",
+        "Ethics"
+      ],
+      [
+        "Giao Tiếp Nội Bộ",
+        "Slack"
+      ],
+      [
+        "Chỗ Ngồi Cố Định Theo Phòng Ban",
+        "Phòng Ban"
+      ],
+      [
+        "HR Benefits",
+        "Phúc Lợi"
+      ],
+      [
+        "Khảo Sát Độ Hài Lòng Nhân Viên (eNPS)",
+        "Tính Ẩn Danh"
+      ],
+      [
+        "Doanh Nghiệp Việt Nam",
+        "Sứ Mệnh Agentic House"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Chính Sách Làm Việc Linh Hoạt"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Giá Trị Cốt Lõi Agentic House"
+      ],
+      [
+        "Bếp/Pantry",
+        "Quy Định Lưu Trữ Thức Ăn"
+      ],
+      [
+        "HRM System",
+        "Nghỉ Phép"
+      ],
+      [
+        "Radical Candor",
+        "Văn Hóa Phản Hồi"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Văn Hóa Làm Việc Agentic House"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng HR"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Văn Phòng Hà Nội"
+      ],
+      [
+        "CHRO",
+        "Phòng HR"
+      ],
+      [
+        "IT Helpdesk",
+        "Máy Nội Bộ 100"
+      ],
+      [
+        "Confluence HR Employee Handbook",
+        "Sổ Tay Nhân Viên"
+      ],
+      [
+        "Email Finance",
+        "Finance"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Finance"
+      ],
+      [
+        "Năm 2030",
+        "Tầm Nhìn Agentic House"
+      ],
+      [
+        "Agenda Cuộc Họp",
+        "Văn Hóa Cuộc Họp"
+      ],
+      [
+        "Finance",
+        "Hoàn Ứng"
+      ],
+      [
+        "Action Items Cuộc Họp",
+        "Văn Hóa Cuộc Họp"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Sổ Tay Nhân Viên"
+      ],
+      [
+        "CPO",
+        "Phòng Product"
+      ],
+      [
+        "Head Of CS",
+        "Phòng Customer Success"
+      ],
+      [
+        "Nhân Viên Thử Việc",
+        "Work From Home (WFH)"
+      ],
+      [
+        "CSO",
+        "Phòng Sales & BD"
+      ],
+      [
+        "Nhân Viên",
+        "Nhân Viên Đã Qua Thử Việc"
+      ],
+      [
+        "IT Helpdesk",
+        "Mạng"
+      ],
+      [
+        "Chính Sách Mang Thú Cưng Vào Văn Phòng",
+        "Thú Cưng"
+      ],
+      [
+        "HR",
+        "Onboarding"
+      ],
+      [
+        "Khảo Sát Độ Hài Lòng Nhân Viên (eNPS)",
+        "Xem Xét Nghiêm Túc"
+      ],
+      [
+        "Google Calendar",
+        "Phòng Họp"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Văn Phòng TP. Hồ Chí Minh"
+      ],
+      [
+        "Giờ Làm Việc Chuẩn",
+        "Thứ Hai - Thứ Sáu"
+      ],
+      [
+        "Email",
+        "Giao Tiếp Nội Bộ"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Marketing"
+      ],
+      [
+        "Thú Cưng",
+        "Tiêm Phòng Đầy Đủ"
+      ],
+      [
+        "Chính Sách Làm Việc Linh Hoạt",
+        "Work From Home (WFH)"
+      ],
+      [
+        "Chấm Công",
+        "HRM System"
+      ],
+      [
+        "Bếp/Pantry",
+        "Quy Định Dọn Dẹp"
+      ],
+      [
+        "Bảo Hiểm",
+        "HR Benefits"
+      ],
+      [
+        "Chính Sách Chấm Công",
+        "Vắng Mặt Không Có Lý Do"
+      ],
+      [
+        "IT Helpdesk",
+        "Slack #it-support"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Data & AI"
+      ],
+      [
+        "CFO",
+        "Phòng Finance"
+      ],
+      [
+        "IT Helpdesk",
+        "Phần Mềm"
+      ],
+      [
+        "1:1 Hàng Tuần Với Trưởng Phòng",
+        "Trưởng Phòng"
+      ],
+      [
+        "Chính Sách Làm Việc Linh Hoạt",
+        "Flexible Hours"
+      ],
+      [
+        "Nhân Viên Đã Qua Thử Việc",
+        "Work From Home (WFH)"
+      ],
+      [
+        "Khu Vực Hot-Desk",
+        "Nhân Viên WFH"
+      ],
+      [
+        "Chính Sách Tôn Trọng Giờ Ngoài Làm Việc",
+        "Phản Hồi Ngoài Giờ Làm Việc"
+      ],
+      [
+        "Giá Trị Cốt Lõi Agentic House",
+        "Thẳng Thắn Và Tôn Trọng"
+      ],
+      [
+        "Phiên Bản 4.0",
+        "Sổ Tay Nhân Viên"
+      ],
+      [
+        "Họp Nội Bộ",
+        "Phòng Họp"
+      ],
+      [
+        "Chính Sách Chấm Công",
+        "Đi Trễ/Về Sớm"
+      ],
+      [
+        "Chính Sách Mang Thú Cưng Vào Văn Phòng",
+        "Trưởng Phòng"
+      ],
+      [
+        "CTO",
+        "Phòng Engineering"
+      ],
+      [
+        "Giao Tiếp Nội Bộ",
+        "Jira/Confluence"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Văn Phòng Đà Nẵng"
+      ],
+      [
+        "Văn Hóa Làm Việc Agentic House",
+        "Văn Hóa Phản Hồi"
+      ],
+      [
+        "Trưởng Phòng",
+        "Đi Trễ/Về Sớm"
+      ],
+      [
+        "Giới Hạn Thời Gian 30 Phút",
+        "Phòng Điện Thoại (Phone Booth)"
+      ],
+      [
+        "HR",
+        "Hợp Đồng"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Chính Sách Chấm Công"
+      ],
+      [
+        "Báo Cáo Vi Phạm",
+        "Ethics"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Customer Success"
+      ],
+      [
+        "1:1 Hàng Tuần Với Trưởng Phòng",
+        "Văn Hóa Phản Hồi"
+      ],
+      [
+        "01/01/2024",
+        "Phiên Bản 4.0"
+      ],
+      [
+        "Nhân Viên",
+        "Nhân Viên Thử Việc"
+      ],
+      [
+        "General Counsel",
+        "Phòng Legal & Compliance"
+      ],
+      [
+        "Doanh Nghiệp Đông Nam Á",
+        "Sứ Mệnh Agentic House"
+      ],
+      [
+        "Email HR Benefits",
+        "HR Benefits"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Product"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Engineering"
+      ],
+      [
+        "Công Việc",
+        "Jira/Confluence"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Sứ Mệnh Agentic House"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Cơ Cấu Tổ Chức Agentic House"
+      ],
+      [
+        "Core Hours",
+        "Flexible Hours"
+      ],
+      [
+        "CMO",
+        "Phòng Marketing"
+      ],
+      [
+        "IT Helpdesk",
+        "Máy Tính"
+      ],
+      [
+        "Email HR",
+        "HR"
+      ],
+      [
+        "Giải Pháp AI Thực Tiễn",
+        "Sứ Mệnh Agentic House"
+      ],
+      [
+        "Trưởng Phòng",
+        "Work From Home (WFH)"
+      ],
+      [
+        "Giá Trị Cốt Lõi Agentic House",
+        "Khách Hàng Là Trung Tâm"
+      ],
+      [
+        "Cuộc Họp 1:1 Hàng Tuần Với Trưởng Phòng",
+        "Không Gian An Toàn"
+      ],
+      [
+        "App HRM",
+        "Chính Sách Chấm Công"
+      ],
+      [
+        "Nhân Viên",
+        "Sổ Tay Nhân Viên"
+      ],
+      [
+        "Giá Trị Cốt Lõi Agentic House",
+        "Vui Vẻ Và Có Ý Nghĩa"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Sales & BD"
+      ],
+      [
+        "HRM System",
+        "Hrm.agentichouse.vn"
+      ],
+      [
+        "Văn Hóa Cuộc Họp",
+        "Văn Hóa Làm Việc Agentic House"
+      ],
+      [
+        "Jira/Confluence",
+        "Tài Liệu Kỹ Thuật"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Tầm Nhìn Agentic House"
+      ],
+      [
+        "Cơ Cấu Tổ Chức Agentic House",
+        "Phòng Legal & Compliance"
+      ],
+      [
+        "Chính Sách Mang Thú Cưng Vào Văn Phòng",
+        "Thứ Sáu"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Giờ Làm Việc Chuẩn"
+      ],
+      [
+        "Giá Trị Cốt Lõi Agentic House",
+        "Học Hỏi Liên Tục"
+      ],
+      [
+        "Khu Vực Hot-Desk",
+        "Khách"
+      ],
+      [
+        "Giá Trị Cốt Lõi Agentic House",
+        "Làm Chủ Kết Quả"
+      ],
+      [
+        "Head Of AI",
+        "Phòng Data & AI"
+      ],
+      [
+        "Giao Tiếp Nội Bộ",
+        "Văn Hóa Làm Việc Agentic House"
+      ],
+      [
+        "Finance",
+        "Tài Chính"
+      ],
+      [
+        "Cuộc Gọi Riêng Tư",
+        "Phòng Điện Thoại (Phone Booth)"
+      ]
+    ],
+    "count": 105,
+    "create_time": 1779334327,
+    "update_time": 1779334327,
+    "_id": "doc-caf21e8a249d00b3005282c846d4037a"
+  }
+}

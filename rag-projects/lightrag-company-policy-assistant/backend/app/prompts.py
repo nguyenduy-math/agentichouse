@@ -12,16 +12,43 @@ Conventions enforced here:
     (audit refs: A3, A4).
   * The classifier prompt is built from ``domains.domain_lines()`` so it can never
     drift from the real domain set, and it carries few-shot examples (audit ref: A5).
+  * All user-facing fallback messages live here (not scattered in orchestrator / services)
+    so tone and wording are reviewable in one place.
 
 Prompt changelog:
   v1 (2026-05-20) — initial extraction + few-shot classifier, shared grounding/citation,
                     language-driven synthesis & answer prompts.
+  v2 (2026-05-21) — move orchestrator fallback messages and PageIndex default persona here.
 """
 
 from __future__ import annotations
 
 from app.config import settings
 from app.domains import domain_lines
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator fallback responses — user-facing messages when no domain
+# matched or no documents have been loaded yet. Kept here so tone and wording
+# are reviewable alongside all other prompts.
+# ---------------------------------------------------------------------------
+
+NO_POLICY_DOMAIN_RESPONSE = (
+    "Xin chào! Tôi là trợ lý chính sách của công ty. "
+    "Bạn có thể hỏi tôi về nội quy lao động, phúc lợi, quy trình, "
+    "y tế, bảo mật CNTT, tài chính, đào tạo và nhiều lĩnh vực khác."
+)
+
+
+def no_documents_response(domains: list[str]) -> str:
+    return (
+        "Chưa có tài liệu nào được nạp cho các lĩnh vực liên quan "
+        f"({', '.join(domains)}). Vui lòng tải lên tài liệu chính sách trước."
+    )
+
+
+# Fallback persona for PageIndex when no agent system_prompt is supplied.
+DEFAULT_PAGEINDEX_PERSONA = "Bạn là chuyên gia tư vấn chính sách của công ty."
 
 
 # ---------------------------------------------------------------------------

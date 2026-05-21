@@ -53,6 +53,9 @@ class BaseAgent(ABC):
     def indexed_count(self) -> int:
         """Return the number of indexed documents."""
 
+    def reset_doc_count(self) -> None:
+        """Reset the indexed-document counter. Override in agents that track it."""
+
     def health(self) -> AgentHealth:
         return AgentHealth(
             ready=self.is_ready(),
