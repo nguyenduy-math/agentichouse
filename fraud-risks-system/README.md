@@ -16,7 +16,7 @@ CSV Upload → Claims DB (PostgreSQL)
         [Nightly Batch @ 2am]
                 ↓
     ┌─────────────────────────┐     ┌──────────────────────────┐
-    │  Gemini LLM Analyzer    │  +  │  Rule-Based Signals      │
+    │  Qwen2.5 LLM Analyzer   │  +  │  Rule-Based Signals      │
     │  (narrative analysis)   │     │  (codes, amounts, dates) │
     └─────────────────────────┘     └──────────────────────────┘
                 ↓
@@ -78,7 +78,7 @@ Hồ sơ bị gắn cờ mạng lưới hiển thị huy hiệu tím **Network R
 | Backend | FastAPI + Uvicorn (Python) |
 | Relational DB | PostgreSQL 16 (Docker) |
 | Graph DB | Neo4j 5 + APOC plugin (Docker) |
-| LLM | Google Gemini `gemini-2.5-flash` |
+| LLM | Qwen2.5 via [SiliconFlow](https://siliconflow.cn) (OpenAI-compatible API) |
 | Scheduler | APScheduler (nightly batch) |
 | Frontend | React + Vite |
 
@@ -89,7 +89,7 @@ Hồ sơ bị gắn cờ mạng lưới hiển thị huy hiệu tím **Network R
 - Python 3.10+
 - Node.js 18+
 - Docker + Docker Compose
-- Google Gemini API key — [get one here](https://aistudio.google.com/apikey)
+- SiliconFlow API key — [get one here](https://siliconflow.cn)
 
 ---
 
@@ -97,18 +97,28 @@ Hồ sơ bị gắn cờ mạng lưới hiển thị huy hiệu tím **Network R
 
 ### 1. Start the databases
 
-```bash
-docker compose up -d
-```
-
-Starts PostgreSQL (port `5432`) and Neo4j (ports `7474` browser UI, `7687` Bolt). Wait for both to be healthy:
+`docker-compose.yml` defines two sets of services. Start only the active **v2** containers:
 
 ```bash
-docker ps --filter name=fraud-postgres
-docker ps --filter name=fraud-neo4j
+docker compose up -d postgres-v2 neo4j-v2
 ```
 
-Neo4j Browser is available at `http://localhost:7474` (login: `neo4j` / `fraud-neo4j-secret`).
+Wait for both to be healthy:
+
+```bash
+docker ps --filter name=fraud-postgres-v2
+docker ps --filter name=fraud-neo4j-v2
+```
+
+| Service | Container | Port |
+|---|---|---|
+| PostgreSQL v2 | `fraud-postgres-v2` | `5433` |
+| Neo4j v2 (browser UI) | `fraud-neo4j-v2` | `7475` |
+| Neo4j v2 (Bolt) | `fraud-neo4j-v2` | `7688` |
+
+Neo4j Browser is available at `http://localhost:7475` (login: `neo4j` / `fraud-neo4j-secret`).
+
+> **Old containers** (`fraud-postgres` on `5432`, `fraud-neo4j` on `7474`/`7687`) are kept in `docker-compose.yml` for data preservation and are not started by the command above.
 
 ### 2. Set up the backend
 
@@ -128,10 +138,10 @@ cp .env.example .env
 Set at minimum:
 
 ```env
-GEMINI_API_KEY=your-key-here
+LLM_API_KEY=your-siliconflow-key-here
 ```
 
-The Neo4j and PostgreSQL defaults match `docker-compose.yml` and need no changes unless you modified the passwords.
+The Neo4j and PostgreSQL defaults in `.env.example` already point to the v2 ports (`5433` / `7688`) and need no changes unless you modified the passwords.
 
 Start the API server:
 
@@ -182,7 +192,7 @@ Bộ dữ liệu mẫu với 25 hồ sơ BHYT Việt Nam tổng hợp tại `bac
 Click **Run Batch Now** in the Review Queue tab, or wait for the nightly run at 2:00 AM. The batch runs in two passes:
 
 **Pass 1 — Phân tích từng hồ sơ** (runs in parallel per claim)
-- Gemini LLM phân tích mô tả hồ sơ → điểm rủi ro + cờ cảnh báo + giải thích **bằng tiếng Việt**
+- Qwen2.5 LLM (SiliconFlow) phân tích mô tả hồ sơ → điểm rủi ro + cờ cảnh báo + giải thích **bằng tiếng Việt**
 - Rule engine kiểm tra số tiền VND, số lượng dịch vụ, và thời gian nộp hồ sơ
 - Combined score ghi vào `fraud_analyses`
 
@@ -227,7 +237,7 @@ Each decision is stored and contributes to your labeled dataset.
 
 ### Step 4 — Explore the Graph
 
-Open **http://localhost:7474** to query the patient profile graph directly:
+Open **http://localhost:7475** to query the patient profile graph directly:
 
 ```cypher
 // View the full graph (small datasets)
@@ -256,7 +266,7 @@ The **Stats** tab shows your label accumulation. Phase 2 ML training (XGBoost/Li
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | System health (DB + Gemini) |
+| `GET` | `/health` | System health (DB + LLM) |
 | `POST` | `/claims/upload` | Upload CSV file |
 | `GET` | `/claims` | List claims with filters |
 | `GET` | `/claims/{id}` | Claim detail + latest analysis |
@@ -278,10 +288,11 @@ All settings are in `backend/.env`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `GEMINI_API_KEY` | — | Required. Your Google Gemini API key |
-| `GEMINI_LLM_MODEL` | `gemini-2.5-flash` | Gemini model to use |
-| `DATABASE_URL` | `postgresql+asyncpg://fraud:fraud-secret@localhost:5432/fraud_detection` | PostgreSQL connection string |
-| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j Bolt URI |
+| `LLM_API_KEY` | — | Required. Your SiliconFlow API key |
+| `LLM_API_BASE` | `https://api.siliconflow.cn/v1` | OpenAI-compatible API base URL |
+| `LLM_MODEL` | `Qwen/Qwen2.5-7B-Instruct` | Model name (e.g. `Qwen/Qwen2.5-14B-Instruct` for higher accuracy) |
+| `DATABASE_URL` | `postgresql+asyncpg://fraud:fraud-secret@localhost:5433/fraud_detection` | PostgreSQL connection string (v2 container) |
+| `NEO4J_URI` | `bolt://localhost:7688` | Neo4j Bolt URI (v2 container) |
 | `NEO4J_USERNAME` | `neo4j` | Neo4j username |
 | `NEO4J_PASSWORD` | `fraud-neo4j-secret` | Must match `docker-compose.yml` `NEO4J_AUTH` |
 | `BATCH_CRON_HOUR` | `2` | Hour for nightly batch (0–23) |
@@ -320,7 +331,7 @@ File `backend/data/sample_claims.csv` chứa 25 hồ sơ BHYT Việt Nam tổng 
 
 ```
 fraud-risks-system/
-├── docker-compose.yml              # PostgreSQL + Neo4j services
+├── docker-compose.yml              # PostgreSQL + Neo4j services (v1 legacy + v2 active)
 ├── backend/
 │   ├── .env.example                # Configuration template
 │   ├── requirements.txt
@@ -332,7 +343,7 @@ fraud-risks-system/
 │       ├── database.py             # SQLAlchemy async engine
 │       ├── models.py               # ORM: Claim, FraudAnalysis, Review, BatchRun
 │       ├── schemas.py              # Pydantic request/response models
-│       ├── fraud_analyzer.py       # Gemini LLM — prompt + phân tích bằng tiếng Việt, ngưỡng VND
+│       ├── fraud_analyzer.py       # Qwen2.5 LLM (SiliconFlow) — prompt + phân tích bằng tiếng Việt, ngưỡng VND
 │       ├── batch_pipeline.py       # APScheduler nightly job + graph enrichment trigger
 │       ├── graph_engine.py         # Neo4j patient profile graph sync + 4 Cypher fraud queries
 │       ├── feature_extractor.py    # ML feature extraction (Phase 2 prep)
@@ -393,12 +404,12 @@ Train an XGBoost/LightGBM classifier on structured features extracted by `featur
 
 ## Bảo Mật & Tuân Thủ Pháp Luật Việt Nam
 
-Hệ thống sử dụng Google Gemini API (cloud). Hồ sơ BHYT chứa thông tin sức khỏe cá nhân thuộc phạm vi bảo vệ theo pháp luật Việt Nam.
+Hệ thống sử dụng SiliconFlow API (cloud, máy chủ đặt tại Trung Quốc). Hồ sơ BHYT chứa thông tin sức khỏe cá nhân thuộc phạm vi bảo vệ theo pháp luật Việt Nam.
 
 **Trước khi xử lý dữ liệu bệnh nhân thực:**
 
 - Tuân thủ **Nghị định 13/2023/NĐ-CP** về bảo vệ dữ liệu cá nhân và **Luật An toàn thông tin mạng 2015**
-- Ký **thỏa thuận bảo mật dữ liệu** với Google Cloud (Data Processing Amendment)
-- Hoặc chuyển sang **LLM cục bộ** (Llama 3, Qwen2.5 via Ollama) bằng cách thay thế Gemini client trong `fraud_analyzer.py` — giao diện structured output giữ nguyên
+- Ký **thỏa thuận bảo mật dữ liệu** với nhà cung cấp API (SiliconFlow Data Processing Agreement)
+- Hoặc chuyển sang **LLM cục bộ** (Qwen2.5 via Ollama) bằng cách đổi `LLM_API_BASE=http://localhost:11434/v1` và `LLM_API_KEY=ollama` trong `.env` — không cần thay đổi code
 - **Ẩn danh hóa** thông tin định danh bệnh nhân (họ tên, số CMND, địa chỉ) trong narrative trước khi gửi lên API
 - Neo4j chạy hoàn toàn on-premises — không có dữ liệu bệnh nhân rời khỏi hạ tầng nội bộ qua tầng đồ thị

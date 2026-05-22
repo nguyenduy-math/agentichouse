@@ -146,4 +146,4 @@ class BatchStatusResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     db_connected: bool
-    gemini_model: str
+    llm_model: str

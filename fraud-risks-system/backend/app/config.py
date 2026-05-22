@@ -14,8 +14,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    gemini_api_key: str
-    gemini_llm_model: str = "gemini-2.5-flash"
+    llm_api_key: str
+    llm_api_base: str = "https://api.siliconflow.cn/v1"
+    llm_model: str = "Qwen/Qwen2.5-7B-Instruct"
 
     database_url: str = "postgresql+asyncpg://fraud:fraud-secret@localhost:5432/fraud_detection"
 

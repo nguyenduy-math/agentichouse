@@ -3,15 +3,14 @@ from __future__ import annotations
 import json
 import logging
 
-from google import genai
-from google.genai import types
+from openai import AsyncOpenAI
 
 from app.config import settings
 from app.schemas import FraudFlag
 
 logger = logging.getLogger(__name__)
 
-_client: genai.Client | None = None
+_client: AsyncOpenAI | None = None
 
 SYSTEM_PROMPT = """Bạn là chuyên gia phát hiện gian lận hồ sơ thanh toán bảo hiểm y tế (BHYT) tại Việt Nam với kiến thức sâu về:
 - Mã bệnh ICD-10 và danh mục dịch vụ kỹ thuật y tế Việt Nam (Thông tư 39/2018/TT-BYT)
@@ -29,32 +28,33 @@ SYSTEM_PROMPT = """Bạn là chuyên gia phát hiện gian lận hồ sơ thanh 
 Phân tích thông tin hồ sơ và mô tả lâm sàng để phát hiện dấu hiệu gian lận. Chỉ đánh dấu các bất thường có căn cứ rõ ràng — tránh cảnh báo nhầm đối với hồ sơ hợp lệ.
 Phản hồi bằng tiếng Việt."""
 
-ANALYSIS_TOOL = types.Tool(
-    function_declarations=[
-        types.FunctionDeclaration(
-            name="report_fraud_analysis",
-            description="Report the structured fraud risk analysis for a healthcare claim",
-            parameters=types.Schema(
-                type="OBJECT",
-                properties={
-                    "risk_score": types.Schema(
-                        type="INTEGER",
-                        description="Overall fraud risk score from 0 (clean) to 100 (highly suspicious)"
-                    ),
-                    "risk_level": types.Schema(
-                        type="STRING",
-                        enum=["low", "medium", "high", "critical"],
-                        description="Risk category: low=0-25, medium=26-50, high=51-75, critical=76-100"
-                    ),
-                    "flags": types.Schema(
-                        type="ARRAY",
-                        description="Specific fraud indicators found",
-                        items=types.Schema(
-                            type="OBJECT",
-                            properties={
-                                "type": types.Schema(
-                                    type="STRING",
-                                    enum=[
+ANALYSIS_TOOL = [
+    {
+        "type": "function",
+        "function": {
+            "name": "report_fraud_analysis",
+            "description": "Report the structured fraud risk analysis for a healthcare claim",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "risk_score": {
+                        "type": "integer",
+                        "description": "Overall fraud risk score from 0 (clean) to 100 (highly suspicious)",
+                    },
+                    "risk_level": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"],
+                        "description": "Risk category: low=0-25, medium=26-50, high=51-75, critical=76-100",
+                    },
+                    "flags": {
+                        "type": "array",
+                        "description": "Specific fraud indicators found",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
                                         "upcoding",
                                         "phantom_billing",
                                         "unbundling",
@@ -65,36 +65,36 @@ ANALYSIS_TOOL = types.Tool(
                                         "timing_anomaly",
                                         "code_mismatch",
                                         "excessive_billing",
-                                    ]
-                                ),
-                                "description": types.Schema(
-                                    type="STRING",
-                                    description="Specific evidence from the claim supporting this flag"
-                                ),
-                                "severity": types.Schema(
-                                    type="STRING",
-                                    enum=["low", "medium", "high"]
-                                ),
+                                    ],
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "description": "Specific evidence from the claim supporting this flag",
+                                },
+                                "severity": {
+                                    "type": "string",
+                                    "enum": ["low", "medium", "high"],
+                                },
                             },
-                            required=["type", "description", "severity"],
-                        ),
-                    ),
-                    "explanation": types.Schema(
-                        type="STRING",
-                        description="Tóm tắt bằng tiếng Việt cho điều tra viên (2-4 câu) về lý do hồ sơ bị nghi ngờ gian lận. Respond in Vietnamese."
-                    ),
+                            "required": ["type", "description", "severity"],
+                        },
+                    },
+                    "explanation": {
+                        "type": "string",
+                        "description": "Tóm tắt bằng tiếng Việt cho điều tra viên (2-4 câu) về lý do hồ sơ bị nghi ngờ gian lận. Respond in Vietnamese.",
+                    },
                 },
-                required=["risk_score", "risk_level", "flags", "explanation"],
-            ),
-        )
-    ]
-)
+                "required": ["risk_score", "risk_level", "flags", "explanation"],
+            },
+        },
+    }
+]
 
 
-def _get_client() -> genai.Client:
+def _get_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = genai.Client(api_key=settings.gemini_api_key)
+        _client = AsyncOpenAI(api_key=settings.llm_api_key, base_url=settings.llm_api_base)
     return _client
 
 
@@ -126,38 +126,33 @@ def _build_claim_prompt(claim_data: dict) -> str:
 
 
 async def analyze_claim(claim_data: dict) -> dict:
-    """Analyze a single claim with Gemini. Returns risk_score, risk_level, flags, explanation."""
+    """Analyze a single claim with the configured LLM. Returns risk_score, risk_level, flags, explanation."""
     prompt = _build_claim_prompt(claim_data)
 
     try:
-        response = await _get_client().aio.models.generate_content(
-            model=settings.gemini_llm_model,
-            contents=[types.Content(role="user", parts=[types.Part(text=prompt)])],
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                temperature=0.1,
-                tools=[ANALYSIS_TOOL],
-                tool_config=types.ToolConfig(
-                    function_calling_config=types.FunctionCallingConfig(
-                        mode="ANY",
-                        allowed_function_names=["report_fraud_analysis"],
-                    )
-                ),
-            ),
+        response = await _get_client().chat.completions.create(
+            model=settings.llm_model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            tools=ANALYSIS_TOOL,
+            tool_choice={"type": "function", "function": {"name": "report_fraud_analysis"}},
+            temperature=0.1,
         )
 
-        for part in response.candidates[0].content.parts:
-            if part.function_call and part.function_call.name == "report_fraud_analysis":
-                args = dict(part.function_call.args)
-                return {
-                    "risk_score": int(args.get("risk_score", 0)),
-                    "risk_level": args.get("risk_level", "low"),
-                    "flags": args.get("flags", []),
-                    "explanation": args.get("explanation", ""),
-                }
+        tool_calls = response.choices[0].message.tool_calls
+        if tool_calls and tool_calls[0].function.name == "report_fraud_analysis":
+            args = json.loads(tool_calls[0].function.arguments)
+            return {
+                "risk_score": int(args.get("risk_score", 0)),
+                "risk_level": args.get("risk_level", "low"),
+                "flags": args.get("flags", []),
+                "explanation": args.get("explanation", ""),
+            }
 
     except Exception as exc:
-        logger.error("Gemini analysis failed for claim %s: %s", claim_data.get("claim_id"), exc)
+        logger.error("LLM analysis failed for claim %s: %s", claim_data.get("claim_id"), exc)
 
     return {
         "risk_score": 0,
@@ -211,14 +206,14 @@ def apply_rule_signals(claim_data: dict) -> tuple[int, list[dict]]:
     return min(score, 100), flags
 
 
-async def check_gemini_connectivity() -> bool:
+async def check_llm_connectivity() -> bool:
     try:
-        response = await _get_client().aio.models.generate_content(
-            model=settings.gemini_llm_model,
-            contents=[types.Content(role="user", parts=[types.Part(text="ping")])],
-            config=types.GenerateContentConfig(max_output_tokens=5),
+        response = await _get_client().chat.completions.create(
+            model=settings.llm_model,
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=5,
         )
-        return bool(response.text or response.candidates)
+        return bool(response.choices)
     except Exception as exc:
-        logger.warning("Gemini connectivity check failed: %s", exc)
+        logger.warning("LLM connectivity check failed: %s", exc)
         return False

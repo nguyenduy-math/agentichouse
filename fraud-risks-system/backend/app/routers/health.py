@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.config import settings
 from app.database import engine
-from app.fraud_analyzer import check_gemini_connectivity
+from app.fraud_analyzer import check_llm_connectivity
 from app.schemas import HealthResponse
 
 router = APIRouter(tags=["health"])
@@ -23,5 +23,5 @@ async def health():
     return HealthResponse(
         status="ok" if db_ok else "degraded",
         db_connected=db_ok,
-        gemini_model=settings.gemini_llm_model,
+        llm_model=settings.llm_model,
     )

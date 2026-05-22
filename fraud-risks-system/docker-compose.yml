@@ -38,3 +38,45 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+
+  # ── v2 databases (fresh, old data preserved above) ──────────────────────────
+
+  postgres-v2:
+    image: postgres:16
+    container_name: fraud-postgres-v2
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: fraud
+      POSTGRES_PASSWORD: fraud-secret
+      POSTGRES_DB: fraud_detection
+    volumes:
+      - ./postgres_data_v2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud -d fraud_detection"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  neo4j-v2:
+    image: neo4j:5
+    container_name: fraud-neo4j-v2
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/fraud-neo4j-secret"
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*"
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+    volumes:
+      - ./neo4j_data_v2:/data
+      - ./neo4j_logs_v2:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped

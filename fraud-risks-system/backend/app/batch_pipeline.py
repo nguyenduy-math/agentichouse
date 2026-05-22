@@ -83,7 +83,7 @@ async def run_batch() -> uuid.UUID:
                         rule_flags=rule_flags,
                         combined_score=combined,
                         llm_explanation=llm_result["explanation"],
-                        model_version=settings.gemini_llm_model,
+                        model_version=settings.llm_model,
                     )
                     session.add(analysis)
                     await session.execute(
