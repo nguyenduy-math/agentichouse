@@ -1,0 +1,438 @@
+{
+  "doc-7b47df0f1bec58af860f9a8fc117479a": {
+    "relation_pairs": [
+      [
+        "Quy Trình Hoàn Ứng (Reimbursement)",
+        "Quy Trình Sử Dụng Bảo Hiểm"
+      ],
+      [
+        "Chính Sách Y Tế Và Bảo Hiểm Sức Khỏe",
+        "Ngày Hiệu Lực Chính Sách"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Đo Thị Lực"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Phần Công Ty Đóng BHYT"
+      ],
+      [
+        "Bệnh Viện Hoàn Mỹ Sài Gòn",
+        "Chi Phí Ngoại Trú"
+      ],
+      [
+        "Cấp Cứu Quốc Tế",
+        "Giới Hạn Cấp Cứu Quốc Tế Gói Nhân Viên"
+      ],
+      [
+        "Cấp Cứu Quốc Tế",
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)"
+      ],
+      [
+        "Thẻ BHYT",
+        "Thời Hạn Cấp Thẻ BHYT"
+      ],
+      [
+        "Bệnh Viện Đối Tác",
+        "Khám Sức Khỏe Định Kỳ"
+      ],
+      [
+        "Hà Nội",
+        "Phòng Khám Quốc Tế SOS"
+      ],
+      [
+        "Mã Nhân Viên",
+        "Quy Trình Bảo Lãnh Trực Tiếp"
+      ],
+      [
+        "Bệnh Viện FV",
+        "TP. Hồ Chí Minh"
+      ],
+      [
+        "Cấp Cứu Quốc Tế",
+        "Gói Nhân Viên (Junior - Senior)"
+      ],
+      [
+        "Bệnh Viện Vinmec Times City",
+        "Hà Nội"
+      ],
+      [
+        "Phiếu Thu Có Dấu",
+        "Quy Trình Hoàn Ứng (Reimbursement)"
+      ],
+      [
+        "Bệnh Viện Vinmec Central Park",
+        "Mức Bảo Lãnh 100%"
+      ],
+      [
+        "Cơ Sở Y Tế Công Lập",
+        "Khám Chữa Bệnh"
+      ],
+      [
+        "Bảo Hiểm Sức Khỏe Cao Cấp (PTI Care)",
+        "PTI Care Gold"
+      ],
+      [
+        "App PTI Care",
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Miễn Phí Toàn Bộ"
+      ],
+      [
+        "Gói Nhân Viên (Junior - Senior)",
+        "Nha Khoa"
+      ],
+      [
+        "Bệnh Án/Toa Thuốc Có Chữ Ký Bác Sĩ",
+        "Quy Trình Hoàn Ứng (Reimbursement)"
+      ],
+      [
+        "Quyền Lợi BHYT",
+        "Địa Chỉ Đăng Ký Thẻ BHYT"
+      ],
+      [
+        "ECG Cơ Bản",
+        "Gói Khám Cơ Bản"
+      ],
+      [
+        "Chi Phí Ngoại Trú",
+        "Giới Hạn Ngoại Trú Gói Cán Bộ Quản Lý"
+      ],
+      [
+        "Nhân Viên Chính Thức",
+        "Phần Nhân Viên Đóng BHYT"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "Hóa Đơn VAT Gốc Hoặc Phiếu Thu Có Dấu"
+      ],
+      [
+        "Email Claim@pti.com.vn",
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách"
+      ],
+      [
+        "Bảo Hiểm Y Tế Bắt Buộc (BHYT)",
+        "Quyền Lợi BHYT"
+      ],
+      [
+        "Bệnh Viện Thu Cúc",
+        "Hà Nội"
+      ],
+      [
+        "Bệnh Viện Vinmec Times City",
+        "Mức Bảo Lãnh 100%"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "Thời Hạn Nộp Hồ Sơ 60 Ngày"
+      ],
+      [
+        "PTI Care Gold",
+        "Điều Kiện Áp Dụng PTI Care"
+      ],
+      [
+        "Công Ty",
+        "Kết Quả Khám Bảo Mật"
+      ],
+      [
+        "Bệnh Viện FV",
+        "Mức Bảo Lãnh 100%"
+      ],
+      [
+        "Chi Phí Nội Trú",
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)"
+      ],
+      [
+        "Hóa Đơn VAT Gốc",
+        "Quy Trình Hoàn Ứng (Reimbursement)"
+      ],
+      [
+        "Chi Phí Nội Trú",
+        "Gói Nhân Viên (Junior - Senior)"
+      ],
+      [
+        "Nha Khoa",
+        "Nha Khoa Paris"
+      ],
+      [
+        "Giới Hạn Khúc Xạ Mắt Gói Nhân Viên",
+        "Khúc Xạ Mắt"
+      ],
+      [
+        "PTI",
+        "Quy Trình Bảo Lãnh Trực Tiếp"
+      ],
+      [
+        "Giới Hạn Khúc Xạ Mắt Gói Cán Bộ Quản Lý",
+        "Khúc Xạ Mắt"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Quy Trình Bảo Lãnh Trực Tiếp"
+      ],
+      [
+        "Cấp Cứu Quốc Tế",
+        "Giới Hạn Cấp Cứu Quốc Tế Gói Cán Bộ Quản Lý"
+      ],
+      [
+        "Cá Nhân Nhân Viên",
+        "Kết Quả Khám Bảo Mật"
+      ],
+      [
+        "Bảo Hiểm Sức Khỏe Cao Cấp (PTI Care)",
+        "Nhân Viên Chính Thức"
+      ],
+      [
+        "PTI",
+        "Tài Khoản Ngân Hàng Đã Đăng Ký"
+      ],
+      [
+        "Kết Quả Xét Nghiệm/Chẩn Đoán",
+        "Quy Trình Hoàn Ứng (Reimbursement)"
+      ],
+      [
+        "Bảo Lãnh Ngoại Trú",
+        "Bệnh Viện Đa Khoa Medlatec"
+      ],
+      [
+        "Bảo Hiểm Y Tế Bắt Buộc (BHYT)",
+        "Nhân Viên Chính Thức"
+      ],
+      [
+        "Gói Nhân Viên (Junior - Senior)",
+        "PTI Care Gold"
+      ],
+      [
+        "Phòng Khám Columbia Asia",
+        "TP. Hồ Chí Minh"
+      ],
+      [
+        "Giới Hạn Nha Khoa Gói Cán Bộ Quản Lý",
+        "Nha Khoa Bao Gồm Implant"
+      ],
+      [
+        "Gói Nhân Viên (Junior - Senior)",
+        "Khúc Xạ Mắt"
+      ],
+      [
+        "Khám Nâng Cao",
+        "Siêu Âm Tuyến Vú (Nữ)"
+      ],
+      [
+        "Phí Mua Bổ Sung Bảo Hiểm Người Thân",
+        "Thời Hạn Đăng Ký Bổ Sung Bảo Hiểm Người Thân"
+      ],
+      [
+        "Bệnh Viện Thu Cúc",
+        "Chi Phí Nội Trú"
+      ],
+      [
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)",
+        "Nha Khoa Bao Gồm Implant"
+      ],
+      [
+        "Chi Phí Nội Trú",
+        "Giới Hạn Nội Trú Gói Nhân Viên"
+      ],
+      [
+        "Hotline PTI Care",
+        "PTI"
+      ],
+      [
+        "PTI",
+        "Phòng Nhân Sự (HR)"
+      ],
+      [
+        "Bệnh Viện Đa Khoa Medlatec",
+        "Hà Nội"
+      ],
+      [
+        "Quy Trình Hoàn Ứng (Reimbursement)",
+        "Thời Hạn Nộp Hồ Sơ Hoàn Ứng"
+      ],
+      [
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)",
+        "PTI Care Gold"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Bảo Hiểm Y Tế Bắt Buộc (BHYT)"
+      ],
+      [
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)",
+        "Khúc Xạ Mắt"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "PTI"
+      ],
+      [
+        "Chi Phí Ngoại Trú",
+        "Giới Hạn Ngoại Trú Gói Nhân Viên"
+      ],
+      [
+        "Người Thân Nhân Viên",
+        "Nhân Viên Chính Thức"
+      ],
+      [
+        "Khám Nâng Cao",
+        "Nhân Viên Trên 35 Tuổi"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "Kết Quả Xét Nghiệm Hoặc Chẩn Đoán"
+      ],
+      [
+        "Cơ Sở Y Tế",
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Siêu Âm Ổ Bụng"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Bảo Hiểm Sức Khỏe Cao Cấp (PTI Care)"
+      ],
+      [
+        "Bảo Hiểm Y Tế Bắt Buộc (BHYT)",
+        "Luật BHYT"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Chính Sách Y Tế Và Bảo Hiểm Sức Khỏe"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Xét Nghiệm Nước Tiểu"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Đo Huyết Áp"
+      ],
+      [
+        "Bệnh Viện Hoàn Mỹ Sài Gòn",
+        "TP. Hồ Chí Minh"
+      ],
+      [
+        "Bảo Lãnh Ngoại Trú",
+        "Phòng Khám Columbia Asia"
+      ],
+      [
+        "Chính Sách Y Tế Và Bảo Hiểm Sức Khỏe",
+        "Quy Trình Sử Dụng Bảo Hiểm"
+      ],
+      [
+        "Agentic House Việt Nam",
+        "Phí Mua Bổ Sung Bảo Hiểm Người Thân"
+      ],
+      [
+        "Bộ Y Tế",
+        "Mức Hoàn Trả BHYT"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "Reimbursement"
+      ],
+      [
+        "Chi Phí Ngoại Trú",
+        "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)"
+      ],
+      [
+        "Chi Phí Nội Trú",
+        "Giới Hạn Nội Trú Gói Cán Bộ Quản Lý"
+      ],
+      [
+        "Bệnh Viện Hoàn Mỹ Sài Gòn",
+        "Chi Phí Nội Trú"
+      ],
+      [
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách",
+        "Phòng Nhân Sự (HR)"
+      ],
+      [
+        "Hà Nội",
+        "Nha Khoa Paris"
+      ],
+      [
+        "Khám Nâng Cao",
+        "Nội Soi Dạ Dày (Nam)"
+      ],
+      [
+        "Mức Hoàn Trả BHYT",
+        "Quyền Lợi BHYT"
+      ],
+      [
+        "Quy Trình Bảo Lãnh Trực Tiếp",
+        "Thẻ PTI Care Hoặc App PTI"
+      ],
+      [
+        "Giới Hạn Nha Khoa Gói Nhân Viên",
+        "Nha Khoa"
+      ],
+      [
+        "Khám Chữa Bệnh",
+        "Quyền Lợi BHYT"
+      ],
+      [
+        "Khám Sức Khỏe Định Kỳ",
+        "Tần Suất Khám 1 Lần/Năm"
+      ],
+      [
+        "PTI",
+        "Thời Gian Xử Lý 10-15 Ngày Làm Việc"
+      ],
+      [
+        "Bệnh Án Hoặc Toa Thuốc Có Chữ Ký Bác Sĩ",
+        "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách"
+      ],
+      [
+        "Người Thân Nhân Viên",
+        "Phí Mua Bổ Sung Bảo Hiểm Người Thân"
+      ],
+      [
+        "Hỗ Trợ Nội Bộ Hr-Benefits@agentichouse.vn",
+        "Phòng Nhân Sự (HR)"
+      ],
+      [
+        "Bệnh Viện Thu Cúc",
+        "Chi Phí Ngoại Trú"
+      ],
+      [
+        "Quy Trình Bảo Lãnh Trực Tiếp",
+        "Quy Trình Sử Dụng Bảo Hiểm"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Khám Sức Khỏe Định Kỳ"
+      ],
+      [
+        "Khám Sức Khỏe Định Kỳ",
+        "Quý III"
+      ],
+      [
+        "Bệnh Viện Vinmec Central Park",
+        "TP. Hồ Chí Minh"
+      ],
+      [
+        "Chi Phí Ngoại Trú",
+        "Gói Nhân Viên (Junior - Senior)"
+      ],
+      [
+        "Gói Khám Cơ Bản",
+        "Xét Nghiệm Máu"
+      ],
+      [
+        "Khám Sức Khỏe Định Kỳ",
+        "Nhân Viên Trên 35 Tuổi"
+      ]
+    ],
+    "count": 107,
+    "create_time": 1779455771,
+    "update_time": 1779455771,
+    "_id": "doc-7b47df0f1bec58af860f9a8fc117479a"
+  }
+}

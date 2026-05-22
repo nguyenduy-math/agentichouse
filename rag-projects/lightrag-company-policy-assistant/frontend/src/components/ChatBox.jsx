@@ -122,6 +122,7 @@ export default function ChatBox() {
             content={m.content}
             domains={m.domains}
             citations={m.citations}
+            entities={m.entities}
           />
         ))}
         {loading && (

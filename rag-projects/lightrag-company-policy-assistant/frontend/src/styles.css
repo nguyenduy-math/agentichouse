@@ -70,6 +70,7 @@ body {
 }
 
 .agent-chip--ready { background: #dbeafe; color: #1e40af; }
+.agent-chip--cloud { background: #dcfce7; color: #15803d; }
 .agent-chip--idle  { background: #f3f4f6; color: #9ca3af; }
 
 .app__main {
@@ -198,19 +199,42 @@ body {
   word-break: break-word;
 }
 
+.message__entities {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.message__entities-label {
+  font-size: 0.68rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.entity-badge {
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #f3e8ff;
+  color: #6b21a8;
+  cursor: default;
+}
+
 .message__citations {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .citation-badge {
   font-size: 0.7rem;
   padding: 1px 7px;
   border-radius: 6px;
-  background: #e0e7ff;
-  color: #3730a3;
+  background: #dcfce7;
+  color: #15803d;
   cursor: default;
 }
 

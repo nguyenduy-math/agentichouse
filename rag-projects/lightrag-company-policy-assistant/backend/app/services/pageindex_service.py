@@ -242,7 +242,7 @@ class PageIndexService:
         answer_prompt = prompts.build_answer_prompt(
             persona=persona,
             document_name=source_file.name,
-            page_range=page_range,
+            section_range=page_range,
             content=content,
             question=question,
             history_block=history_block,

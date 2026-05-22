@@ -202,14 +202,14 @@ _ANSWER_TEMPLATE = """\
 {grounding}
 
 Tài liệu: {document_name}
-Trang liên quan: {page_range}
+Các mục liên quan: {section_range}
 {history_block}\
 Nội dung trích từ tài liệu:
 {content}
 
 Câu hỏi: {question}
 
-Trả lời chính xác và trích dẫn số trang. {language_line}
+Trả lời chính xác và trích dẫn số trang/điều khoản. {language_line}
 Đồng thời liệt kê các trang bạn thực sự dựa vào trong trường citations.
 """
 
@@ -217,7 +217,7 @@ Trả lời chính xác và trích dẫn số trang. {language_line}
 def build_answer_prompt(
     persona: str,
     document_name: str,
-    page_range: str,
+    section_range: str,
     content: str,
     question: str,
     history_block: str = "",
@@ -227,7 +227,7 @@ def build_answer_prompt(
         persona=persona.strip(),
         grounding=GROUNDING_CLAUSE,
         document_name=document_name,
-        page_range=page_range,
+        section_range=section_range,
         history_block=block,
         content=content,
         question=question,

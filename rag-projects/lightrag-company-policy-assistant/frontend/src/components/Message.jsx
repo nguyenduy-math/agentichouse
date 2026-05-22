@@ -1,8 +1,8 @@
-// Một bong bóng tin nhắn với nhãn lĩnh vực và trích dẫn trang.
+// Một bong bóng tin nhắn với nhãn lĩnh vực, thực thể đồ thị và trích dẫn trang.
 
 const DOMAIN_COLORS = {
   HR_POLICY:   { bg: '#dbeafe', color: '#1e40af', label: 'Nội quy LĐ' },
-  BENEFITS:    { bg: '#dcfce7', color: '#15803d', label: 'Phúc lợi' },
+  BENEFITS:    { bg: '#dcfce7', color: '#15803d', label: '☁ Phúc lợi' },
   CONDUCT:     { bg: '#fef9c3', color: '#854d0e', label: 'Quy tắc ứng xử' },
   PROCEDURES:  { bg: '#f3e8ff', color: '#6b21a8', label: 'Quy trình' },
   HANDBOOK:    { bg: '#ffedd5', color: '#9a3412', label: 'Sổ tay NV' },
@@ -13,7 +13,7 @@ const DOMAIN_COLORS = {
   TRAINING:    { bg: '#ecfdf5', color: '#065f46', label: 'Đào tạo' },
 }
 
-export default function Message({ role, content, domains, citations }) {
+export default function Message({ role, content, domains, citations, entities }) {
   const isUser = role === 'user'
   return (
     <div className={`message ${isUser ? 'message--user' : 'message--assistant'}`}>
@@ -36,12 +36,26 @@ export default function Message({ role, content, domains, citations }) {
           </span>
         )}
       </div>
+
       <div className="message__content">{content}</div>
+
+      {/* Knowledge-graph entities — shown for LightRAG answers */}
+      {!isUser && entities && entities.length > 0 && (
+        <div className="message__entities">
+          <span className="message__entities-label">Thực thể:</span>
+          {entities.map((e, i) => (
+            <span key={i} className="entity-badge">{e}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Page citations — shown for PageIndex Cloud (BENEFITS) answers */}
       {!isUser && citations && citations.length > 0 && (
         <div className="message__citations">
           {citations.map((c, i) => (
             <span key={i} className="citation-badge" title={c.section || ''}>
               {c.document} · tr.{c.page}
+              {c.section ? ` · ${c.section}` : ''}
             </span>
           ))}
         </div>

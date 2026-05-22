@@ -15,7 +15,7 @@ Câu hỏi của nhân viên → OrchestratorAgent (phân loại lĩnh vực)
 | Công cụ | Điểm mạnh | Dùng cho |
 |---------|-----------|----------|
 | **LightRAG** | Đồ thị tri thức + vector hybrid. Tìm mối quan hệ giữa các thực thể (vai trò, phòng ban, chính sách) qua nhiều tài liệu. | Nội quy LĐ, quy trình, sổ tay NV, đào tạo |
-| **PageIndex** | Điều hướng cây phân cấp không cần vector. LLM lý luận qua mục lục tài liệu để trả lời với trích dẫn số trang chính xác. | Phúc lợi, quy tắc ứng xử, y tế, CNTT, tuân thủ, tài chính |
+| **PageIndex Cloud** | Upload PDF lên cloud → tải cây tri thức JSON về local → Gemini điều hướng cây theo node_id → đọc `node.text` + văn bản PDF gốc → trả lời với trích dẫn số trang chính xác. | Phúc lợi & đãi ngộ — cần số trang và số tiền chính xác |
 
 ---
 
@@ -24,14 +24,14 @@ Câu hỏi của nhân viên → OrchestratorAgent (phân loại lĩnh vực)
 | Tác nhân | Domain Key | Công cụ | Thư mục | Phù hợp nhất cho |
 |---------|-----------|---------|---------|-----------------|
 | `HRPolicyAgent` | `HR_POLICY` | LightRAG (hybrid) | `hr_policies/` | Hợp đồng LĐ, nghỉ phép, giờ làm, đánh giá hiệu suất |
-| `BenefitsAgent` | `BENEFITS` | PageIndex | `benefits/` | Lương thưởng, bảo hiểm, hưu trí, phụ cấp — cần số trang chính xác |
-| `ConductAgent` | `CONDUCT` | PageIndex | `conduct/` | Quy tắc ứng xử, trang phục, kỷ luật — cần trích dẫn điều khoản |
+| `BenefitsAgent` | `BENEFITS` | PageIndex Cloud | `benefits/` | Lương thưởng, bảo hiểm, hưu trí, phụ cấp — trích dẫn số trang từ cây tri thức cloud |
+| `ConductAgent` | `CONDUCT` | LightRAG (hybrid) | `conduct/` | Quy tắc ứng xử, trang phục, kỷ luật, quan hệ vai trò–quy tắc–xử phạt |
 | `ProceduresAgent` | `PROCEDURES` | LightRAG (hybrid) | `procedures/` | Quy trình từng bước, chuỗi phê duyệt, onboarding |
 | `HandbookAgent` | `HANDBOOK` | LightRAG (global) | `handbooks/` | Văn hóa công ty, sứ mệnh, thông tin chung nhân viên mới |
-| `MedicalAgent` | `MEDICAL` | PageIndex | `medical/` | Bảo hiểm y tế, danh sách bệnh viện, mức hoàn trả |
-| `ITSecurityAgent` | `IT_SECURITY` | PageIndex | `it_security/` | Sử dụng thiết bị, mật khẩu, bảo mật dữ liệu, quyền truy cập |
-| `ComplianceAgent` | `COMPLIANCE` | PageIndex | `compliance/` | Luật lao động, bảo vệ dữ liệu (PDPA), phòng chống tham nhũng |
-| `FinanceAgent` | `FINANCE` | PageIndex | `finance/` | Hạn mức chi phí, hoàn ứng, phê duyệt ngân sách, công tác phí |
+| `MedicalAgent` | `MEDICAL` | LightRAG (hybrid) | `medical/` | Bảo hiểm y tế, quan hệ bệnh viện–dịch vụ–mức hoàn trả |
+| `ITSecurityAgent` | `IT_SECURITY` | LightRAG (hybrid) | `it_security/` | Sử dụng thiết bị, mật khẩu, bảo mật dữ liệu, quan hệ hệ thống–quyền truy cập |
+| `ComplianceAgent` | `COMPLIANCE` | LightRAG (hybrid) | `compliance/` | Luật lao động, PDPA/GDPR, phòng chống tham nhũng, quan hệ nghĩa vụ–xử phạt |
+| `FinanceAgent` | `FINANCE` | LightRAG (hybrid) | `finance/` | Hạn mức chi phí, hoàn ứng, quan hệ danh mục–người phê duyệt–thời hạn |
 | `TrainingAgent` | `TRAINING` | LightRAG (hybrid) | `training/` | Lộ trình sự nghiệp, chương trình đào tạo, học bổng, chứng chỉ |
 
 ---
@@ -50,18 +50,19 @@ lightrag-company-policy-assistant/
 │   │   │   ├── base_agent.py          # BaseAgent ABC
 │   │   │   ├── orchestrator.py        # OrchestratorAgent: classify → route → synthesize
 │   │   │   ├── hr_policy_agent.py     # LightRAG — Nội quy lao động
-│   │   │   ├── benefits_agent.py      # PageIndex — Phúc lợi & đãi ngộ
-│   │   │   ├── conduct_agent.py       # PageIndex — Quy tắc ứng xử
+│   │   │   ├── benefits_agent.py      # PageIndex Cloud — Phúc lợi & đãi ngộ
+│   │   │   ├── conduct_agent.py       # LightRAG — Quy tắc ứng xử
 │   │   │   ├── procedures_agent.py    # LightRAG — Quy trình & thủ tục
 │   │   │   ├── handbook_agent.py      # LightRAG — Sổ tay nhân viên
-│   │   │   ├── medical_agent.py       # PageIndex — Chính sách y tế
-│   │   │   ├── it_security_agent.py   # PageIndex — CNTT & Bảo mật
-│   │   │   ├── compliance_agent.py    # PageIndex — Tuân thủ & Pháp lý
-│   │   │   ├── finance_agent.py       # PageIndex — Chính sách tài chính
+│   │   │   ├── medical_agent.py       # LightRAG — Chính sách y tế
+│   │   │   ├── it_security_agent.py   # LightRAG — CNTT & Bảo mật
+│   │   │   ├── compliance_agent.py    # LightRAG — Tuân thủ & Pháp lý
+│   │   │   ├── finance_agent.py       # LightRAG — Chính sách tài chính
 │   │   │   └── training_agent.py      # LightRAG — Đào tạo & Phát triển
 │   │   ├── services/
-│   │   │   ├── lightrag_service.py    # LightRAGService class (per-domain instance)
-│   │   │   └── pageindex_service.py   # PageIndexService (tree index + Gemini navigation)
+│   │   │   ├── lightrag_service.py         # LightRAGService (per-domain instance)
+│   │   │   ├── pageindex_cloud_service.py  # upload PDF → cloud → tải cây JSON về local
+│   │   │   └── search_service.py           # điều hướng cây + đọc node.text + PDF → trả lời
 │   │   └── routers/
 │   │       ├── health.py              # GET /health (per-agent status)
 │   │       ├── ingest.py              # POST /ingest, /ingest/upload
@@ -99,6 +100,7 @@ lightrag-company-policy-assistant/
 - Node.js 18+
 - Docker (for Neo4j)
 - Google Gemini API key
+- PageIndex API key (from [dash.pageindex.ai/api-keys](https://dash.pageindex.ai/api-keys))
 
 ---
 
@@ -118,8 +120,8 @@ Wait until Neo4j is healthy (check at `http://localhost:7474`).
 cd backend
 pip install -r requirements.txt
 
-# PageIndex is not on PyPI — install from GitHub:
-pip install git+https://github.com/VectifyAI/PageIndex.git
+# PageIndex Cloud SDK:
+pip install -U pageindex
 ```
 
 ### 3. Configure environment
@@ -132,7 +134,8 @@ Edit `.env` and fill in at minimum:
 
 ```ini
 GEMINI_API_KEY=your-key-here
-NEO4J_PASSWORD=please-change-me   # must match docker-compose.yml
+NEO4J_PASSWORD=please-change-me        # must match docker-compose.yml
+PAGEINDEX_API_KEY=your-pi-key-here     # from dash.pageindex.ai/api-keys
 ```
 
 ### 4. Start the backend
@@ -142,7 +145,7 @@ cd backend
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-On startup, all five domain agents initialize. LightRAG agents connect to Neo4j and set up their storage directories. PageIndex agents load their document registries.
+On startup, all ten domain agents initialize. Nine LightRAG agents connect to Neo4j and set up their storage directories. The one PageIndex Cloud agent (BENEFITS) loads its local tree registry — uploaded PDFs have their tree JSONs cached in `rag_storage/pageindex/benefits/`.
 
 ### 5. Start the frontend (dev)
 
@@ -191,13 +194,13 @@ Gõ bất kỳ câu hỏi nào bằng tiếng Việt. OrchestratorAgent tự đ�
 
 | Câu hỏi | Tác nhân | Công cụ |
 |---------|---------|---------|
-| "Tôi được nghỉ phép năm bao nhiêu ngày?" | BENEFITS | PageIndex → trích dẫn trang |
-| "Thứ Sáu casual có được phép không với nhà thầu?" | CONDUCT | PageIndex → trích dẫn trang |
+| "Tôi được nghỉ phép năm bao nhiêu ngày?" | BENEFITS | PageIndex Cloud → điều hướng cây + trích dẫn trang |
+| "Thứ Sáu casual có được phép không với nhà thầu?" | CONDUCT | LightRAG → đồ thị thực thể |
 | "Chính sách nghỉ phép liên quan đến làm việc từ xa như thế nào?" | HR_POLICY | LightRAG → đồ thị thực thể |
 | "Các bước để nộp đề xuất hoàn ứng là gì?" | PROCEDURES | LightRAG → graph traversal |
-| "Gói bảo hiểm sức khỏe của tôi bao gồm những bệnh viện nào?" | MEDICAL | PageIndex → trích dẫn trang |
-| "Tôi có được cài phần mềm cá nhân trên máy tính công ty không?" | IT_SECURITY | PageIndex → trích dẫn điều khoản |
-| "Hạn mức chi phí công tác nội địa là bao nhiêu?" | FINANCE | PageIndex → trích dẫn số tiền |
+| "Gói bảo hiểm sức khỏe của tôi bao gồm những bệnh viện nào?" | MEDICAL | LightRAG → đồ thị thực thể |
+| "Tôi có được cài phần mềm cá nhân trên máy tính công ty không?" | IT_SECURITY | LightRAG → đồ thị thực thể |
+| "Hạn mức chi phí công tác nội địa là bao nhiêu?" | FINANCE | LightRAG → đồ thị thực thể |
 | "Điều kiện để được cử đi học chứng chỉ chuyên môn là gì?" | TRAINING | LightRAG → quan hệ thực thể |
 
 **Ví dụ đa lĩnh vực:**
@@ -220,7 +223,7 @@ Returns per-agent readiness.
   "agents": {
     "HR_POLICY":   { "ready": true,  "engine_type": "lightrag",   "indexed_docs": 3 },
     "BENEFITS":    { "ready": true,  "engine_type": "pageindex",  "indexed_docs": 1 },
-    "CONDUCT":     { "ready": false, "engine_type": "pageindex",  "indexed_docs": 0 },
+    "CONDUCT":     { "ready": false, "engine_type": "lightrag",   "indexed_docs": 0 },
     "PROCEDURES":  { "ready": true,  "engine_type": "lightrag",   "indexed_docs": 2 },
     "HANDBOOK":    { "ready": false, "engine_type": "lightrag",   "indexed_docs": 0 }
     // … all 10 domains (MEDICAL, IT_SECURITY, COMPLIANCE, FINANCE, TRAINING) appear here too
@@ -262,8 +265,8 @@ Valid `doc_type` values: `hr_policies`, `benefits`, `conduct`, `procedures`, `ha
   "citations": [
     { "document": "benefits_guide.pdf", "page": 4, "section": "sick leave eligibility", "domain": "BENEFITS" }
   ],
-  // Populated for LightRAG-backed domains (HR_POLICY, PROCEDURES, HANDBOOK, TRAINING)
-  // with the knowledge-graph entities behind the answer; empty for PageIndex domains.
+  // Populated for LightRAG-backed domains (all except BENEFITS)
+  // with the knowledge-graph entities behind the answer; empty for the PageIndex domain.
   "entities": ["Nghỉ ốm", "Kỹ sư", "Phòng Nhân sự"],
   "history": [
     { "role": "user",      "content": "How many sick days do junior engineers get?" },
@@ -289,12 +292,17 @@ backend/
 ├── data/documents/         ← source files (one sub-folder per domain)
 └── rag_storage/
     ├── lightrag/
-    │   ├── hr_policy/      ← LightRAG vector + KV store (HR_POLICY agent)
-    │   ├── procedures/     ← LightRAG vector + KV store (PROCEDURES agent)
-    │   └── handbook/       ← LightRAG vector + KV store (HANDBOOK agent)
+    │   ├── hr_policy/      ← LightRAG vector + KV store (HR_POLICY)
+    │   ├── procedures/     ← LightRAG vector + KV store (PROCEDURES)
+    │   ├── handbook/       ← LightRAG vector + KV store (HANDBOOK)
+    │   ├── training/       ← LightRAG vector + KV store (TRAINING)
+    │   ├── conduct/        ← LightRAG vector + KV store (CONDUCT)
+    │   ├── medical/        ← LightRAG vector + KV store (MEDICAL)
+    │   ├── it_security/    ← LightRAG vector + KV store (IT_SECURITY)
+    │   ├── compliance/     ← LightRAG vector + KV store (COMPLIANCE)
+    │   └── finance/        ← LightRAG vector + KV store (FINANCE)
     └── pageindex/
-        ├── benefits/       ← JSON trees + registry.json (BENEFITS agent)
-        └── conduct/        ← JSON trees + registry.json (CONDUCT agent)
+        └── benefits/       ← registry.json + {doc_id}.json cây tri thức (BENEFITS cloud)
 ```
 
 Neo4j stores the entity/relation graphs for all LightRAG agents (shared instance, isolated by `working_dir`).
@@ -308,7 +316,7 @@ Neo4j stores the entity/relation graphs for all LightRAG agents (shared instance
 | LLM | Google Gemini 2.5 Flash |
 | Embeddings | gemini-embedding-001 (1536d) |
 | Graph RAG | [LightRAG](https://github.com/HKUDS/LightRAG) |
-| Vectorless RAG | [PageIndex](https://github.com/VectifyAI/PageIndex) |
+| Vectorless RAG | [PageIndex Cloud](https://pageindex.ai) (tree download + Gemini navigation) |
 | Graph DB | Neo4j 5 |
 | Backend | FastAPI + Uvicorn |
 | Config | Pydantic-settings |

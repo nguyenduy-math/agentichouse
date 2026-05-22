@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     neo4j_password: str = "please-change-me"
     neo4j_database: str = "neo4j"
 
+    # --- PageIndex Cloud ---
+    pageindex_api_key: str = ""
+
     # --- Storage paths ---
     document_folder: str = "./data/documents"
     lightrag_base_dir: str = "./rag_storage/lightrag"

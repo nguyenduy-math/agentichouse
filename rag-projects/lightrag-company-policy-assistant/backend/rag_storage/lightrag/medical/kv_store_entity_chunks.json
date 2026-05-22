@@ -1,0 +1,877 @@
+{
+  "Phần Công Ty Đóng BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Phần Công Ty Đóng BHYT"
+  },
+  "Phần Nhân Viên Đóng BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Phần Nhân Viên Đóng BHYT"
+  },
+  "Bảo Hiểm Y Tế Bắt Buộc (BHYT)": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Bảo Hiểm Y Tế Bắt Buộc (BHYT)"
+  },
+  "Luật BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Luật BHYT"
+  },
+  "Agentic House Việt Nam": {
+    "chunk_ids": [
+      "chunk-885dba305f99c663c53b1fe871557593",
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 2,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Agentic House Việt Nam"
+  },
+  "Nhân Viên Chính Thức": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Nhân Viên Chính Thức"
+  },
+  "Chính Sách Y Tế Và Bảo Hiểm Sức Khỏe": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Chính Sách Y Tế Và Bảo Hiểm Sức Khỏe"
+  },
+  "Ngày Hiệu Lực Chính Sách": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455741,
+    "update_time": 1779455741,
+    "_id": "Ngày Hiệu Lực Chính Sách"
+  },
+  "Thẻ BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Thẻ BHYT"
+  },
+  "Quyền Lợi BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Quyền Lợi BHYT"
+  },
+  "Thời Hạn Cấp Thẻ BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Thời Hạn Cấp Thẻ BHYT"
+  },
+  "Khám Chữa Bệnh": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Khám Chữa Bệnh"
+  },
+  "Cơ Sở Y Tế Công Lập": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Cơ Sở Y Tế Công Lập"
+  },
+  "Địa Chỉ Đăng Ký Thẻ BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Địa Chỉ Đăng Ký Thẻ BHYT"
+  },
+  "Mức Hoàn Trả BHYT": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Mức Hoàn Trả BHYT"
+  },
+  "Bộ Y Tế": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455742,
+    "update_time": 1779455742,
+    "_id": "Bộ Y Tế"
+  },
+  "Điều Kiện Áp Dụng PTI Care": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Điều Kiện Áp Dụng PTI Care"
+  },
+  "Bảo Hiểm Sức Khỏe Cao Cấp (PTI Care)": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Bảo Hiểm Sức Khỏe Cao Cấp (PTI Care)"
+  },
+  "PTI Care Gold": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "PTI Care Gold"
+  },
+  "Chi Phí Nội Trú": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Chi Phí Nội Trú"
+  },
+  "Chi Phí Ngoại Trú": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Chi Phí Ngoại Trú"
+  },
+  "Gói Nhân Viên (Junior - Senior)": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Gói Nhân Viên (Junior - Senior)"
+  },
+  "Giới Hạn Nội Trú Gói Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Giới Hạn Nội Trú Gói Nhân Viên"
+  },
+  "Giới Hạn Ngoại Trú Gói Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455743,
+    "update_time": 1779455743,
+    "_id": "Giới Hạn Ngoại Trú Gói Nhân Viên"
+  },
+  "Giới Hạn Nha Khoa Gói Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Nha Khoa Gói Nhân Viên"
+  },
+  "Nha Khoa": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Nha Khoa"
+  },
+  "Khúc Xạ Mắt": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Khúc Xạ Mắt"
+  },
+  "Giới Hạn Khúc Xạ Mắt Gói Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Khúc Xạ Mắt Gói Nhân Viên"
+  },
+  "Cấp Cứu Quốc Tế": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Cấp Cứu Quốc Tế"
+  },
+  "Giới Hạn Cấp Cứu Quốc Tế Gói Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Cấp Cứu Quốc Tế Gói Nhân Viên"
+  },
+  "Giới Hạn Nội Trú Gói Cán Bộ Quản Lý": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Nội Trú Gói Cán Bộ Quản Lý"
+  },
+  "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Gói Cán Bộ Quản Lý (Trưởng Nhóm - Trưởng Phòng)"
+  },
+  "Giới Hạn Ngoại Trú Gói Cán Bộ Quản Lý": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Ngoại Trú Gói Cán Bộ Quản Lý"
+  },
+  "Nha Khoa Bao Gồm Implant": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Nha Khoa Bao Gồm Implant"
+  },
+  "Giới Hạn Nha Khoa Gói Cán Bộ Quản Lý": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Nha Khoa Gói Cán Bộ Quản Lý"
+  },
+  "Giới Hạn Khúc Xạ Mắt Gói Cán Bộ Quản Lý": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Khúc Xạ Mắt Gói Cán Bộ Quản Lý"
+  },
+  "Giới Hạn Cấp Cứu Quốc Tế Gói Cán Bộ Quản Lý": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Giới Hạn Cấp Cứu Quốc Tế Gói Cán Bộ Quản Lý"
+  },
+  "Người Thân Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455744,
+    "update_time": 1779455744,
+    "_id": "Người Thân Nhân Viên"
+  },
+  "Phí Mua Bổ Sung Bảo Hiểm Người Thân": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Phí Mua Bổ Sung Bảo Hiểm Người Thân"
+  },
+  "Thời Hạn Đăng Ký Bổ Sung Bảo Hiểm Người Thân": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Thời Hạn Đăng Ký Bổ Sung Bảo Hiểm Người Thân"
+  },
+  "Bệnh Viện Vinmec Times City": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện Vinmec Times City"
+  },
+  "Bệnh Viện Đa Khoa Medlatec": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện Đa Khoa Medlatec"
+  },
+  "Phòng Khám Quốc Tế SOS": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Phòng Khám Quốc Tế SOS"
+  },
+  "Bệnh Viện Thu Cúc": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện Thu Cúc"
+  },
+  "Nha Khoa Paris": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Nha Khoa Paris"
+  },
+  "Bệnh Viện FV": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện FV"
+  },
+  "Bệnh Viện Vinmec Central Park": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện Vinmec Central Park"
+  },
+  "Phòng Khám Columbia Asia": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Phòng Khám Columbia Asia"
+  },
+  "Bệnh Viện Hoàn Mỹ Sài Gòn": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455745,
+    "update_time": 1779455745,
+    "_id": "Bệnh Viện Hoàn Mỹ Sài Gòn"
+  },
+  "Hà Nội": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Hà Nội"
+  },
+  "TP. Hồ Chí Minh": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "TP. Hồ Chí Minh"
+  },
+  "Mức Bảo Lãnh 100%": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Mức Bảo Lãnh 100%"
+  },
+  "Quy Trình Sử Dụng Bảo Hiểm": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Quy Trình Sử Dụng Bảo Hiểm"
+  },
+  "Bảo Lãnh Ngoại Trú": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Bảo Lãnh Ngoại Trú"
+  },
+  "Quy Trình Bảo Lãnh Trực Tiếp": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Quy Trình Bảo Lãnh Trực Tiếp"
+  },
+  "Thẻ PTI Care Hoặc App PTI": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Thẻ PTI Care Hoặc App PTI"
+  },
+  "Mã Nhân Viên": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Mã Nhân Viên"
+  },
+  "PTI": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c",
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 2,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "PTI"
+  },
+  "Quy Trình Hoàn Ứng (Reimbursement)": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Quy Trình Hoàn Ứng (Reimbursement)"
+  },
+  "Hóa Đơn VAT Gốc": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Hóa Đơn VAT Gốc"
+  },
+  "Phiếu Thu Có Dấu": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Phiếu Thu Có Dấu"
+  },
+  "Bệnh Án/Toa Thuốc Có Chữ Ký Bác Sĩ": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Bệnh Án/Toa Thuốc Có Chữ Ký Bác Sĩ"
+  },
+  "Kết Quả Xét Nghiệm/Chẩn Đoán": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455746,
+    "update_time": 1779455746,
+    "_id": "Kết Quả Xét Nghiệm/Chẩn Đoán"
+  },
+  "Thời Hạn Nộp Hồ Sơ Hoàn Ứng": {
+    "chunk_ids": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Thời Hạn Nộp Hồ Sơ Hoàn Ứng"
+  },
+  "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Hoàn Ứng Tại Cơ Sở Không Nằm Trong Danh Sách"
+  },
+  "Hóa Đơn VAT Gốc Hoặc Phiếu Thu Có Dấu": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Hóa Đơn VAT Gốc Hoặc Phiếu Thu Có Dấu"
+  },
+  "Kết Quả Xét Nghiệm Hoặc Chẩn Đoán": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Kết Quả Xét Nghiệm Hoặc Chẩn Đoán"
+  },
+  "Bệnh Án Hoặc Toa Thuốc Có Chữ Ký Bác Sĩ": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Bệnh Án Hoặc Toa Thuốc Có Chữ Ký Bác Sĩ"
+  },
+  "Thời Hạn Nộp Hồ Sơ 60 Ngày": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Thời Hạn Nộp Hồ Sơ 60 Ngày"
+  },
+  "App PTI Care": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "App PTI Care"
+  },
+  "Email Claim@pti.com.vn": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Email Claim@pti.com.vn"
+  },
+  "Phòng Nhân Sự (HR)": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Phòng Nhân Sự (HR)"
+  },
+  "Thời Gian Xử Lý 10-15 Ngày Làm Việc": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Thời Gian Xử Lý 10-15 Ngày Làm Việc"
+  },
+  "Tài Khoản Ngân Hàng Đã Đăng Ký": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Tài Khoản Ngân Hàng Đã Đăng Ký"
+  },
+  "Tần Suất Khám 1 Lần/Năm": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Tần Suất Khám 1 Lần/Năm"
+  },
+  "Khám Sức Khỏe Định Kỳ": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Khám Sức Khỏe Định Kỳ"
+  },
+  "Quý III": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Quý III"
+  },
+  "Bệnh Viện Đối Tác": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455747,
+    "update_time": 1779455747,
+    "_id": "Bệnh Viện Đối Tác"
+  },
+  "Gói Khám Cơ Bản": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Gói Khám Cơ Bản"
+  },
+  "Miễn Phí Toàn Bộ": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Miễn Phí Toàn Bộ"
+  },
+  "Xét Nghiệm Máu": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Xét Nghiệm Máu"
+  },
+  "Xét Nghiệm Nước Tiểu": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Xét Nghiệm Nước Tiểu"
+  },
+  "Siêu Âm Ổ Bụng": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Siêu Âm Ổ Bụng"
+  },
+  "Đo Thị Lực": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Đo Thị Lực"
+  },
+  "Đo Huyết Áp": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Đo Huyết Áp"
+  },
+  "ECG Cơ Bản": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "ECG Cơ Bản"
+  },
+  "Nhân Viên Trên 35 Tuổi": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Nhân Viên Trên 35 Tuổi"
+  },
+  "Khám Nâng Cao": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Khám Nâng Cao"
+  },
+  "Nội Soi Dạ Dày (Nam)": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Nội Soi Dạ Dày (Nam)"
+  },
+  "Siêu Âm Tuyến Vú (Nữ)": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Siêu Âm Tuyến Vú (Nữ)"
+  },
+  "Kết Quả Khám Bảo Mật": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455748,
+    "update_time": 1779455748,
+    "_id": "Kết Quả Khám Bảo Mật"
+  },
+  "Cá Nhân Nhân Viên": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Cá Nhân Nhân Viên"
+  },
+  "Công Ty": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Công Ty"
+  },
+  "Hotline PTI Care": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Hotline PTI Care"
+  },
+  "Hỗ Trợ Nội Bộ Hr-Benefits@agentichouse.vn": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Hỗ Trợ Nội Bộ Hr-Benefits@agentichouse.vn"
+  },
+  "Cơ Sở Y Tế": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Cơ Sở Y Tế"
+  },
+  "Reimbursement": {
+    "chunk_ids": [
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "count": 1,
+    "create_time": 1779455749,
+    "update_time": 1779455749,
+    "_id": "Reimbursement"
+  }
+}

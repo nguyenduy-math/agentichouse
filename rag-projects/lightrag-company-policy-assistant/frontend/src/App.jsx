@@ -32,7 +32,7 @@ export default function App() {
       <header className="app__header">
         <h1>Trợ lý Chính sách Doanh nghiệp</h1>
         <p className="app__subtitle">
-          Đa tác nhân RAG &mdash; LightRAG + PageIndex + Gemini
+          Đa tác nhân RAG &mdash; LightRAG (9 tác nhân) + PageIndex Cloud (Phúc lợi) + Gemini
         </p>
         {health && (
           <div className="app__status-row">
@@ -42,15 +42,19 @@ export default function App() {
                `${readyCount}/${agentEntries.length} tác nhân sẵn sàng`}
             </span>
             <div className="app__agents">
-              {agentEntries.map(([domain, h]) => (
-                <span
-                  key={domain}
-                  className={`agent-chip agent-chip--${h.ready ? 'ready' : 'idle'}`}
-                  title={`${h.engine_type} · ${h.indexed_docs} tài liệu`}
-                >
-                  {AGENT_LABELS[domain] || domain}
-                </span>
-              ))}
+              {agentEntries.map(([domain, h]) => {
+                const isCloud = domain === 'BENEFITS'
+                const engineLabel = isCloud ? 'pageindex cloud' : h.engine_type
+                return (
+                  <span
+                    key={domain}
+                    className={`agent-chip agent-chip--${h.ready ? (isCloud ? 'cloud' : 'ready') : 'idle'}`}
+                    title={`${engineLabel} · ${h.indexed_docs} tài liệu`}
+                  >
+                    {isCloud ? '☁ ' : ''}{AGENT_LABELS[domain] || domain}
+                  </span>
+                )
+              })}
             </div>
           </div>
         )}

@@ -22,9 +22,6 @@ python-docx>=1.1.2
 # Used by LightRAG embedding wrapper
 numpy>=1.26.0
 
-# PageIndex (VectifyAI) — vectorless reasoning-based RAG
-# Install from GitHub (no PyPI package available):
-#   pip install git+https://github.com/VectifyAI/PageIndex.git
-# OR clone the repo and: pip install -e /path/to/PageIndex
-# PageIndex uses LiteLLM internally:
-litellm>=1.40.0
+# PageIndex Cloud SDK (VectifyAI) — vectorless reasoning-based RAG via cloud API
+# API key from https://dash.pageindex.ai/api-keys  →  PAGEINDEX_API_KEY in .env
+pageindex>=0.2.8

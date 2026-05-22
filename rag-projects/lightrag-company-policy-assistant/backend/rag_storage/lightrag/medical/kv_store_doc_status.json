@@ -1,0 +1,20 @@
+{
+  "doc-7b47df0f1bec58af860f9a8fc117479a": {
+    "status": "processed",
+    "chunks_count": 2,
+    "chunks_list": [
+      "chunk-ad4dd264cb83476196e230bd825fd73c",
+      "chunk-e314cce6287bfa54dd29e41cbe752320"
+    ],
+    "content_summary": "# CHÍNH SÁCH Y TẾ VÀ BẢO HIỂM SỨC KHỎE\n## Công ty TNHH Agentic House Việt Nam\n### Phiên bản 1.3 — Có hiệu lực từ ngày 01/01/2024\n\n---\n\n## Điều 1. Bảo hiểm y tế bắt buộc (BHYT)\n\nCông ty đóng bảo hiểm y tế bắt buộc theo Luật BHYT cho toàn bộ nhân viên ...",
+    "content_length": 4200,
+    "created_at": "2026-05-22T13:13:38.401399+00:00",
+    "updated_at": "2026-05-22T13:16:11.798975+00:00",
+    "file_path": "data/documents/medical/chinh_sach_y_te.md",
+    "track_id": "insert_20260522_201338_e4947763",
+    "metadata": {
+      "processing_start_time": 1779455618,
+      "processing_end_time": 1779455771
+    }
+  }
+}

@@ -37,14 +37,14 @@ flowchart TD
                 PRO["ProceduresAgent · procedures/"]
                 HB["HandbookAgent · handbooks/"]
                 TRN["TrainingAgent · training/"]
-            end
-            subgraph PAgents["PageIndex (tree navigation)"]
-                BEN["BenefitsAgent · benefits/"]
                 CON["ConductAgent · conduct/"]
                 MED["MedicalAgent · medical/"]
                 ITS["ITSecurityAgent · it_security/"]
                 CMP["ComplianceAgent · compliance/"]
                 FIN["FinanceAgent · finance/"]
+            end
+            subgraph PAgents["PageIndex (tree navigation)"]
+                BEN["BenefitsAgent · benefits/"]
             end
         end
 
@@ -56,8 +56,8 @@ flowchart TD
 
     subgraph Storage["Storage Layer"]
         NEO4J[("Neo4j\nGraph DB · Entities + Relations\n(shared, one per domain working_dir)")]
-        LDIR[("rag_storage/lightrag/\n{hr_policy, procedures,\nhandbook, training}/")]
-        PDIR[("rag_storage/pageindex/\n{benefits, conduct, medical, it_security,\ncompliance, finance}/ · *.json + registry.json")]
+        LDIR[("rag_storage/lightrag/\n{hr_policy, procedures, handbook, training,\nconduct, medical, it_security,\ncompliance, finance}/")]
+        PDIR[("rag_storage/pageindex/\n{benefits}/ · *.json + registry.json")]
         DOCS[("data/documents/\n10 doc_type sub-folders")]
     end
 
@@ -85,8 +85,8 @@ flowchart TD
     CLS -->|"response_schema JSON"| GLLM
     CLS --> ROUTE
     ROUTE --> LAgents & PAgents
-    HR & PRO & HB & TRN --> LSVC
-    BEN & CON & MED & ITS & CMP & FIN --> PSVC
+    HR & PRO & HB & TRN & CON & MED & ITS & CMP & FIN --> LSVC
+    BEN --> PSVC
     SYNTH -->|"Gemini merge"| GLLM
 
     %% Storage
@@ -112,13 +112,13 @@ All 10 domains are declared in one place — [`backend/app/domains.py`](backend/
 |-------|-----------|--------|----------|
 | HRPolicyAgent | `HR_POLICY` | LightRAG (hybrid) | Relational: leave, hours, entitlements, roles |
 | BenefitsAgent | `BENEFITS` | PageIndex | Precise: salary bands, insurance amounts, page citations |
-| ConductAgent | `CONDUCT` | PageIndex | Precise: exact rules, prohibited behaviors, section refs |
+| ConductAgent | `CONDUCT` | LightRAG (hybrid) | Relational: rules, prohibited behaviors, discipline chains |
 | ProceduresAgent | `PROCEDURES` | LightRAG (hybrid) | Relational: steps, approval chains, responsible roles |
 | HandbookAgent | `HANDBOOK` | LightRAG (global) | Broad: culture, mission, company overview |
-| MedicalAgent | `MEDICAL` | PageIndex | Precise: reimbursement, coverage limits, hospital lists |
-| ITSecurityAgent | `IT_SECURITY` | PageIndex | Precise: device use, passwords, access rules |
-| ComplianceAgent | `COMPLIANCE` | PageIndex | Precise: labor law, PDPA, anti-corruption clauses |
-| FinanceAgent | `FINANCE` | PageIndex | Precise: expense caps, reimbursement, approval limits |
+| MedicalAgent | `MEDICAL` | LightRAG (hybrid) | Relational: insurance, hospitals, coverage, procedures |
+| ITSecurityAgent | `IT_SECURITY` | LightRAG (hybrid) | Relational: systems, access roles, security policies |
+| ComplianceAgent | `COMPLIANCE` | LightRAG (hybrid) | Relational: laws, obligations, violations, penalties |
+| FinanceAgent | `FINANCE` | LightRAG (hybrid) | Relational: expense categories, approvers, limits |
 | TrainingAgent | `TRAINING` | LightRAG (hybrid) | Relational: career paths, programs, eligibility, budgets |
 
 ## Context-Engineering Layer
@@ -159,9 +159,9 @@ OrchestratorAgent.process_message()
                  { answer, domains_consulted, citations, entities }
 
 agent.answer():
-  • LightRAG → query(history, system_prompt) + retrieve_entities()  → entities
-  • PageIndex → nav (TreeNavigation schema) → grounded answer
-               (GroundedAnswer schema, persona + history threaded)  → citations
+  • LightRAG (9 agents) → query(history, system_prompt) + retrieve_entities()  → entities
+  • PageIndex (BENEFITS) → nav (TreeNavigation schema) → grounded answer
+                           (GroundedAnswer schema, persona + history threaded)  → citations
 ```
 
 ## Ingestion Flow

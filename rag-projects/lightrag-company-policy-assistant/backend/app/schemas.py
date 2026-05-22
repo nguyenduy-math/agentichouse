@@ -47,7 +47,6 @@ class DomainClassification(BaseModel):
     """Classifier output — Gemini may only return keys from the DomainKey enum."""
 
     domains: list[DomainKey] = Field(
-        default_factory=list,
         description="1-3 relevant policy domains, most relevant first. Empty if none apply.",
     )
 
@@ -55,28 +54,27 @@ class DomainClassification(BaseModel):
 class RelevantNode(BaseModel):
     """One section a PageIndex tree-navigation step decided is worth reading."""
 
-    node_id: str = ""
-    start_page: int
-    end_page: int
-    reason: str = ""
+    node_id: str
+    title: str
+    reason: str
 
 
 class TreeNavigation(BaseModel):
-    relevant_nodes: list[RelevantNode] = Field(default_factory=list)
+    relevant_nodes: list[RelevantNode]
 
 
 class PageCitation(BaseModel):
     """A citation produced by the answer step, tied to the text it actually used."""
 
     page: int
-    section: str = ""
+    section: str
 
 
 class GroundedAnswer(BaseModel):
     """PageIndex answer-step output: answer text + the citations it relied on."""
 
     answer: str
-    citations: list[PageCitation] = Field(default_factory=list)
+    citations: list[PageCitation]
 
 
 # ---------------------------------------------------------------------------

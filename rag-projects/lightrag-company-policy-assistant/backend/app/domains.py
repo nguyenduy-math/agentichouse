@@ -37,7 +37,7 @@ DOMAINS: tuple[DomainInfo, ...] = (
         "Lương thưởng, bảo hiểm sức khỏe, hưu trí, phụ cấp, đãi ngộ",
     ),
     DomainInfo(
-        "CONDUCT", "conduct", "pageindex", "Quy tắc ứng xử",
+        "CONDUCT", "conduct", "lightrag", "Quy tắc ứng xử",
         "Quy tắc ứng xử, đạo đức, quy trình kỷ luật, trang phục",
     ),
     DomainInfo(
@@ -49,19 +49,19 @@ DOMAINS: tuple[DomainInfo, ...] = (
         "Tổng quan công ty, văn hóa, sứ mệnh, thông tin chung nhân viên",
     ),
     DomainInfo(
-        "MEDICAL", "medical", "pageindex", "Chính sách y tế",
+        "MEDICAL", "medical", "lightrag", "Chính sách y tế",
         "Chính sách y tế, bảo hiểm sức khỏe, danh sách bệnh viện, quy trình khám chữa bệnh",
     ),
     DomainInfo(
-        "IT_SECURITY", "it_security", "pageindex", "CNTT & Bảo mật",
+        "IT_SECURITY", "it_security", "lightrag", "CNTT & Bảo mật",
         "Chính sách CNTT, bảo mật thông tin, sử dụng thiết bị, mật khẩu, quyền truy cập",
     ),
     DomainInfo(
-        "COMPLIANCE", "compliance", "pageindex", "Tuân thủ & Pháp lý",
+        "COMPLIANCE", "compliance", "lightrag", "Tuân thủ & Pháp lý",
         "Tuân thủ pháp luật, quy định lao động, bảo vệ dữ liệu, phòng chống tham nhũng",
     ),
     DomainInfo(
-        "FINANCE", "finance", "pageindex", "Chính sách tài chính",
+        "FINANCE", "finance", "lightrag", "Chính sách tài chính",
         "Chính sách tài chính, hạn mức chi phí, hoàn ứng, phê duyệt ngân sách",
     ),
     DomainInfo(
