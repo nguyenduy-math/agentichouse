@@ -13,3 +13,6 @@ node_modules/
 neo4j_data/
 neo4j_logs/
 postgres_data/
+neo4j_data_v2/
+neo4j_logs_v2/
+postgres_data_v2/
