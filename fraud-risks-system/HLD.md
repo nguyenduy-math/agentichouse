@@ -80,7 +80,7 @@ flowchart TB
 
     subgraph EXT_AI["  ⬡  EXTERNAL AI INFERENCE  ─ ─ ─ ─ (managed cloud)"]
         direction LR
-        GEMINI["◈  Google Gemini\n──────────────────────\ngemini-2.5-flash\nStructured output via tools\nHealthcare fraud prompts"]
+        SFLOW["◈  Qwen2.5 · SiliconFlow\n──────────────────────\nQwen/Qwen2.5-7B-Instruct\nOpenAI-compatible tool calling\nHealthcare fraud prompts"]
     end
 
     %% ── Ingestion Flow ───────────────────────────────────────────
@@ -102,8 +102,8 @@ flowchart TB
     SCHED -->|"write run record"| BATCH_TBL
 
     %% ── LLM external call ────────────────────────────────────────
-    LLM_AN -->|"narrative + codes + prompt"| GEMINI
-    GEMINI -->|"structured JSON response"| LLM_AN
+    LLM_AN -->|"narrative + codes + prompt"| SFLOW
+    SFLOW -->|"structured JSON response"| LLM_AN
 
     %% ── Review Flow ──────────────────────────────────────────────
     GW    -->|"GET /review/queue"| REVIEW
@@ -153,7 +153,7 @@ flowchart TB
     class REVIEW,LABELS hitl
     class FEAT,TRAIN ml
     class CLAIMS_TBL,ANALYSIS_TBL,REVIEWS_TBL,BATCH_TBL,NEO4J_GRAPH storage
-    class GEMINI extai
+    class SFLOW extai
     class GSYNC,Q_CONC,Q_VEL,Q_RING,Q_DOM netgraph
 ```
 
@@ -261,7 +261,7 @@ sequenceDiagram
     participant FE  as React Frontend
     participant API as FastAPI
     participant DB  as PostgreSQL
-    participant LLM as Gemini 2.5 Flash
+    participant LLM as Qwen2.5 · SiliconFlow
     participant GE  as Graph Engine
     participant NEO as Neo4j
 
@@ -276,7 +276,7 @@ sequenceDiagram
 
     loop For each pending claim
         API->>DB: SELECT claim WHERE status=pending
-        API->>LLM: Structured prompt\n(Vietnamese BHYT context)
+        API->>LLM: Structured prompt\n(Vietnamese BHYT context)\nOpenAI tool_choice forced
         LLM-->>API: {risk_score, flags, explanation}
         API->>API: apply_rule_signals()\n(VND thresholds, code counts)
         API->>API: combined = 0.7×llm + 0.3×rule
