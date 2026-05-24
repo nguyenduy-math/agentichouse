@@ -126,7 +126,7 @@ def create_app() -> FastAPI:
 
     @app.get("/health")
     async def health() -> dict:
-        return {"status": "ok"}
+        return {"status": "ok", "max_chat_retries": settings.max_chat_retries}
 
     return app
 

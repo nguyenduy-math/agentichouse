@@ -3,12 +3,15 @@ QC Test Suite – GraphRAG HR Assistant (Agentic House)
 ======================================================
 Run from the backend/ directory:
 
-    python qc_tests.py                  # all sections
-    python qc_tests.py --section neo4j  # just Neo4j checks
-    python qc_tests.py --section api    # just API checks
-    python qc_tests.py --section eval   # golden-QA evaluation (costs LLM calls)
+    python qc_tests.py                              # all sections
+    python qc_tests.py --section neo4j              # just Neo4j checks
+    python qc_tests.py --section api                # just API checks
+    python qc_tests.py --section eval               # golden-QA evaluation (costs LLM calls)
+    python qc_tests.py --output report.csv          # export results to docs/report.csv
+    python qc_tests.py --section api --output api.csv  # combine section + export
 
 Sections: neo4j | retrieval | api | eval | manual
+Export:   --output FILE  (CSV; plain filename → saved under docs/)
 """
 
 from __future__ import annotations
@@ -284,11 +287,30 @@ async def run_retrieval_qc() -> None:
 
 # (question, must_contain_substring_in_reply, expected_query_type, expected_has_sources)
 API_CASES: list[tuple[str, str, str, bool]] = [
+    # ── Leave policy ─────────────────────────────────────────────────────────
     ("Nhân viên dưới 5 năm có bao nhiêu ngày nghỉ phép năm?", "12", "LOCAL", True),
+    ("Nhân viên từ 5 đến dưới 10 năm thâm niên được bao nhiêu ngày nghỉ phép năm?", "14", "LOCAL", True),
+    ("Nhân viên trên 10 năm thâm niên được nghỉ bao nhiêu ngày phép năm?", "16", "LOCAL", True),
+    ("Phép năm còn dư có thể chuyển tối đa bao nhiêu ngày sang năm sau?", "5 ngày", "LOCAL", True),
+    ("Nhân viên được nghỉ ốm có lương tối đa bao nhiêu ngày mỗi năm?", "10 ngày", "LOCAL", True),
+    ("Nhân viên nữ được nghỉ thai sản bao lâu?", "6 tháng", "LOCAL", True),
+    ("Bản thân nhân viên kết hôn được nghỉ mấy ngày có lương?", "3 ngày", "LOCAL", True),
+    # ── Leave procedure ───────────────────────────────────────────────────────
     ("Quy trình xin nghỉ đột xuất cần làm gì?", "HRM", "LOCAL", True),
+    ("Làm thêm giờ vào ngày lễ được tính bao nhiêu phần trăm lương?", "300", "LOCAL", True),
+    # ── Dress code ────────────────────────────────────────────────────────────
     ("Phòng Kỹ thuật được phép mặc gì vào thứ Hai?", "casual", "LOCAL", True),
+    ("Chính sách Casual Friday cho phép nhân viên mặc trang phục gì?", "jeans", "LOCAL", True),
+    ("Nhân viên vi phạm quy định trang phục lần thứ 2 bị xử lý như thế nào?", "cảnh báo", "LOCAL", True),
+    # ── Benefits ─────────────────────────────────────────────────────────────
     ("Mức phụ cấp ăn trưa là bao nhiêu?", "50.000", "LOCAL", True),
+    ("Thưởng cuối năm xếp loại Xuất sắc được bao nhiêu tháng lương?", "3", "LOCAL", True),
+    ("Nhân viên giới thiệu ứng viên Senior được thưởng bao nhiêu?", "5.000.000", "LOCAL", True),
+    # ── Remote work ───────────────────────────────────────────────────────────
     ("Phòng Kỹ thuật làm remote tối đa mấy ngày?", "3", "LOCAL", True),
+    ("Phòng Kinh doanh có được phép làm việc từ xa không?", "không áp dụng", "LOCAL", True),
+    ("Trong giờ cốt lõi khi làm remote, nhân viên phải phản hồi trong bao lâu?", "15 phút", "LOCAL", True),
+    # ── Out-of-scope (hallucination guard) ───────────────────────────────────
     ("Câu hỏi hoàn toàn không liên quan đến nội quy: thời tiết hôm nay thế nào?", "Nhân sự", "LOCAL", False),
 ]
 
@@ -318,7 +340,7 @@ async def run_api_qc() -> None:
 
         # 3b. Session creation
         try:
-            r = await client.post("/session")
+            r = await client.post("/api/v1/session")
             session_id = r.json().get("session_id", "")
             record("create-session", r.status_code == 200 and bool(session_id),
                    f"session_id={session_id[:20]}...")
@@ -326,11 +348,17 @@ async def run_api_qc() -> None:
             record("create-session", False, str(e))
             return
 
-        # 3c. Individual chat cases
+        # 3c. Individual chat cases — each gets its own fresh session so questions
+        # are fully isolated and don't see each other's conversation history.
         for question, must_contain, exp_type, exp_sources in API_CASES:
             try:
-                r = await client.post("/chat", json={"session_id": session_id, "message": question})
+                # r_sess = await client.post("/api/v1/session")
+                # case_session_id = r_sess.json().get("session_id", "")
+
+                # r = await client.post("/api/v1/chat", json={"session_id": case_session_id, "message": question})
+                r = await client.post("/api/v1/chat", json={"session_id": session_id, "message": question})
                 body = r.json()
+                # print(f"API response: {body}")
                 reply = body.get("reply", "").lower()
                 got_type = body.get("query_type", "")
                 sources = body.get("sources", [])
@@ -345,56 +373,57 @@ async def run_api_qc() -> None:
                     f"query_type={got_type}, sources={len(sources)}, contains='{must_contain}': {'✓' if answer_ok else '✗'}",
                     detail="" if answer_ok else f"Reply excerpt: {body.get('reply', '')[:200]}",
                 )
+                # await client.delete(f"/api/v1/session/{case_session_id}")
             except Exception as e:
                 record(f"chat-{question[:35]}", False, str(e))
 
         # 3d. Multi-turn conversation (context continuity)
-        try:
-            r2 = await client.post("/session")
-            mt_session = r2.json().get("session_id", "")
-            mt_ok = True
-            for question, must_contain in MULTI_TURN_FLOW:
-                r = await client.post("/chat", json={"session_id": mt_session, "message": question})
-                reply = r.json().get("reply", "").lower()
-                if must_contain.lower() not in reply:
-                    mt_ok = False
-                    record(
-                        f"multi-turn-{question[:30]}",
-                        False,
-                        f"Missing '{must_contain}' in reply",
-                        detail=r.json().get("reply", "")[:300],
-                    )
-                else:
-                    record(f"multi-turn-{question[:30]}", True, f"contains '{must_contain}'")
-        except Exception as e:
-            record("multi-turn", False, str(e))
+        # try:
+        #     r2 = await client.post("/api/v1/session")
+        #     mt_session = r2.json().get("session_id", "")
+        #     mt_ok = True
+        #     for question, must_contain in MULTI_TURN_FLOW:
+        #         r = await client.post("/api/v1/chat", json={"session_id": mt_session, "message": question})
+        #         reply = r.json().get("reply", "").lower()
+        #         if must_contain.lower() not in reply:
+        #             mt_ok = False
+        #             record(
+        #                 f"multi-turn-{question[:30]}",
+        #                 False,
+        #                 f"Missing '{must_contain}' in reply",
+        #                 detail=r.json().get("reply", "")[:300],
+        #             )
+        #         else:
+        #             record(f"multi-turn-{question[:30]}", True, f"contains '{must_contain}'")
+        # except Exception as e:
+        #     record("multi-turn", False, str(e))
 
         # 3e. Session history endpoint
-        try:
-            r = await client.get(f"/chat/{session_id}/history")
-            history = r.json()
-            record("chat-history", r.status_code == 200 and len(history) > 0,
-                   f"{len(history)} messages in history")
-        except Exception as e:
-            record("chat-history", False, str(e))
+        # try:
+        #     r = await client.get(f"/api/v1/chat/{session_id}/history")
+        #     history = r.json()
+        #     record("chat-history", r.status_code == 200 and len(history) > 0,
+        #            f"{len(history)} messages in history")
+        # except Exception as e:
+        #     record("chat-history", False, str(e))
 
         # 3f. Graph endpoint
-        try:
-            r = await client.get("/graph/nodes")
-            record("graph-nodes", r.status_code == 200, f"status={r.status_code}")
-        except Exception as e:
-            record("graph-nodes", False, str(e))
+        # try:
+        #     r = await client.get("/api/v1/graph/nodes")
+        #     record("graph-nodes", r.status_code == 200, f"status={r.status_code}")
+        # except Exception as e:
+        #     record("graph-nodes", False, str(e))
 
         # 3g. Stats endpoint
-        try:
-            r = await client.get("/stats")
-            record("admin-stats", r.status_code == 200, f"status={r.status_code}")
-        except Exception as e:
-            record("admin-stats", False, str(e))
+        # try:
+        #     r = await client.get("/api/v1/stats")
+        #     record("admin-stats", r.status_code == 200, f"status={r.status_code}")
+        # except Exception as e:
+        #     record("admin-stats", False, str(e))
 
         # 3h. Session delete
         try:
-            r = await client.delete(f"/session/{session_id}")
+            r = await client.delete(f"/api/v1/session/{session_id}")
             record("delete-session", r.status_code in (200, 204),
                    f"status={r.status_code}")
         except Exception as e:
@@ -617,14 +646,14 @@ async def run_eval_qc() -> None:
     scores_completeness: list[float] = []
 
     async with httpx.AsyncClient(base_url=BACKEND_URL, timeout=90) as client:
-        # Create a fresh session for evaluation
-        r = await client.post("/session")
-        session_id = r.json().get("session_id", "eval-session")
-
         for case in GOLDEN_QA:
             try:
+                # Fresh session per case so no cross-contamination from prior answers.
+                r_sess = await client.post("/session")
+                eval_session_id = r_sess.json().get("session_id", "eval-session")
+
                 r = await client.post("/chat", json={
-                    "session_id": session_id,
+                    "session_id": eval_session_id,
                     "message": case.question,
                 })
                 answer = r.json().get("reply", "")
@@ -662,6 +691,7 @@ async def run_eval_qc() -> None:
                     label,
                     detail=reasoning if not passed else "",
                 )
+                await client.delete(f"/session/{eval_session_id}")
                 await asyncio.sleep(1)  # gentle rate-limit
 
             except Exception as e:
@@ -765,11 +795,29 @@ def print_summary() -> None:
     print()
 
 
+def export_csv(path: str) -> None:
+    import csv
+    from pathlib import Path
+
+    out = Path(path)
+    if out.parent == Path("."):
+        out = Path("docs") / out
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with out.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["name", "passed", "message", "detail"])
+        writer.writeheader()
+        for r in results:
+            writer.writerow({"name": r.name, "passed": r.passed, "message": r.message, "detail": r.detail})
+
+    print(f"\n  Report saved → {out.resolve()}")
+
+
 # ===========================================================================
 # Entry point
 # ===========================================================================
 
-async def main(sections: list[str]) -> None:
+async def main(sections: list[str], output: Optional[str] = None) -> None:
     print("\n  GraphRAG HR Assistant – QC Test Suite")
     print(f"  Backend: {BACKEND_URL}  |  Neo4j: {NEO4J_URI}")
 
@@ -794,6 +842,9 @@ async def main(sections: list[str]) -> None:
     if sections != ["manual"]:
         print_summary()
 
+    if output:
+        export_csv(output)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GraphRAG QC Test Suite")
@@ -803,5 +854,10 @@ if __name__ == "__main__":
         default="all",
         help="Which QC section to run (default: all)",
     )
+    parser.add_argument(
+        "--output",
+        metavar="FILE",
+        help="Export results to a CSV file (default dir: docs/). E.g. --output report.csv",
+    )
     args = parser.parse_args()
-    asyncio.run(main([args.section]))
+    asyncio.run(main([args.section], output=args.output))

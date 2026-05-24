@@ -1,0 +1,7 @@
+name,passed,message,detail
+health-endpoint,True,"status=200 body={""status"":""ok""}",
+create-session,True,session_id=0e69af9b-7f3f-485d-a...,
+multi-turn-Nhân viên có bao nhiêu ngày ng,True,contains '12',
+multi-turn-Nếu thâm niên trên 10 năm thì ,True,contains '16',
+multi-turn-Còn nhân viên thử việc?,True,contains 'không áp dụng',
+delete-session,True,status=200,

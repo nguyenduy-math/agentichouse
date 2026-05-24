@@ -48,6 +48,9 @@ class LLMService(ABC):
     async def classify_query(self, question: str) -> str: ...
 
     @abstractmethod
+    async def rewrite_query(self, history: list[dict], message: str) -> str: ...
+
+    @abstractmethod
     async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult: ...
 
 
@@ -55,6 +58,18 @@ _GEMINI_JSON_CONFIG = types.GenerateContentConfig(
     response_mime_type="application/json",
     temperature=0.0,
 )
+
+_QUERY_REWRITE_PROMPT = """\
+Dựa vào lịch sử hội thoại bên dưới và câu hỏi mới nhất của người dùng, hãy viết lại câu hỏi \
+thành một câu hỏi độc lập, đầy đủ ngữ cảnh để tìm kiếm trong cơ sở tri thức nội quy công ty.
+Chỉ trả về câu hỏi đã viết lại, không thêm bất kỳ giải thích nào.
+
+Lịch sử hội thoại:
+{history_text}
+
+Câu hỏi hiện tại: {message}
+Câu hỏi độc lập:\
+"""
 
 
 class GeminiLLMService(LLMService):
@@ -79,14 +94,16 @@ class GeminiLLMService(LLMService):
             )
             for msg in history
         ]
-        chat = self._client.chats.create(model=self._model, history=gemini_history)
-        full_message = (
-            f"{system_prompt}\n\n{user_message}" if not gemini_history else user_message
+        chat = self._client.chats.create(
+            model=self._model,
+            history=gemini_history,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=temperature,
+                max_output_tokens=2048,
+            ),
         )
-        response = chat.send_message(
-            full_message,
-            config=types.GenerateContentConfig(temperature=temperature, max_output_tokens=2048),
-        )
+        response = chat.send_message(user_message)
         return response.text
 
     async def generate_answer(self, question: str, context: str) -> str:
@@ -144,6 +161,24 @@ class GeminiLLMService(LLMService):
             return data.get("query_type", "LOCAL")
         except Exception:
             return "LOCAL"
+
+    async def rewrite_query(self, history: list[dict], message: str) -> str:
+        if not history:
+            return message
+        history_text = "\n".join(
+            f"{'Người dùng' if m['role'] == 'user' else 'Trợ lý'}: {m['content']}"
+            for m in history[-6:]
+        )
+        prompt = _QUERY_REWRITE_PROMPT.format(history_text=history_text, message=message)
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=256),
+            )
+            return response.text.strip() or message
+        except Exception:
+            return message
 
     async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
         prompt = ANSWER_VERIFICATION_PROMPT.format(
@@ -254,6 +289,25 @@ class OpenAILLMService(LLMService):
             return data.get("query_type", "LOCAL")
         except Exception:
             return "LOCAL"
+
+    async def rewrite_query(self, history: list[dict], message: str) -> str:
+        if not history:
+            return message
+        history_text = "\n".join(
+            f"{'Người dùng' if m['role'] == 'user' else 'Trợ lý'}: {m['content']}"
+            for m in history[-6:]
+        )
+        prompt = _QUERY_REWRITE_PROMPT.format(history_text=history_text, message=message)
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=256,
+            )
+            return (response.choices[0].message.content or "").strip() or message
+        except Exception:
+            return message
 
     async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
         prompt = ANSWER_VERIFICATION_PROMPT.format(

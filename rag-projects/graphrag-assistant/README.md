@@ -97,9 +97,11 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Q(["Employee"])
+    Q(["Employee\n(turn N of a session)"])
+    History["Load history\nlast 10 messages"]
     Classify["Query Classification\nGemini LLM"]
-    Embed["Embed query\nGemini Embeddings"]
+    Rewrite["Rewrite query\nGemini LLM\n(skipped on turn 1)"]
+    Embed["Embed rewritten query\nGemini Embeddings"]
 
     subgraph LOCAL["LOCAL search"]
         VecChunk["Vector search\nTopK PolicyChunks\n(Neo4j cosine)"]
@@ -112,12 +114,14 @@ flowchart TD
         GlobalCtx["Build Context\ncommunity summaries + sample chunks"]
     end
 
-    Generate["Gemini 2.5 Flash\nGenerate Answer in Vietnamese"]
+    Generate["Gemini 2.5 Flash\nGenerate Answer in Vietnamese\n(system_instruction carries RAG context every turn)"]
     Response(["ChatResponse\nreply · sources · graph_data · query_type"])
 
-    Q --> Classify & Embed
+    Q --> History --> Classify
+    History --> Rewrite
     Classify -- "LOCAL" --> VecChunk
     Classify -- "GLOBAL" --> VecComm
+    Rewrite --> Embed
     Embed --> VecChunk & VecComm
     VecChunk --> Cypher --> LocalCtx --> Generate
     VecComm --> GlobalCtx --> Generate
@@ -131,6 +135,18 @@ flowchart TD
 | **LOCAL** | Specific questions (number of vacation days, dress code by department) | Vector search chunks → Cypher 2-hop traversal → answer with citations |
 | **GLOBAL** | General questions, summaries, policy comparisons | Vector search community summaries → synthesized answer |
 
+> **Answer Verification** — when `ENABLE_ANSWER_VERIFICATION=true` (default), a second LLM call checks that the generated answer is grounded in the retrieved context before returning the response.
+
+### Multi-Turn Conversation Quality
+
+Three mechanisms keep answer quality high across a long conversation:
+
+| Mechanism | How it works |
+|---|---|
+| **Query rewriting** | Before embedding, Gemini rewrites vague follow-ups ("Còn nhân viên thử việc?") into a standalone, context-rich query using recent conversation history. No extra LLM call on turn 1. |
+| **System instruction** | The RAG context (policy documents) is passed as `system_instruction` in every Gemini chat turn, so the model always has the retrieved evidence — not just on the first message. |
+| **History windowing** | Only the last 10 messages (5 turns) are sent to the LLM, preventing context bloat and conflicting information from old turns. |
+
 ---
 
 ## Tech Stack
@@ -138,8 +154,10 @@ flowchart TD
 | Layer | Technology |
 |-------|-----------|
 | Backend | FastAPI + Uvicorn (Python 3.12) |
-| LLM | Google Gemini 2.5 Flash |
-| Embeddings | `models/gemini-embedding-exp-03-07` (3072 dims) |
+| LLM (default) | Google Gemini 2.5 Flash |
+| LLM (alternative) | OpenAI GPT-4.1 — set `LLM_PROVIDER=openai` |
+| Embeddings (Gemini) | `models/gemini-embedding-exp-03-07` (3072 dims) |
+| Embeddings (OpenAI) | `text-embedding-3-large` |
 | Graph + Vector Store | **Neo4j 5** (replaces both ChromaDB + NetworkX) |
 | Community Detection | python-louvain (results stored in Neo4j) |
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
@@ -164,8 +182,8 @@ graphrag-assistant/
 │   │   │   └── graph.py               # GET /graph/nodes, GET /graph/community/{id}
 │   │   ├── models/                    # Pydantic schemas
 │   │   ├── services/
-│   │   │   ├── llm_service.py         # Gemini: extract, classify, answer
-│   │   │   ├── embedding_service.py   # Gemini embeddings
+│   │   │   ├── llm_service.py         # LLM provider abstraction (Gemini / OpenAI)
+│   │   │   ├── embedding_service.py   # Embedding provider abstraction
 │   │   │   ├── neo4j_store.py         # Neo4j: graph + vector index (KEY FILE)
 │   │   │   ├── indexing_service.py    # 5-stage indexing pipeline
 │   │   │   ├── graph_rag_service.py   # LOCAL / GLOBAL query pipeline
@@ -208,7 +226,7 @@ graphrag-assistant/
 - Python 3.12+
 - Node.js 20+
 - Docker & Docker Compose
-- Google API Key (with access to Gemini)
+- Google API Key (Gemini) **or** OpenAI API Key — depending on your chosen `LLM_PROVIDER`
 
 ### 1. Environment Configuration
 
@@ -217,11 +235,21 @@ cd backend
 cp .env.example .env
 ```
 
-Edit `.env` and fill in API key:
+Edit `.env` and choose your LLM provider:
 
+**Option A — Google Gemini (default)**
 ```ini
+LLM_PROVIDER=gemini
 GOOGLE_API_KEY=your_google_api_key_here
 ```
+
+**Option B — OpenAI**
+```ini
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+> **Important:** `EMBEDDING_DIM` and the embedding model are baked into the Neo4j vector index on first build. If you switch providers after indexing, delete the Neo4j volume and rebuild the graph index.
 
 ### 2. Install Dependencies
 
@@ -301,8 +329,9 @@ Open **http://localhost:5173**
 ## Docker (Recommended for Production)
 
 ```bash
-# Create .env at root directory
-echo "GOOGLE_API_KEY=your_key_here" > .env
+# Create .env at root directory (Gemini example — set LLM_PROVIDER=openai for OpenAI)
+echo "LLM_PROVIDER=gemini" > .env
+echo "GOOGLE_API_KEY=your_key_here" >> .env
 
 docker compose up --build
 ```
@@ -340,19 +369,76 @@ docker compose up --build
 
 All settings in `backend/.env`:
 
+### LLM Provider
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GOOGLE_API_KEY` | — | **Required.** Google Gemini API key |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | LLM model |
+| `LLM_PROVIDER` | `gemini` | Provider selection: `gemini` or `openai` |
+
+### Google Gemini (used when `LLM_PROVIDER=gemini`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GOOGLE_API_KEY` | — | **Required.** Google Cloud API key with Gemini access |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | LLM model name |
 | `GEMINI_EMBEDDING_MODEL` | `models/gemini-embedding-exp-03-07` | Embedding model |
-| `EMBEDDING_DIM` | `3072` | Embedding dimension |
-| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j connection |
+| `EMBEDDING_DIM` | `3072` | Embedding dimension (must match the model) |
+
+### OpenAI (used when `LLM_PROVIDER=openai`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OPENAI_API_KEY` | — | **Required.** OpenAI API key |
+| `OPENAI_MODEL` | `gpt-4.1` | LLM model name |
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-large` | Embedding model |
+
+### Neo4j
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j Bolt connection URI |
 | `NEO4J_USER` | `neo4j` | Neo4j username |
-| `NEO4J_PASSWORD` | `techviet2024` | Neo4j password |
+| `NEO4J_PASSWORD` | `techviet2024` | Neo4j password (must match `docker-compose.yml`) |
+
+### Indexing & Retrieval Tuning
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `CHUNK_SIZE` | `2800` | Characters per chunk (~700 tokens in Vietnamese) |
+| `CHUNK_OVERLAP` | `400` | Overlap between consecutive chunks |
+| `ENTITY_EXTRACTION_BATCH` | `5` | Chunks processed per LLM batch during extraction |
 | `MAX_LOCAL_CHUNKS` | `8` | Top-K chunks for LOCAL search |
-| `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K summaries for GLOBAL search |
-| `GRAPH_HOP_DEPTH` | `2` | Cypher traversal depth |
+| `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K community summaries for GLOBAL search |
+| `GRAPH_HOP_DEPTH` | `2` | Cypher 2-hop traversal depth for entity expansion |
+| `ENABLE_ANSWER_VERIFICATION` | `true` | Run an LLM self-check after answer generation |
+
+### Session & CORS
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SESSION_TTL_SECONDS` | `3600` | Session idle timeout (1 hour) |
+| `CORS_ORIGINS` | `["http://localhost:5173","http://localhost:3000"]` | Allowed CORS origins (JSON list) |
+
+---
+
+## QC Test Suite
+
+`backend/qc_tests.py` covers five sections. Run from the `backend/` directory (with the venv activated):
+
+```bash
+python qc_tests.py                              # all sections
+python qc_tests.py --section neo4j              # verify Neo4j connection & schema
+python qc_tests.py --section retrieval          # test vector + graph retrieval
+python qc_tests.py --section api                # integration tests against running backend
+python qc_tests.py --section eval               # LLM-as-judge golden QA (costs API calls)
+python qc_tests.py --section manual             # print manual test prompts
+python qc_tests.py --output report.csv          # export results to docs/report.csv
+python qc_tests.py --section api --output api.csv  # combine section + export
+```
+
+Use `--output FILE` to export results as CSV (columns: `name`, `passed`, `message`, `detail`). A plain filename is saved under `backend/docs/`; an absolute path is used as-is.
+
+> The `eval` section reads golden Q&A pairs from `backend/data/eval_questions.json` and `eval_conversation_sets.json`. It scores answers using the LLM as judge — expect a small cost.
 
 ---
 

@@ -37,6 +37,7 @@ class Settings(BaseSettings):
 
     # Answer verification
     enable_answer_verification: bool = True
+    max_chat_retries: int = 3
 
     # Session
     session_ttl_seconds: int = 3600

@@ -6,10 +6,12 @@ interface ChatStore {
   isLoading: boolean
   activeSources: PolicySource[]
   activeGraphData: GraphData | null
+  maxRetries: number
   addMessage: (msg: Message) => void
   setLoading: (v: boolean) => void
   setActiveSources: (sources: PolicySource[]) => void
   setActiveGraphData: (data: GraphData | null) => void
+  setMaxRetries: (n: number) => void
   clearMessages: () => void
 }
 
@@ -23,10 +25,12 @@ export const useChatStore = create<ChatStore>((set) => ({
   isLoading: false,
   activeSources: [],
   activeGraphData: null,
+  maxRetries: 3,
   addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
   setLoading: (v) => set({ isLoading: v }),
   setActiveSources: (sources) => set({ activeSources: sources }),
   setActiveGraphData: (data) => set({ activeGraphData: data }),
+  setMaxRetries: (n) => set({ maxRetries: n }),
   clearMessages: () => set({ messages: [], activeSources: [], activeGraphData: null }),
 }))
 

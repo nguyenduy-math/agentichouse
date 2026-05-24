@@ -9,6 +9,8 @@ All diagrams are written in [Mermaid](https://mermaid.js.org/) and render direct
 > - Indexing pipeline: [backend/app/services/indexing_service.py](../backend/app/services/indexing_service.py)
 > - Query engine: [backend/app/services/graph_rag_service.py](../backend/app/services/graph_rag_service.py)
 > - Graph + vector store: [backend/app/services/neo4j_store.py](../backend/app/services/neo4j_store.py)
+> - LLM / embedding provider abstraction: [backend/app/services/llm_service.py](../backend/app/services/llm_service.py), [backend/app/services/embedding_service.py](../backend/app/services/embedding_service.py)
+> - Answer verification prompts: [backend/app/prompts/verification_prompts.py](../backend/app/prompts/verification_prompts.py)
 > - Deployment: [docker-compose.yml](../docker-compose.yml)
 
 ---
@@ -26,14 +28,14 @@ flowchart LR
         app["Web App + REST API\n(FastAPI · React · Neo4j)"]
     end
 
-    gemini["☁️ Google Gemini API\n(LLM + Embeddings)"]
+    llmapi["☁️ LLM / Embedding API\nGoogle Gemini (default)\nor OpenAI (LLM_PROVIDER=openai)"]
     docs[["📁 Policy Documents\nPDF · DOCX · TXT"]]
     browser["Neo4j Browser\n(ops / debugging)"]
 
     user -- "asks policy questions\n(HTTPS · React UI)" --> app
     admin -- "uploads docs, triggers indexing" --> app
     admin -- "inspects graph" --> browser
-    app -- "extract · classify · generate · embed" --> gemini
+    app -- "extract · classify · generate · verify · embed" --> llmapi
     app -- "reads at ingest time" --> docs
     browser -- "Bolt" --> app
 ```
@@ -66,12 +68,12 @@ flowchart TB
         end
     end
 
-    gemini["☁️ Google Gemini API"]:::ext
+    llmapi["☁️ LLM / Embedding API\n(Gemini or OpenAI\nper LLM_PROVIDER env)"]:::ext
 
     user -- ":5173 (HTTP)" --> fe
     fe -- "/api/v1/* reverse proxy" --> be
     be -- "Bolt :7687" --> db
-    be -- "HTTPS REST" --> gemini
+    be -- "HTTPS REST" --> llmapi
     be --- volraw
     db --- volneo
 ```
@@ -108,21 +110,21 @@ flowchart TB
 
         subgraph Services["Service layer (singletons via app.state)"]
             Sess["SessionService\nin-mem + TTL cleanup"]:::svc
-            LLM["LLMService\nextract · classify · summarize · generate"]:::svc
-            Emb["EmbeddingService\nGemini embeddings"]:::svc
+            LLM["LLMService (abstract)\nextract · classify · summarize\ngenerate · verify · rewrite_query\nGeminiLLMService | OpenAILLMService"]:::svc
+            Emb["EmbeddingService (abstract)\nembed_query · embed_documents\nGeminiEmbeddingService | OpenAIEmbeddingService"]:::svc
             Idx["IndexingService\n5-stage pipeline"]:::svc
-            RAG["GraphRAGService\nLOCAL / GLOBAL query"]:::svc
+            RAG["GraphRAGService\nLOCAL / GLOBAL query + verification"]:::svc
             Store["Neo4jStore\nschema · upsert · vector · traversal"]:::store
         end
 
         subgraph Utils["Utils & prompts"]
             Parse["document_parser\ntext_splitter"]
-            Prompts["extraction · rag · system\nVietnamese prompts"]
+            Prompts["extraction · rag · system\nverification · Vietnamese prompts"]
         end
     end
 
     Neo4j[("Neo4j 5")]:::store
-    Gemini["Google Gemini API"]:::ext
+    LLMAPI["LLM / Embedding API\n(Google Gemini or OpenAI)"]:::ext
 
     UI --> Hooks --> Store
     Hooks --> ApiL
@@ -145,8 +147,8 @@ flowchart TB
     Idx --> Parse
 
     LLM --> Prompts
-    LLM --> Gemini
-    Emb --> Gemini
+    LLM --> LLMAPI
+    Emb --> LLMAPI
     Store --> Neo4j
 ```
 
@@ -254,8 +256,8 @@ sequenceDiagram
     participant API as POST /admin/index
     participant Idx as IndexingService
     participant FS as Filesystem<br/>(data/raw)
-    participant LLM as LLMService<br/>(Gemini)
-    participant Emb as EmbeddingService<br/>(Gemini)
+    participant LLM as LLMService
+    participant Emb as EmbeddingService
     participant N4J as Neo4jStore
 
     Admin->>API: trigger
@@ -333,11 +335,17 @@ flowchart TD
     Expand["Expand with related entities\nand their relationships"]:::proc
     Compose["Compose grounded context"]:::proc
     Answer["Generate answer in Vietnamese"]:::proc
+    Verify{{"Verify grounding?\n(ENABLE_ANSWER_VERIFICATION)"}}:::decide
+    Fallback["Return fallback message\n(not grounded / low confidence)"]:::proc
     Resp([Reply + citations + graph view]):::io
+
+    Rewrite["Rewrite query for retrieval\n(Gemini · skipped on turn 1)"]:::proc
 
     Start --> Classify
     Classify -- holistic --> Global
-    Classify -- specific --> Retrieve --> Expand --> Compose --> Answer --> Resp
+    Classify -- specific --> Rewrite --> Retrieve --> Expand --> Compose --> Answer --> Verify
+    Verify -- "grounded & confidence ≥ 3" --> Resp
+    Verify -- "not grounded or confidence < 3" --> Fallback --> Resp
 ```
 
 ### 7b. Sequence — timing view
@@ -355,14 +363,14 @@ sequenceDiagram
 
     FE->>API: {session_id, message}
     API->>RAG: process_message
-    RAG->>Sess: get_session → history
-    par classify + embed in parallel paths
-        RAG->>LLM: classify_query(message)
-        LLM-->>RAG: "LOCAL"
-    and
-        RAG->>Emb: embed_query(message)
-        Emb-->>RAG: vector[3072]
-    end
+    RAG->>Sess: get_session → history (last 10 msgs)
+    RAG->>LLM: classify_query(message)
+    LLM-->>RAG: "LOCAL"
+    note right of RAG: rewrite_query skipped when history is empty (turn 1)
+    RAG->>LLM: rewrite_query(history, message)
+    LLM-->>RAG: standalone search query
+    RAG->>Emb: embed_query(rewritten_query)
+    Emb-->>RAG: vector[3072]
 
     RAG->>N4J: vector_search_chunks(emb, k=MAX_LOCAL_CHUNKS)
     N4J-->>RAG: top-K PolicyChunks (+ entity_names)
@@ -372,9 +380,17 @@ sequenceDiagram
 
     RAG->>RAG: build_local_context(chunks + entities + triples)
     RAG->>LLM: generate(system_prompt, history, message)
+    note right of LLM: system_prompt passed as system_instruction<br/>in every Gemini chat turn — RAG context never dropped
     LLM-->>RAG: Vietnamese answer
+
+    opt ENABLE_ANSWER_VERIFICATION=true
+        RAG->>LLM: verify_answer(question, context, reply)
+        LLM-->>RAG: VerificationResult{is_grounded, confidence, issues}
+        note right of RAG: if not grounded or confidence < 3 → FALLBACK_ANSWER
+    end
+
     RAG->>Sess: append user + assistant messages
-    RAG-->>API: ChatResponse{reply, sources, graph_data, query_type=LOCAL}
+    RAG-->>API: ChatResponse{reply, sources, graph_data, query_type=LOCAL, verification}
     API-->>FE: 200 OK
     FE->>FE: update store → render bubble + SourcesPanel + GraphPanel
 ```
@@ -396,7 +412,9 @@ sequenceDiagram
 
     FE->>RAG: process_message
     RAG->>LLM: classify_query → "GLOBAL"
-    RAG->>Emb: embed_query
+    RAG->>LLM: rewrite_query(history, message)
+    LLM-->>RAG: standalone search query
+    RAG->>Emb: embed_query(rewritten_query)
     Emb-->>RAG: vector[3072]
 
     RAG->>N4J: vector_search_communities(emb, k=MAX_COMMUNITY_SUMMARIES)
@@ -407,7 +425,14 @@ sequenceDiagram
     RAG->>RAG: build_global_context(summaries + sample chunks)
     RAG->>LLM: generate
     LLM-->>RAG: synthesized answer
-    RAG-->>FE: ChatResponse{query_type=GLOBAL, graph_data=null}
+
+    opt ENABLE_ANSWER_VERIFICATION=true
+        RAG->>LLM: verify_answer(question, context, reply)
+        LLM-->>RAG: VerificationResult{is_grounded, confidence, issues}
+        note right of RAG: if not grounded or confidence < 3 → FALLBACK_ANSWER
+    end
+
+    RAG-->>FE: ChatResponse{query_type=GLOBAL, graph_data=null, verification}
 ```
 
 > GLOBAL path returns `graph_data=null` — the GraphPanel falls back to an empty / dimmed state.
@@ -492,13 +517,19 @@ flowchart TB
 | Concern | Where it lives | Notes |
 |---|---|---|
 | **Configuration** | [backend/app/config.py](../backend/app/config.py) + `.env` | Pydantic `Settings`; one source of truth |
+| **LLM Provider Abstraction** | `LLMService` (ABC) + `GeminiLLMService` / `OpenAILLMService`; `create_llm_service()` factory | Swap `LLM_PROVIDER=openai` in `.env` — no code changes needed. Same interface for both. |
+| **Embedding Provider Abstraction** | `EmbeddingService` (ABC) + provider implementations; `create_embedding_service()` factory | Provider is selected at startup and baked into the Neo4j vector index dimensions. Switching providers requires re-indexing. |
+| **Answer Verification** | `GraphRAGService.process_message` → `LLMService.verify_answer`; [verification_prompts.py](../backend/app/prompts/verification_prompts.py) | Controlled by `ENABLE_ANSWER_VERIFICATION` (default `true`). Scores grounding (bool) + confidence (1–5). Answers with `confidence < 3` or `is_grounded=false` are replaced with `FALLBACK_ANSWER`. |
 | **DI / lifecycle** | [backend/app/main.py — lifespan](../backend/app/main.py#L47-L98) | Singletons attached to `app.state`; resolved via [dependencies.py](../backend/app/dependencies.py) |
 | **CORS** | `main.create_app` | Allowed origins from `CORS_ORIGINS` |
 | **Logging** | `structlog` across all services | Structured JSON logs |
 | **Session TTL** | `SessionService.start_cleanup()` | Background task purges expired sessions |
 | **Idempotent indexing** | `Neo4jStore` MERGE + `clear()` at pipeline start | Safe to re-run |
-| **Rate limiting (LLM)** | `IndexingService` — `asyncio.sleep(1.0)` between batches | Avoid Gemini quota bursts |
-| **Vector index dims** | `EMBEDDING_DIM` (default 3072) | Must match Gemini embedding model |
+| **Rate limiting (LLM)** | `IndexingService` — `asyncio.sleep(1.0)` between batches | Avoids LLM API quota bursts during batch extraction |
+| **Vector index dims** | `EMBEDDING_DIM` (default 3072) | Must match the active embedding model; baked into Neo4j vector index at first `build_graph_index` run |
+| **Multi-turn query rewriting** | `GraphRAGService.process_message` → `LLMService.rewrite_query(history, message)` | Before embedding, Gemini rewrites vague follow-up questions into a standalone, context-rich search query. No-op on turn 1 (empty history) to avoid unnecessary latency. Falls back to the original message on error. |
+| **History windowing** | `GraphRAGService.process_message` — `session.messages[-10:]` | Only the last 10 messages (5 turns) are passed to the LLM, preventing context bloat and conflicting information from stale conversation turns. |
+| **Gemini system instruction** | `GeminiLLMService.generate()` — `system_instruction` in `chats.create()` config | The RAG context (system prompt) is passed as `system_instruction` on every chat turn, ensuring policy documents are visible to the model on turn 2+ as well as turn 1. |
 
 ---
 

@@ -1,0 +1,15 @@
+name,passed,message,detail
+health-endpoint,True,"status=200 body={""status"":""ok""}",
+create-session,True,session_id=a5dd4c17-2037-484b-9...,
+chat-Nhân viên dưới 5 năm có bao nhiêu n,True,"query_type=LOCAL, sources=7, contains='12': ✓",
+chat-Quy trình xin nghỉ đột xuất cần làm,False,"query_type=LOCAL, sources=6, contains='HRM': ✗","Reply excerpt: Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+chat-Phòng Kỹ thuật được phép mặc gì vào,False,"query_type=LOCAL, sources=6, contains='casual': ✗","Reply excerpt: Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+chat-Mức phụ cấp ăn trưa là bao nhiêu?,False,"query_type=LOCAL, sources=6, contains='50.000': ✗","Reply excerpt: Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+chat-Phòng Kỹ thuật làm remote tối đa mấ,False,"query_type=LOCAL, sources=6, contains='3': ✗","Reply excerpt: Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+chat-Câu hỏi hoàn toàn không liên quan đ,False,"query_type=LOCAL, sources=6, contains='Nhân sự': ✗","Reply excerpt: Xin lỗi, tôi là một trợ lý AI được thiết kế để trả lời các câu hỏi dựa trên nội quy và thông tin nội bộ của công ty. Tôi không có khả năng truy cập thông tin thời tiết theo thời gian thực.
+
+Để biết th"
+multi-turn-Nhân viên có bao nhiêu ngày ng,True,contains '12',
+multi-turn-Nếu thâm niên trên 10 năm thì ,False,Missing '16' in reply,"Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+multi-turn-Còn nhân viên thử việc?,False,Missing 'không áp dụng' in reply,"Xin lỗi, tôi không tìm thấy thông tin đủ chính xác trong tài liệu nội quy để trả lời câu hỏi này. Vui lòng liên hệ bộ phận Nhân sự để được hỗ trợ thêm."
+delete-session,True,status=200,

@@ -31,13 +31,15 @@ class GraphRAGService:
         session = self._sessions.get_session(session_id)
         history = [
             {"role": m.role, "content": m.content}
-            for m in (session.messages if session else [])
+            for m in (session.messages[-10:] if session else [])
         ]
 
         query_type = await self._llm.classify_query(message)
         logger.info("query_classified", query_type=query_type, message=message[:80])
 
-        embedding = await self._emb.embed_query(message)
+        retrieval_query = await self._llm.rewrite_query(history, message)
+        logger.info("retrieval_query_rewritten", rewritten=retrieval_query[:120])
+        embedding = await self._emb.embed_query(retrieval_query)
 
         if query_type == "GLOBAL":
             context, sources, graph_data = await self._global_search(embedding)
@@ -51,10 +53,12 @@ class GraphRAGService:
         )
 
         verification: VerificationResult | None = None
+        is_fallback = False
         if settings.enable_answer_verification:
             verification = await self._llm.verify_answer(message, context, reply)
             if not verification.is_grounded or verification.confidence < 3:
                 reply = FALLBACK_ANSWER
+                is_fallback = True
 
         self._sessions.append_message(session_id, "user", message)
         self._sessions.append_message(session_id, "assistant", reply)
@@ -66,6 +70,7 @@ class GraphRAGService:
             query_type=query_type,
             graph_data=graph_data,
             verification=verification,
+            is_fallback=is_fallback,
         )
 
     # ── LOCAL search ─────────────────────────────────────────────────────────

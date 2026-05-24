@@ -31,6 +31,7 @@ class ChatResponse(BaseModel):
     query_type: str = "LOCAL"
     graph_data: GraphData | None = None
     verification: VerificationResult | None = None
+    is_fallback: bool = False
 
 
 class ChatHistoryResponse(BaseModel):

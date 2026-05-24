@@ -47,4 +47,5 @@ export interface ChatResponse {
   sources: PolicySource[]
   query_type: 'LOCAL' | 'GLOBAL'
   graph_data?: GraphData
+  is_fallback?: boolean
 }
