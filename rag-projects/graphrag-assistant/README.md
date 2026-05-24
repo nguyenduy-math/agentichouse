@@ -115,7 +115,14 @@ flowchart TD
     end
 
     Generate["Gemini 2.5 Flash\nGenerate Answer in Vietnamese\n(system_instruction carries RAG context every turn)"]
-    Response(["ChatResponse\nreply · sources · graph_data · query_type"])
+
+    subgraph VERIFY["VERIFY (when ENABLE_ANSWER_VERIFICATION=true)"]
+        Judge["LLM-as-Judge\nGemini 2.5 Flash\nGroundedness · Confidence · Issues"]
+        Pass{"is_grounded AND\nconfidence ≥ 3?"}
+        Fallback["Fallback reply\n'Xin liên hệ bộ phận\nNhân sự...'"]
+    end
+
+    Response(["ChatResponse\nreply · sources · graph_data · query_type · verification"])
 
     Q --> History --> Classify
     History --> Rewrite
@@ -125,7 +132,10 @@ flowchart TD
     Embed --> VecChunk & VecComm
     VecChunk --> Cypher --> LocalCtx --> Generate
     VecComm --> GlobalCtx --> Generate
-    Generate --> Response
+    Generate --> Judge
+    Judge --> Pass
+    Pass -- "yes" --> Response
+    Pass -- "no" --> Fallback --> Response
 ```
 
 ### Query Types
