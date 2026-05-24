@@ -1,0 +1,278 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-05-24",
+    "description": "Bộ câu hỏi hội thoại nhiều lượt (multi-turn) dùng để đánh giá khả năng duy trì ngữ cảnh (context retention) của các LLM trong một phiên hội thoại dài. Mỗi set là một kịch bản liên kết gồm 4 lượt hỏi đáp, lượt sau tham chiếu hoặc phụ thuộc vào ngữ cảnh lượt trước.",
+    "total_sets": 5,
+    "turns_per_set": 4,
+    "evaluation_focus": [
+      "context_retention",
+      "pronoun_resolution",
+      "progressive_reasoning",
+      "cross_policy_synthesis"
+    ]
+  },
+  "conversation_sets": [
+    {
+      "set_id": "CS-001",
+      "title": "Kế hoạch nghỉ phép dài ngày",
+      "scenario": "Nhân viên có 8 năm thâm niên hỏi về quyền lợi và quy trình xin nghỉ phép dài ngày, sau đó hỏi về các tình huống phát sinh.",
+      "source_docs": ["chinh_sach_nghi_phep.txt", "quy_trinh_xin_phep.txt"],
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Tôi làm việc tại Agentic House được 8 năm rồi. Tôi được nghỉ bao nhiêu ngày phép năm?",
+          "context_dependency": null,
+          "expected_key_facts": [
+            "14 ngày/năm (từ 5 năm đến dưới 10 năm thâm niên)"
+          ],
+          "expected_answer_summary": "Với 8 năm thâm niên (thuộc nhóm từ 5 đến dưới 10 năm), nhân viên được hưởng 14 ngày nghỉ phép năm có lương."
+        },
+        {
+          "turn": 2,
+          "question": "Tôi muốn xin nghỉ 10 ngày liên tục để đi du lịch. Tôi cần làm gì và phải nộp đơn trước bao nhiêu ngày?",
+          "context_dependency": "Tiếp tục kịch bản của nhân viên 8 năm thâm niên ở lượt 1.",
+          "expected_key_facts": [
+            "10 ngày thuộc nhóm từ 6 ngày trở lên",
+            "Nộp đơn trên hệ thống HRM ít nhất 14 ngày trước",
+            "Cần phê duyệt của Trưởng phòng (cấp 1) và Phòng Nhân sự (cấp 2)",
+            "Phải bàn giao công việc, cập nhật Jira/Asana, cài auto-reply email"
+          ],
+          "expected_answer_summary": "Nghỉ 10 ngày thuộc nhóm từ 6 ngày trở lên: phải nộp đơn trên HRM ít nhất 14 ngày trước, cần được Trưởng phòng và Phòng Nhân sự phê duyệt. Trước ngày nghỉ phải bàn giao công việc, cập nhật Jira/Asana và cài auto-reply email."
+        },
+        {
+          "turn": 3,
+          "question": "Giả sử tôi chỉ nộp đơn trước 5 ngày thay vì 14 ngày vì quên. Điều đó có thể gây ra hậu quả gì không?",
+          "context_dependency": "Tham chiếu kịch bản nghỉ 10 ngày ở lượt 2, kiểm tra xem LLM có nhớ yêu cầu 14 ngày không.",
+          "expected_key_facts": [
+            "Không tuân thủ thời hạn nộp đơn 14 ngày theo quy định",
+            "Trưởng phòng có quyền từ chối yêu cầu nghỉ phép",
+            "Có thể bị coi là vắng mặt không phép nếu tự ý nghỉ khi chưa được phê duyệt",
+            "Vắng mặt không phép bị trừ lương và ghi vào hồ sơ kỷ luật"
+          ],
+          "expected_answer_summary": "Nộp đơn chỉ 5 ngày trước vi phạm quy định 14 ngày với kỳ nghỉ từ 6 ngày trở lên. Trưởng phòng có quyền từ chối. Nếu tự ý nghỉ mà chưa có phê duyệt sẽ bị xem là vắng mặt không phép — bị trừ lương ngày tương ứng và bị ghi vào hồ sơ kỷ luật. Tái phạm 3 lần trở lên có thể dẫn đến sa thải."
+        },
+        {
+          "turn": 4,
+          "question": "Nếu kỳ nghỉ được duyệt và sau khi đi về tôi còn dư lại 4 ngày phép năm, tôi có thể chuyển sang năm sau không? Có giới hạn gì không?",
+          "context_dependency": "Tiếp nối kịch bản 14 ngày phép (lượt 1). LLM cần nhớ nhân viên này có 14 ngày phép — sau khi dùng 10 ngày còn 4 ngày, phù hợp với dữ kiện ban đầu.",
+          "expected_key_facts": [
+            "Phép năm còn dư được chuyển tối đa 5 ngày sang năm tiếp theo",
+            "4 ngày nằm trong giới hạn 5 ngày, vậy toàn bộ 4 ngày được chuyển",
+            "Phép chuyển phải được sử dụng trong 6 tháng đầu của năm tiếp theo",
+            "Nếu không dùng trong 6 tháng đầu, phép chuyển sẽ bị hủy"
+          ],
+          "expected_answer_summary": "Có thể chuyển toàn bộ 4 ngày phép dư sang năm sau vì giới hạn chuyển phép là 5 ngày. Tuy nhiên, 4 ngày này phải được sử dụng trong 6 tháng đầu của năm tiếp theo (trước 30/6); nếu không dùng hết sẽ bị hủy tự động."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-002",
+      "title": "Hành trình remote work của nhân viên kỹ thuật mới",
+      "scenario": "Theo dõi một nhân viên kỹ thuật từ khi mới vào làm, qua quá trình thử việc, đến khi được phép remote và gặp tình huống đặc biệt.",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt", "so_tay_nhan_vien.txt"],
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Tôi vừa vào làm ở Phòng Kỹ thuật được 1 tháng và đang trong thời gian thử việc. Tôi có thể đăng ký làm việc từ xa không?",
+          "context_dependency": null,
+          "expected_key_facts": [
+            "Không được phép vì chưa hoàn thành thời gian thử việc (ít nhất 2 tháng)",
+            "Chính sách remote chỉ áp dụng cho nhân viên chính thức đã qua thử việc"
+          ],
+          "expected_answer_summary": "Chưa được. Chính sách làm việc từ xa chỉ áp dụng cho nhân viên chính thức đã hoàn thành thời gian thử việc (ít nhất 2 tháng). Sau khi pass thử việc và có đánh giá 'Đạt' trở lên, mới có thể đăng ký."
+        },
+        {
+          "turn": 2,
+          "question": "3 tháng sau tôi đã pass thử việc và được đánh giá 'Đạt'. Bây giờ tôi được làm remote tối đa bao nhiêu ngày mỗi tuần?",
+          "context_dependency": "LLM phải nhớ người này ở Phòng Kỹ thuật (lượt 1) để trả lời đúng mức giới hạn 3 ngày/tuần.",
+          "expected_key_facts": [
+            "Phòng Kỹ thuật được tối đa 3 ngày/tuần làm việc từ xa",
+            "Cần đánh giá hiệu suất 'Đạt' trở lên — đã đáp ứng",
+            "Cần không đang trong giai đoạn kỷ luật"
+          ],
+          "expected_answer_summary": "Nhân viên Phòng Kỹ thuật đã qua thử việc và đánh giá 'Đạt' được làm việc từ xa tối đa 3 ngày/tuần. Để đăng ký, cần nộp lịch trên HRM trước 17:00 thứ Sáu của tuần trước."
+        },
+        {
+          "turn": 3,
+          "question": "Tuần tới tôi muốn làm remote cả 5 ngày vì nhà có việc. Điều đó có được chấp nhận không?",
+          "context_dependency": "Kiểm tra xem LLM còn nhớ giới hạn 3 ngày/tuần từ lượt 2 không.",
+          "expected_key_facts": [
+            "Không được vì vượt giới hạn 3 ngày/tuần của Phòng Kỹ thuật",
+            "Trưởng phòng có quyền từ chối yêu cầu remote",
+            "Tối đa chỉ được 3 ngày remote trong tuần"
+          ],
+          "expected_answer_summary": "Không được. Nhân viên Phòng Kỹ thuật chỉ được làm remote tối đa 3 ngày/tuần theo chính sách. Dù có lý do cá nhân, Trưởng phòng vẫn có quyền từ chối nếu vượt giới hạn hoặc có nhu cầu công việc cần hiện diện tại văn phòng."
+        },
+        {
+          "turn": 4,
+          "question": "Tuần đó đúng rơi vào ngày họp All-hands hàng quý. Hôm đó tôi đang có kế hoạch làm remote, có được không?",
+          "context_dependency": "Tham chiếu kịch bản remote tuần đó ở lượt 3. LLM phải kết hợp thông tin về ngày bắt buộc đến văn phòng.",
+          "expected_key_facts": [
+            "Không được phép làm remote vào ngày họp All-hands toàn công ty",
+            "All-hands hàng quý là ngày bắt buộc có mặt tại văn phòng",
+            "Quy định này áp dụng bất kể chính sách remote của phòng ban"
+          ],
+          "expected_answer_summary": "Không. Họp All-hands hàng quý là một trong những ngày bắt buộc có mặt tại văn phòng, bất kể chính sách remote của phòng ban. Nhân viên phải hủy lịch remote ngày hôm đó và đến văn phòng dự họp."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-003",
+      "title": "Phúc lợi của nhân viên Senior mới gia nhập",
+      "scenario": "Nhân viên mới cấp Senior hỏi các câu hỏi liên tiếp về bảo hiểm, quyền lợi gia đình, và thưởng cuối năm.",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Tôi vừa ký hợp đồng chính thức ở vị trí Senior Engineer. Từ tháng đầu tiên tôi được hưởng bảo hiểm sức khỏe gì?",
+          "context_dependency": null,
+          "expected_key_facts": [
+            "Gói PTI Care cơ bản từ tháng đầu tiên, công ty chi trả 100%",
+            "Nội trú tối đa 50 triệu VNĐ/năm",
+            "Ngoại trú 5 triệu VNĐ/năm",
+            "Chưa phải gói nâng cao vì Senior không phải Trưởng phòng/Phó phòng"
+          ],
+          "expected_answer_summary": "Từ tháng đầu tiên, nhân viên chính thức được tham gia gói bảo hiểm sức khỏe PTI Care cơ bản, công ty chi trả 100% phí. Gói này bao gồm: nội trú tối đa 50 triệu VNĐ/năm và ngoại trú 5 triệu VNĐ/năm. (Gói nâng cao 100 triệu chỉ dành cho Trưởng phòng/Phó phòng trở lên.)"
+        },
+        {
+          "turn": 2,
+          "question": "Tháng tới tôi phải nhập viện phẫu thuật, dự kiến chi phí khoảng 70 triệu. Bảo hiểm chi trả bao nhiêu và tôi phải tự trả bao nhiêu?",
+          "context_dependency": "LLM cần nhớ nhân viên này có gói cơ bản (lượt 1) với giới hạn nội trú 50 triệu để tính đúng.",
+          "expected_key_facts": [
+            "Gói cơ bản chi trả nội trú tối đa 50 triệu VNĐ/năm",
+            "Chi phí 70 triệu vượt giới hạn 50 triệu",
+            "Bảo hiểm chi trả 50 triệu, nhân viên tự trả 20 triệu còn lại"
+          ],
+          "expected_answer_summary": "Với gói PTI Care cơ bản (giới hạn nội trú 50 triệu/năm), bảo hiểm sẽ chi trả 50 triệu. Nhân viên phải tự chi trả phần còn lại là 20 triệu đồng."
+        },
+        {
+          "turn": 3,
+          "question": "Vợ tôi cũng muốn được bảo hiểm theo. Công ty có hỗ trợ không và ai trả phí?",
+          "context_dependency": "Tiếp nối kịch bản bảo hiểm của lượt 1 và 2.",
+          "expected_key_facts": [
+            "Có thể đăng ký bảo hiểm cho vợ/chồng, con theo gói gia đình",
+            "Nhân viên tự chi trả phí bảo hiểm người thân, không phải công ty",
+            "Được hưởng mức giá doanh nghiệp ưu đãi"
+          ],
+          "expected_answer_summary": "Được. Nhân viên có thể đăng ký thêm bảo hiểm cho vợ/chồng và con theo gói gia đình của PTI Care. Tuy nhiên, phần phí cho người thân do nhân viên tự chi trả (không phải công ty), nhưng sẽ được hưởng mức giá doanh nghiệp ưu đãi thấp hơn thị trường."
+        },
+        {
+          "turn": 4,
+          "question": "Cuối năm tôi được đánh giá hiệu suất xếp loại 'Tốt' (đạt 88% KPI). Thưởng cuối năm của tôi là bao nhiêu tháng lương?",
+          "context_dependency": "Độc lập về chủ đề thưởng, nhưng giữ nguyên nhân vật Senior Engineer từ lượt 1 — không ảnh hưởng đến mức thưởng vì thưởng tính theo KPI, không theo level.",
+          "expected_key_facts": [
+            "Xếp loại 'Tốt' tương ứng 85–94% KPI",
+            "88% KPI nằm trong khoảng này",
+            "Thưởng từ 2 đến 3 tháng lương"
+          ],
+          "expected_answer_summary": "Với kết quả 88% KPI, nhân viên được xếp loại 'Tốt' (85–94% KPI) và nhận thưởng cuối năm từ 2 đến 3 tháng lương gross. Mức cụ thể trong khoảng đó sẽ do Ban Giám đốc quyết định dựa trên kết quả toàn công ty."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-004",
+      "title": "Vi phạm trang phục và leo thang kỷ luật",
+      "scenario": "Nhân viên mới ở Phòng Marketing hỏi về quy định trang phục, rồi lần lượt vi phạm và hỏi về hậu quả.",
+      "source_docs": ["quy_dinh_trang_phuc.txt"],
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Tôi mới vào làm ở Phòng Marketing. Quy định trang phục từ thứ Hai đến thứ Năm của tôi là gì?",
+          "context_dependency": null,
+          "expected_key_facts": [
+            "Phòng Marketing áp dụng trang phục Business Casual từ thứ Hai đến thứ Năm",
+            "Nam: áo polo/sơ mi, quần kaki hoặc jeans sẫm màu (không rách)",
+            "Nữ: áo thun có cổ, áo blouse, quần jeans sẫm màu",
+            "Hạn chế jeans vào ngày có họp lớn hoặc tiếp khách"
+          ],
+          "expected_answer_summary": "Phòng Marketing áp dụng Business Casual từ thứ Hai đến thứ Năm: áo polo hoặc sơ mi, quần kaki hoặc jeans sẫm màu (không rách), giày thể thao gọn gàng chấp nhận được. Tuy nhiên, nên hạn chế mặc jeans vào những ngày có cuộc họp lớn hoặc tiếp khách."
+        },
+        {
+          "turn": 2,
+          "question": "Thứ Sáu thì sao, tôi có thể mặc thoải mái hơn không?",
+          "context_dependency": "Tiếp tục kịch bản nhân viên Marketing ở lượt 1.",
+          "expected_key_facts": [
+            "Thứ Sáu có chính sách Casual Friday",
+            "Được phép: jeans, áo thun có cổ, áo thun logo công ty, giày thể thao/sneakers",
+            "Không được phép: quần short, dép lê, áo phản cảm, trang phục thể thao (bộ tập gym)",
+            "Trừ khi có lịch tiếp khách chính thức thì phải mặc theo quy định phòng ban"
+          ],
+          "expected_answer_summary": "Thứ Sáu có chính sách Casual Friday: được mặc jeans, áo thun có cổ, áo thun logo công ty và giày sneakers. Không được mặc quần short, dép lê, trang phục thể thao hay áo có hình ảnh phản cảm. Nếu hôm đó có lịch tiếp khách thì vẫn phải mặc theo quy định phòng ban."
+        },
+        {
+          "turn": 3,
+          "question": "Thứ Tư tuần này tôi lỡ mặc quần short đến văn phòng. Đây là lần đầu vi phạm, tôi sẽ bị xử lý thế nào?",
+          "context_dependency": "Kiểm tra LLM nhớ phòng ban (Marketing) và ngày trong tuần (thứ Tư — không phải Casual Friday) từ lượt 1.",
+          "expected_key_facts": [
+            "Quần short vi phạm quy định (không được phép ngay cả Casual Friday)",
+            "Lần vi phạm đầu tiên: nhắc nhở bằng miệng từ quản lý hoặc HR",
+            "Không bị lưu vào hồ sơ ở lần đầu"
+          ],
+          "expected_answer_summary": "Đây là vi phạm quy định trang phục (quần short không được phép bất kỳ ngày nào, kể cả Casual Friday). Ở lần vi phạm đầu tiên, nhân viên sẽ bị nhắc nhở bằng miệng từ quản lý trực tiếp hoặc nhân viên HR. Chưa có hậu quả chính thức lưu vào hồ sơ."
+        },
+        {
+          "turn": 4,
+          "question": "Tuần sau tôi lại đi dép lê vào văn phòng — đây là lần thứ hai vi phạm. Bây giờ hậu quả có nặng hơn không?",
+          "context_dependency": "LLM phải nhớ lần vi phạm đầu (lượt 3) để xác định đây là lần 2 và trả lời đúng về leo thang kỷ luật.",
+          "expected_key_facts": [
+            "Lần vi phạm thứ hai: cảnh báo bằng văn bản",
+            "Cảnh báo được lưu vào hồ sơ nhân viên",
+            "Dép lê cũng là trang phục không được phép ngay cả Casual Friday"
+          ],
+          "expected_answer_summary": "Lần vi phạm thứ hai sẽ bị xử lý nặng hơn: cảnh báo bằng văn bản (written warning), được lưu chính thức vào hồ sơ nhân viên. Nếu tiếp tục vi phạm lần thứ ba trở đi, có thể bị yêu cầu về nhà thay đồ (không tính giờ làm) và bị trừ điểm đánh giá hiệu suất định kỳ."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-005",
+      "title": "Nhân viên chuẩn bị nghỉ việc",
+      "scenario": "Nhân viên thông báo nghỉ việc và hỏi lần lượt về thời gian báo trước, thanh toán phép, hoàn trả tài sản và nghĩa vụ chứng chỉ.",
+      "source_docs": ["so_tay_nhan_vien.txt", "chinh_sach_nghi_phep.txt", "chinh_sach_phuc_loi.txt"],
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Tôi là nhân viên (không phải quản lý) và muốn nghỉ việc. Tôi phải báo trước bao nhiêu ngày?",
+          "context_dependency": null,
+          "expected_key_facts": [
+            "Nhân viên thông thường phải thông báo ít nhất 30 ngày trước ngày nghỉ dự kiến",
+            "Quản lý cấp Trưởng phòng trở lên phải báo 45 ngày (không áp dụng ở đây)"
+          ],
+          "expected_answer_summary": "Nhân viên thông thường cần thông báo nghỉ việc ít nhất 30 ngày trước ngày nghỉ dự kiến. (Với quản lý cấp Trưởng phòng trở lên thì phải báo 45 ngày, nhưng không áp dụng cho trường hợp này.)"
+        },
+        {
+          "turn": 2,
+          "question": "Tính đến ngày nghỉ việc, tôi còn 8 ngày phép năm chưa dùng. Số ngày đó sẽ được xử lý thế nào?",
+          "context_dependency": "Tiếp nối kịch bản nghỉ việc ở lượt 1.",
+          "expected_key_facts": [
+            "Phép năm còn dư khi nghỉ việc được thanh toán bằng tiền theo lương cơ bản",
+            "8 ngày phép sẽ được quy đổi và trả cùng lương tháng cuối"
+          ],
+          "expected_answer_summary": "Toàn bộ 8 ngày phép còn lại sẽ được thanh toán bằng tiền mặt, quy đổi theo lương cơ bản ngày. Khoản này được chi trả cùng với lương tháng cuối trong quy trình offboarding."
+        },
+        {
+          "turn": 3,
+          "question": "Tôi đang giữ laptop công ty và 1 màn hình phụ mà IT cấp cho tôi để làm việc từ xa. Khi nghỉ việc tôi phải làm gì với những thứ đó?",
+          "context_dependency": "Kết hợp thông tin offboarding (so_tay_nhan_vien) và chính sách hỗ trợ thiết bị remote (chinh_sach_lam_viec_tu_xa).",
+          "expected_key_facts": [
+            "Phải hoàn trả toàn bộ tài sản công ty trong ngày làm việc cuối cùng",
+            "Màn hình phụ là tài sản mượn dài hạn, phải hoàn trả khi nghỉ việc",
+            "Laptop công ty cũng phải trả lại"
+          ],
+          "expected_answer_summary": "Phải hoàn trả toàn bộ thiết bị công ty — bao gồm laptop và màn hình phụ — trong ngày làm việc cuối cùng. Màn hình phụ cấp cho nhân viên remote là tài sản mượn dài hạn, có điều khoản hoàn trả khi nghỉ việc. Việc không hoàn trả có thể bị trừ từ khoản thanh toán cuối."
+        },
+        {
+          "turn": 4,
+          "question": "À, tôi nhớ ra là 4 tháng trước công ty đã trả phí thi chứng chỉ AWS cho tôi. Giờ tôi nghỉ việc thì có phải hoàn trả khoản đó không?",
+          "context_dependency": "Kiểm tra LLM biết về điều khoản cam kết 1 năm sau khi đậu chứng chỉ, kết hợp với kịch bản nghỉ việc ở các lượt trước.",
+          "expected_key_facts": [
+            "Nhân viên cam kết làm việc ít nhất 1 năm sau khi đậu chứng chỉ",
+            "Nghỉ trước 1 năm phải hoàn trả toàn bộ chi phí thi chứng chỉ",
+            "4 tháng chưa đủ 1 năm, nên phải hoàn trả"
+          ],
+          "expected_answer_summary": "Có, phải hoàn trả toàn bộ phí thi chứng chỉ AWS. Chính sách quy định nhân viên được hỗ trợ thi chứng chỉ phải cam kết làm việc ít nhất 1 năm sau khi đậu. Nghỉ việc sau 4 tháng (chưa đủ 1 năm) đồng nghĩa với việc vi phạm cam kết và phải hoàn trả toàn bộ chi phí theo quy định riêng."
+        }
+      ]
+    }
+  ]
+}
