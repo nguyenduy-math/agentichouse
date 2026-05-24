@@ -6,11 +6,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # LLM provider: "gemini" or "openai"
+    llm_provider: str = "gemini"
+
     # Google Gemini
     google_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
     gemini_embedding_model: str = "models/gemini-embedding-exp-03-07"
     embedding_dim: int = 3072
+
+    # OpenAI
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
 
     # Neo4j
     neo4j_uri: str = "bolt://localhost:7687"

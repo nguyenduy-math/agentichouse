@@ -12,7 +12,7 @@ from app.config import settings
 from app.services.session_service import SessionService
 from app.services.embedding_service import EmbeddingService
 from app.services.neo4j_store import Neo4jStore
-from app.services.llm_service import LLMService
+from app.services.llm_factory import create_llm_service
 from app.services.indexing_service import IndexingService
 from app.services.graph_rag_service import GraphRAGService
 
@@ -60,7 +60,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     neo4j_store = Neo4jStore()
     await neo4j_store.initialize()
 
-    llm_service = LLMService()
+    llm_service = create_llm_service()
+    logger.info("llm_provider_loaded", provider=settings.llm_provider)
 
     indexing_service = IndexingService(
         llm_service=llm_service,
