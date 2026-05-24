@@ -1,12 +1,12 @@
-# Trợ Lý Nội Quy Công Ty – Agentic House
+# Company Policy Assistant – Agentic House
 
-Hệ thống hỏi đáp thông minh về nội quy và chính sách công ty, được xây dựng bằng **Graph RAG** (Retrieval-Augmented Generation với đồ thị tri thức). Khác với hệ thống tìm kiếm thông thường, Graph RAG hiểu được **mối quan hệ** giữa các chính sách, phòng ban, vai trò và quy trình.
+An intelligent question-answering system for company policies and regulations, built with **Graph RAG** (Retrieval-Augmented Generation with knowledge graph). Unlike traditional search systems, Graph RAG understands the **relationships** between policies, departments, roles, and processes.
 
 ---
 
-## Kiến trúc hệ thống
+## System Architecture
 
-### Tổng quan hệ thống
+### System Overview
 
 ```mermaid
 graph TB
@@ -58,18 +58,18 @@ graph TB
     GraphStore <-->|read / write| VecSearch
 ```
 
-### Pipeline lập chỉ mục (5 giai đoạn)
+### Indexing Pipeline (5 Stages)
 
 ```mermaid
 flowchart LR
-    Docs["Tài liệu\nPDF / DOCX / TXT"]
+    Docs["Documents\nPDF / DOCX / TXT"]
 
     subgraph S1["Stage 1"]
         Parse["Parse & Chunk\ndocument_parser\ntext_splitter"]
     end
 
     subgraph S2["Stage 2"]
-        Extract["Trích xuất\nThực thể + Quan hệ\nGemini LLM"]
+        Extract["Extraction\nEntities + Relations\nGemini LLM"]
     end
 
     subgraph S3["Stage 3"]
@@ -81,7 +81,7 @@ flowchart LR
     end
 
     subgraph S5["Stage 5"]
-        Summarize["Tóm tắt Community\nGemini LLM + Embed"]
+        Summarize["Summarize Community\nGemini LLM + Embed"]
     end
 
     Neo4j[("Neo4j\nGraph Store")]
@@ -93,26 +93,26 @@ flowchart LR
     S5 -- "Community summary + embedding" --> Neo4j
 ```
 
-### Luồng truy vấn (LOCAL / GLOBAL)
+### Query Flow (LOCAL / GLOBAL)
 
 ```mermaid
 flowchart TD
-    Q(["Câu hỏi người dùng"])
-    Classify["Phân loại truy vấn\nGemini LLM"]
+    Q(["Employee"])
+    Classify["Query Classification\nGemini LLM"]
     Embed["Embed query\nGemini Embeddings"]
 
     subgraph LOCAL["LOCAL search"]
         VecChunk["Vector search\nTopK PolicyChunks\n(Neo4j cosine)"]
         Cypher["Cypher 2-hop traversal\nEntity neighborhood"]
-        LocalCtx["Xây dựng context\nchunks + entities + triples"]
+        LocalCtx["Build Context\nchunks + entities + triples"]
     end
 
     subgraph GLOBAL["GLOBAL search"]
         VecComm["Vector search\nTopK Community summaries\n(Neo4j cosine)"]
-        GlobalCtx["Xây dựng context\ncommunity summaries + sample chunks"]
+        GlobalCtx["Build Context\ncommunity summaries + sample chunks"]
     end
 
-    Generate["Gemini 2.5 Flash\nSinh câu trả lời tiếng Việt"]
+    Generate["Gemini 2.5 Flash\nGenerate Answer in Vietnamese"]
     Response(["ChatResponse\nreply · sources · graph_data · query_type"])
 
     Q --> Classify & Embed
@@ -124,38 +124,38 @@ flowchart TD
     Generate --> Response
 ```
 
-### Loại truy vấn
+### Query Types
 
-| Loại | Khi nào | Cách hoạt động |
-|------|---------|----------------|
-| **LOCAL** | Câu hỏi cụ thể (số ngày phép, trang phục theo phòng ban) | Vector search chunks → Cypher 2-hop traversal → câu trả lời với trích dẫn |
-| **GLOBAL** | Câu hỏi tổng quan, tóm tắt, so sánh nhiều chính sách | Vector search community summaries → câu trả lời tổng hợp |
+| Type | When | How |
+|------|------|-----|
+| **LOCAL** | Specific questions (number of vacation days, dress code by department) | Vector search chunks → Cypher 2-hop traversal → answer with citations |
+| **GLOBAL** | General questions, summaries, policy comparisons | Vector search community summaries → synthesized answer |
 
 ---
 
 ## Tech Stack
 
-| Tầng | Công nghệ |
-|------|-----------|
+| Layer | Technology |
+|-------|-----------|
 | Backend | FastAPI + Uvicorn (Python 3.12) |
 | LLM | Google Gemini 2.5 Flash |
 | Embeddings | `models/gemini-embedding-exp-03-07` (3072 dims) |
-| Đồ thị + Vector Store | **Neo4j 5** (thay thế cả ChromaDB + NetworkX) |
-| Community Detection | python-louvain (kết quả ghi vào Neo4j) |
+| Graph + Vector Store | **Neo4j 5** (replaces both ChromaDB + NetworkX) |
+| Community Detection | python-louvain (results stored in Neo4j) |
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
 | State | Zustand |
 | Container | Docker + Docker Compose |
 
 ---
 
-## Cấu trúc dự án
+## Project Structure
 
 ```
 graphrag-assistant/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                    # FastAPI app + khởi động dịch vụ
-│   │   ├── config.py                  # Cấu hình từ .env
+│   │   ├── main.py                    # FastAPI app + service initialization
+│   │   ├── config.py                  # Configuration from .env
 │   │   ├── dependencies.py            # FastAPI dependency injection
 │   │   ├── api/routes/
 │   │   │   ├── session.py             # POST/DELETE /session
@@ -166,20 +166,20 @@ graphrag-assistant/
 │   │   ├── services/
 │   │   │   ├── llm_service.py         # Gemini: extract, classify, answer
 │   │   │   ├── embedding_service.py   # Gemini embeddings
-│   │   │   ├── neo4j_store.py         # Neo4j: đồ thị + vector index (KEY FILE)
-│   │   │   ├── indexing_service.py    # Pipeline lập chỉ mục 5 giai đoạn
+│   │   │   ├── neo4j_store.py         # Neo4j: graph + vector index (KEY FILE)
+│   │   │   ├── indexing_service.py    # 5-stage indexing pipeline
 │   │   │   ├── graph_rag_service.py   # LOCAL / GLOBAL query pipeline
 │   │   │   └── session_service.py     # In-memory sessions
-│   │   ├── prompts/                   # Prompts tiếng Việt
+│   │   ├── prompts/                   # Vietnamese prompts
 │   │   └── utils/                     # Document parser + text splitter
 │   ├── data/raw/
-│   │   ├── handbooks/                 # Sổ tay nhân viên
-│   │   ├── hr_policies/               # Chính sách nhân sự
-│   │   ├── conduct/                   # Quy tắc ứng xử, trang phục
-│   │   ├── benefits/                  # Phúc lợi
-│   │   └── procedures/                # Quy trình
+│   │   ├── handbooks/                 # Employee handbooks
+│   │   ├── hr_policies/               # HR policies
+│   │   ├── conduct/                   # Code of conduct, dress code
+│   │   ├── benefits/                  # Benefits
+│   │   └── procedures/                # Procedures
 │   ├── scripts/
-│   │   └── build_graph_index.py       # CLI lập chỉ mục offline
+│   │   └── build_graph_index.py       # Offline indexing CLI
 │   ├── requirements.txt
 │   ├── Dockerfile
 │   └── .env.example
@@ -201,29 +201,29 @@ graphrag-assistant/
 
 ---
 
-## Bắt đầu nhanh
+## Quick Start
 
-### Yêu cầu
+### Requirements
 
 - Python 3.12+
 - Node.js 20+
 - Docker & Docker Compose
-- Google API Key (có quyền truy cập Gemini)
+- Google API Key (with access to Gemini)
 
-### 1. Cấu hình môi trường
+### 1. Environment Configuration
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-Chỉnh sửa `.env` và điền API key:
+Edit `.env` and fill in API key:
 
 ```ini
 GOOGLE_API_KEY=your_google_api_key_here
 ```
 
-### 2. Cài đặt dependencies
+### 2. Install Dependencies
 
 ```bash
 python -m venv venv
@@ -231,62 +231,62 @@ source venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 3. Khởi động Neo4j
+### 3. Start Neo4j
 
 ```bash
 docker compose up neo4j -d
-# Chờ Neo4j sẵn sàng (~30 giây)
-# Giao diện Neo4j Browser: http://localhost:7474
+# Wait for Neo4j to be ready (~30 seconds)
+# Neo4j Browser UI: http://localhost:7474
 ```
 
-### 4. Thêm tài liệu chính sách
+### 4. Add Policy Documents
 
-Bỏ các file PDF, DOCX hoặc TXT vào các thư mục:
+Place PDF, DOCX, or TXT files in these folders:
 
 ```
-backend/data/raw/handbooks/       ← Sổ tay nhân viên
-backend/data/raw/hr_policies/     ← Chính sách nhân sự (nghỉ phép, WFH...)
-backend/data/raw/conduct/         ← Quy tắc ứng xử, trang phục
-backend/data/raw/benefits/        ← Phúc lợi, trợ cấp
-backend/data/raw/procedures/      ← Quy trình xin phép, onboarding...
+backend/data/raw/handbooks/       ← Employee handbooks
+backend/data/raw/hr_policies/     ← HR policies (vacation, WFH...)
+backend/data/raw/conduct/         ← Code of conduct, dress code
+backend/data/raw/benefits/        ← Benefits, allowances
+backend/data/raw/procedures/      ← Procedures for requests, onboarding...
 ```
 
-> Đã có sẵn 6 tài liệu mẫu tiếng Việt để test ngay.
+> Pre-loaded with 6 sample Vietnamese documents for testing.
 
-### 5. Lập chỉ mục đồ thị tri thức
+### 5. Build Knowledge Graph Index
 
 ```bash
 cd backend
 python -m scripts.build_graph_index
 ```
 
-Kết quả mong đợi:
+Expected output:
 ```
-Khởi tạo dịch vụ...
-Bắt đầu pipeline lập chỉ mục...
+Initializing services...
+Starting indexing pipeline...
   parsing [N/N]
   extracting [N/N]
   embedding_chunks [N/N]
   community_detection [1/1]
   summarizing [K/K]
 
-=== Lập chỉ mục hoàn tất ===
+=== Indexing Complete ===
   Chunks:      N
-  Thực thể:   M
-  Quan hệ:    P
+  Entities:   M
+  Relations:    P
   Communities: K
-  Tóm tắt:    K
+  Summaries:    K
 ```
 
-### 6. Khởi động backend
+### 6. Start Backend
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-Kiểm tra: `GET http://localhost:8000/health` → `{"status": "ok"}`
+Verify: `GET http://localhost:8000/health` → `{"status": "ok"}`
 
-### 7. Khởi động frontend
+### 7. Start Frontend
 
 ```bash
 cd ../frontend
@@ -294,80 +294,80 @@ npm install
 npm run dev
 ```
 
-Mở **http://localhost:5173**
+Open **http://localhost:5173**
 
 ---
 
-## Docker (Khuyến nghị cho môi trường production)
+## Docker (Recommended for Production)
 
 ```bash
-# Tạo .env tại thư mục gốc
+# Create .env at root directory
 echo "GOOGLE_API_KEY=your_key_here" > .env
 
 docker compose up --build
 ```
 
-| Dịch vụ | URL |
+| Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
 | Backend API | http://localhost:8000 |
 | Neo4j Browser | http://localhost:7474 |
 | API Docs | http://localhost:8000/docs |
 
-> **Lưu ý:** Sau khi Docker khởi động, bạn vẫn cần chạy pipeline lập chỉ mục:
+> **Note:** After Docker starts, you still need to run the indexing pipeline:
 > ```bash
 > docker compose exec backend python -m scripts.build_graph_index
 > ```
 
 ---
 
-## Ví dụ câu hỏi
+## Example Questions
 
-**LOCAL** (câu hỏi cụ thể):
-- `"Nhân viên Phòng Kỹ thuật được phép mặc gì vào thứ Hai?"`
-- `"Nhân viên có bao nhiêu ngày nghỉ phép năm sau 5 năm làm việc?"`
-- `"Làm thêm giờ vào ngày lễ được tính lương thế nào?"`
-- `"Quy trình xin nghỉ thai sản gồm những bước nào?"`
+**LOCAL** (specific questions):
+- `"What can the IT Department wear on Monday?"`
+- `"How many vacation days does an employee get after 5 years of service?"`
+- `"How is overtime pay calculated on holidays?"`
+- `"What are the steps in the maternity leave request process?"`
 
-**GLOBAL** (câu hỏi tổng quan):
-- `"Tóm tắt toàn bộ chính sách phúc lợi của công ty"`
-- `"So sánh quyền lợi nghỉ phép của các cấp nhân viên"`
-- `"Công ty có những chính sách gì hỗ trợ nhân viên làm việc từ xa?"`
-
----
-
-## Cấu hình
-
-Tất cả cài đặt trong `backend/.env`:
-
-| Biến | Mặc định | Mô tả |
-|------|---------|-------|
-| `GOOGLE_API_KEY` | — | **Bắt buộc.** Google Gemini API key |
-| `GEMINI_MODEL` | `gemini-2.5-flash` | Model LLM |
-| `GEMINI_EMBEDDING_MODEL` | `models/gemini-embedding-exp-03-07` | Model embedding |
-| `EMBEDDING_DIM` | `3072` | Số chiều embedding |
-| `NEO4J_URI` | `bolt://localhost:7687` | Kết nối Neo4j |
-| `NEO4J_USER` | `neo4j` | Username Neo4j |
-| `NEO4J_PASSWORD` | `techviet2024` | Mật khẩu Neo4j |
-| `CHUNK_SIZE` | `2800` | Ký tự mỗi chunk (~700 tokens tiếng Việt) |
-| `MAX_LOCAL_CHUNKS` | `8` | Top-K chunks cho LOCAL search |
-| `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K summaries cho GLOBAL search |
-| `GRAPH_HOP_DEPTH` | `2` | Độ sâu Cypher traversal |
+**GLOBAL** (general questions):
+- `"Summarize the company's entire benefits policy"`
+- `"Compare vacation rights across employee levels"`
+- `"What policies does the company have to support remote work?"`
 
 ---
 
-## Schema Neo4j
+## Configuration
+
+All settings in `backend/.env`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GOOGLE_API_KEY` | — | **Required.** Google Gemini API key |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | LLM model |
+| `GEMINI_EMBEDDING_MODEL` | `models/gemini-embedding-exp-03-07` | Embedding model |
+| `EMBEDDING_DIM` | `3072` | Embedding dimension |
+| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j connection |
+| `NEO4J_USER` | `neo4j` | Neo4j username |
+| `NEO4J_PASSWORD` | `techviet2024` | Neo4j password |
+| `CHUNK_SIZE` | `2800` | Characters per chunk (~700 tokens in Vietnamese) |
+| `MAX_LOCAL_CHUNKS` | `8` | Top-K chunks for LOCAL search |
+| `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K summaries for GLOBAL search |
+| `GRAPH_HOP_DEPTH` | `2` | Cypher traversal depth |
+
+---
+
+## Neo4j Schema
 
 ### Node Labels
-- `PolicyChunk`: Đoạn văn bản từ tài liệu (có embedding)
-- `Entity`: Thực thể tri thức (CHINH_SACH, QUY_TAC, PHONG_BAN, VAI_TRO, QUY_TRINH, QUYEN_LOI, NGOAI_LE)
-- `Community`: Nhóm chủ đề (có embedding của summary)
+- `PolicyChunk`: Text segments from documents (with embedding)
+- `Entity`: Knowledge entities (POLICY, RULE, DEPARTMENT, ROLE, PROCEDURE, BENEFIT, EXCEPTION)
+- `Community`: Topic groups (with embedding of summary)
 
 ### Relationship Types
 - `MENTIONS`: PolicyChunk → Entity
-- `THUOC_CONG_DONG`: Entity → Community
-- `AP_DUNG_CHO`, `MIEN_TRU`, `GHI_DE`, `THAM_CHIEU`, `YEU_CAU`, `CUNG_CAP`, `THUC_THI_BOI`: Entity → Entity
+- `BELONGS_TO_COMMUNITY`: Entity → Community
+- `APPLIES_TO`, `EXEMPTS`, `OVERRIDES`, `REFERENCES`, `REQUIRES`, `PROVIDES`, `ENFORCED_BY`: Entity → Entity
 
 ### Vector Indexes
-- `policy_chunks` trên `PolicyChunk.embedding` (cosine, 3072 dims)
-- `community_summaries` trên `Community.embedding` (cosine, 3072 dims)
+- `policy_chunks` on `PolicyChunk.embedding` (cosine, 3072 dims)
+- `community_summaries` on `Community.embedding` (cosine, 3072 dims)
