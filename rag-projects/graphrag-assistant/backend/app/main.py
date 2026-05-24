@@ -10,9 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.services.session_service import SessionService
-from app.services.embedding_service import EmbeddingService
+from app.services.embedding_service import create_embedding_service
 from app.services.neo4j_store import Neo4jStore
-from app.services.llm_service import LLMService
+from app.services.llm_service import create_llm_service
 from app.services.indexing_service import IndexingService
 from app.services.graph_rag_service import GraphRAGService
 
@@ -46,7 +46,7 @@ _TAGS = [
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.info("starting_up")
+    logger.info("starting_up", llm_provider=settings.llm_provider)
 
     for doc_type in ["handbooks", "hr_policies", "conduct", "benefits", "procedures"]:
         os.makedirs(f"./data/raw/{doc_type}", exist_ok=True)
@@ -54,13 +54,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     session_service = SessionService(ttl_seconds=settings.session_ttl_seconds)
     session_service.start_cleanup()
 
-    embedding_service = EmbeddingService()
+    embedding_service = create_embedding_service()
     await embedding_service.initialize()
 
     neo4j_store = Neo4jStore()
     await neo4j_store.initialize()
 
-    llm_service = LLMService()
+    llm_service = create_llm_service()
 
     indexing_service = IndexingService(
         llm_service=llm_service,
