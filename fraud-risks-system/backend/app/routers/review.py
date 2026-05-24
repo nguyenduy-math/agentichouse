@@ -64,6 +64,7 @@ async def review_queue(
             claim_type=claim.claim_type,
             combined_score=analysis.combined_score,
             risk_level=analysis.risk_level,
+            ml_score=analysis.ml_score,
             llm_explanation=analysis.llm_explanation,
             top_flags=top_flags,
             reviewed=reviewed,

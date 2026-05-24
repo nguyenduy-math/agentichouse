@@ -42,4 +42,8 @@ export const api = {
   triggerBatch: () => request("/batch/run", { method: "POST" }),
 
   batchStatus: () => request("/batch/status"),
+
+  modelStatus: () => request("/batch/model-status"),
+
+  trainModel: () => request("/batch/train", { method: "POST" }),
 };

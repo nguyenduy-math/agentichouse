@@ -37,8 +37,16 @@ export default function ClaimDetail({ claimId, onClose, onDecision }) {
         </div>
 
         {analysis && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <RiskBadge level={analysis.risk_level} score={analysis.combined_score} />
+            {analysis.ml_score != null && (
+              <span style={{
+                fontSize: 12, padding: "3px 8px", borderRadius: 4,
+                background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0", fontWeight: 600,
+              }}>
+                ML {analysis.ml_score}
+              </span>
+            )}
           </div>
         )}
 

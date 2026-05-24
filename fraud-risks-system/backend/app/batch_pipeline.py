@@ -13,11 +13,14 @@ from app.database import AsyncSessionLocal
 from app.fraud_analyzer import analyze_claim, apply_rule_signals
 from app.graph_engine import sync_and_enrich
 from app.models import BatchRun, Claim, FraudAnalysis
+from app import ml_trainer
 
 logger = logging.getLogger(__name__)
 
 _scheduler = AsyncIOScheduler()
 _last_run_id: uuid.UUID | None = None
+
+_SEVERITY_MAP = {"low": 1, "medium": 2, "high": 3}
 
 
 async def run_batch() -> uuid.UUID:
@@ -34,6 +37,13 @@ async def run_batch() -> uuid.UUID:
     logger.info("Batch run %s started", run_id)
     processed = 0
     failed = 0
+
+    # Load ML model once per batch (Phase 2: used when model file exists)
+    ml_bundle = ml_trainer.load_model(settings.ml_model_path)
+    if ml_bundle:
+        logger.info("ML model loaded (n_samples=%d, cv_auc=%.3f)",
+                    ml_bundle["metadata"].get("n_samples", 0),
+                    ml_bundle["metadata"].get("cv_auc", 0))
 
     try:
         async with AsyncSessionLocal() as session:
@@ -66,10 +76,46 @@ async def run_batch() -> uuid.UUID:
                 llm_result = await analyze_claim(claim_data)
                 rule_score, rule_flags = apply_rule_signals(claim_data)
 
-                combined = int(
-                    settings.llm_score_weight * llm_result["risk_score"]
-                    + settings.rule_score_weight * rule_score
-                )
+                # --- Phase 2: ML scoring (when model is available) ---
+                ml_score_val: int | None = None
+                if ml_bundle is not None:
+                    from app.feature_extractor import extract_features
+                    base_feats = extract_features(claim_data)
+
+                    llm_flags_list = llm_result.get("flags") or []
+                    rule_only = [f for f in rule_flags if not f.get("type", "").startswith("graph_")]
+                    all_non_graph = llm_flags_list + rule_only
+                    severities = [_SEVERITY_MAP.get(f.get("severity", "low"), 1) for f in all_non_graph]
+
+                    predict_feats = {
+                        **base_feats,
+                        "llm_risk_score": llm_result["risk_score"],
+                        "num_llm_flags": len(llm_flags_list),
+                        "num_rule_flags": len(rule_only),
+                        "max_flag_severity": max(severities, default=0),
+                        "has_graph_flags": 0,  # graph enrichment hasn't run yet
+                    }
+                    ml_score_val = ml_trainer.predict_score(
+                        ml_bundle["model"],
+                        ml_bundle["metadata"]["feature_names"],
+                        predict_feats,
+                    )
+
+                # --- Score blending ---
+                if ml_score_val is not None:
+                    # Three-way blend, normalized so weights always sum to 1
+                    total_w = settings.llm_score_weight + settings.rule_score_weight + settings.ml_score_weight
+                    combined = int((
+                        settings.llm_score_weight * llm_result["risk_score"]
+                        + settings.rule_score_weight * rule_score
+                        + settings.ml_score_weight * ml_score_val
+                    ) / total_w)
+                else:
+                    # Phase 1: two-way blend
+                    combined = int(
+                        settings.llm_score_weight * llm_result["risk_score"]
+                        + settings.rule_score_weight * rule_score
+                    )
                 combined = min(combined, 100)
 
                 risk_level = _score_to_level(combined)
@@ -82,6 +128,7 @@ async def run_batch() -> uuid.UUID:
                         llm_flags=llm_result["flags"],
                         rule_flags=rule_flags,
                         combined_score=combined,
+                        ml_score=ml_score_val,
                         llm_explanation=llm_result["explanation"],
                         model_version=settings.gemini_llm_model,
                     )
@@ -108,18 +155,26 @@ async def run_batch() -> uuid.UUID:
                 })
 
                 processed += 1
-                logger.debug("Claim %s analyzed — combined score: %d (%s)", claim.claim_id, combined, risk_level)
+                ml_info = f", ml_score: {ml_score_val}" if ml_score_val is not None else ""
+                logger.debug(
+                    "Claim %s analyzed — combined: %d (%s)%s",
+                    claim.claim_id, combined, risk_level, ml_info,
+                )
 
             except Exception as exc:
                 failed += 1
                 logger.error("Failed to analyze claim %s: %s", claim.claim_id, exc)
 
-        # --- Graph enrichment pass (runs after all individual analyses) ---
+        # --- Graph enrichment pass ---
         if graph_sync_rows:
             logger.info("Batch run %s: starting graph enrichment for %d claims", run_id, len(graph_sync_rows))
             graph_flags = await sync_and_enrich(graph_sync_rows)
             if graph_flags:
                 await _apply_graph_flags(graph_flags)
+
+        # --- Phase 2: auto-train after batch when enough new labels exist ---
+        if settings.ml_auto_train:
+            await _maybe_auto_train(ml_bundle)
 
     except Exception as exc:
         logger.error("Batch run %s failed: %s", run_id, exc)
@@ -153,6 +208,35 @@ async def run_batch() -> uuid.UUID:
 
     logger.info("Batch run %s complete — processed: %d, failed: %d", run_id, processed, failed)
     return run_id
+
+
+async def _maybe_auto_train(current_bundle: dict | None) -> None:
+    """Retrain ML model if new labels have been added since the last training."""
+    try:
+        async with AsyncSessionLocal() as session:
+            label_count = await ml_trainer.count_usable_labels(session)
+
+        current_n = current_bundle["metadata"].get("n_samples", 0) if current_bundle else 0
+
+        if label_count < settings.ml_min_samples:
+            logger.info(
+                "Auto-train skipped: %d/%d usable labels", label_count, settings.ml_min_samples
+            )
+            return
+
+        if label_count <= current_n:
+            logger.info("Auto-train skipped: no new labels since last training (%d samples)", label_count)
+            return
+
+        logger.info("Auto-training ML model on %d labeled samples...", label_count)
+        async with AsyncSessionLocal() as session:
+            metadata = await ml_trainer.train_and_save(session, settings.ml_model_path)
+        logger.info(
+            "Auto-train complete — n_samples=%d, cv_auc=%.3f",
+            metadata["n_samples"], metadata["cv_auc"],
+        )
+    except Exception as exc:
+        logger.error("Auto-train failed: %s", exc)
 
 
 async def _apply_graph_flags(graph_flags: dict[str, list[dict]]) -> None:

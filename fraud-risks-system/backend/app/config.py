@@ -29,6 +29,11 @@ class Settings(BaseSettings):
 
     llm_score_weight: float = 0.7
     rule_score_weight: float = 0.3
+    ml_score_weight: float = 0.3
+
+    ml_min_samples: int = 20
+    ml_model_path: str = "models/xgboost_fraud.pkl"
+    ml_auto_train: bool = True
 
     host: str = "127.0.0.1"
     port: int = 8000

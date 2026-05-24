@@ -66,6 +66,7 @@ class AnalysisSummary(BaseModel):
     risk_score: int
     risk_level: str
     combined_score: int
+    ml_score: int | None = None
     llm_flags: list[FraudFlag] | None
     rule_flags: list[FraudFlag] | None
     llm_explanation: str | None
@@ -103,6 +104,7 @@ class ReviewQueueItem(BaseModel):
     claim_type: str | None
     combined_score: int
     risk_level: str
+    ml_score: int | None = None
     llm_explanation: str | None
     top_flags: list[FraudFlag]
     reviewed: bool
@@ -139,6 +141,29 @@ class BatchStatusResponse(BaseModel):
     error: str | None
 
     model_config = {"from_attributes": True}
+
+
+class FeatureImportance(BaseModel):
+    name: str
+    importance: float
+
+
+class MLModelStatus(BaseModel):
+    is_trained: bool
+    labeled_so_far: int
+    min_samples_needed: int
+    n_samples: int | None = None
+    cv_auc: float | None = None
+    trained_at: str | None = None
+    feature_importances: list[FeatureImportance] | None = None
+
+
+class MLTrainResult(BaseModel):
+    status: str
+    n_samples: int
+    cv_auc: float
+    trained_at: str
+    feature_importances: list[FeatureImportance]
 
 
 # ---------- Health ----------
