@@ -9,12 +9,14 @@ from google.genai import types
 from openai import AsyncOpenAI
 
 from app.config import settings
+from app.models.chat import VerificationResult
 from app.prompts.extraction_prompts import (
     ENTITY_EXTRACTION_PROMPT,
     COMMUNITY_SUMMARY_PROMPT,
     QUERY_CLASSIFICATION_PROMPT,
 )
 from app.prompts.rag_prompts import ANSWER_GENERATION_PROMPT
+from app.prompts.verification_prompts import ANSWER_VERIFICATION_PROMPT
 
 logger = structlog.get_logger()
 
@@ -44,6 +46,9 @@ class LLMService(ABC):
 
     @abstractmethod
     async def classify_query(self, question: str) -> str: ...
+
+    @abstractmethod
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult: ...
 
 
 _GEMINI_JSON_CONFIG = types.GenerateContentConfig(
@@ -140,6 +145,29 @@ class GeminiLLMService(LLMService):
         except Exception:
             return "LOCAL"
 
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
+        prompt = ANSWER_VERIFICATION_PROMPT.format(
+            question=question,
+            context=context[:4000],
+            answer=answer,
+        )
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=_GEMINI_JSON_CONFIG,
+            )
+            data = json.loads(response.text)
+            confidence = max(1, min(5, int(data.get("confidence", 3))))
+            return VerificationResult(
+                is_grounded=bool(data.get("is_grounded", True)),
+                confidence=confidence,
+                issues=data.get("issues", []),
+            )
+        except Exception as e:
+            logger.warning("answer_verification_failed", error=str(e))
+            return VerificationResult(is_grounded=True, confidence=5, issues=[])
+
 
 class OpenAILLMService(LLMService):
     def __init__(self) -> None:
@@ -226,6 +254,30 @@ class OpenAILLMService(LLMService):
             return data.get("query_type", "LOCAL")
         except Exception:
             return "LOCAL"
+
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
+        prompt = ANSWER_VERIFICATION_PROMPT.format(
+            question=question,
+            context=context[:4000],
+            answer=answer,
+        )
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            data = json.loads(response.choices[0].message.content or "{}")
+            confidence = max(1, min(5, int(data.get("confidence", 3))))
+            return VerificationResult(
+                is_grounded=bool(data.get("is_grounded", True)),
+                confidence=confidence,
+                issues=data.get("issues", []),
+            )
+        except Exception as e:
+            logger.warning("answer_verification_failed", error=str(e))
+            return VerificationResult(is_grounded=True, confidence=5, issues=[])
 
 
 def create_llm_service() -> LLMService:

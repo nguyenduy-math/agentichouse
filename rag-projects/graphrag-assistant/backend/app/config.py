@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     graph_hop_depth: int = 2
     entity_extraction_batch: int = 5
 
+    # Answer verification
+    enable_answer_verification: bool = True
+
     # Session
     session_ttl_seconds: int = 3600
 
