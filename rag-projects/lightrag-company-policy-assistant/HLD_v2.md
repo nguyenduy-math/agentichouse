@@ -77,44 +77,36 @@ flowchart TD
 
 ---
 
-## Request Flow
+## Request Flow (Single / Multi-Domain Routing)
 
 ```mermaid
-sequenceDiagram
-    actor Employee
-    participant Web as Web App
-    participant API as REST API
-    participant Orch as Orchestrator
-    participant Agent as Domain Agent(s)
-    participant LLM as Gemini LLM
+flowchart TD
+    Q(["Employee"])
+    API["POST /chat\nREST API"]
+    Classify["Domain Classification\nGemini LLM"]
 
-    Employee->>Web: Ask policy question
-    Web->>API: POST /chat
-    API->>Orch: Process message
-
-    Orch->>LLM: Classify domain(s)
-    LLM-->>Orch: [BENEFITS] or [HR_POLICY, COMPLIANCE] …
-
-    alt No domain matched
-        Orch-->>API: Greeting / out-of-scope response
-    else Single domain
-        Orch->>Agent: Answer question
-        Agent->>LLM: Generate grounded answer
-        LLM-->>Agent: Answer + citations
-        Agent-->>Orch: Response
-    else Multiple domains
-        par Fan-out
-            Orch->>Agent: Answer (domain A)
-        and
-            Orch->>Agent: Answer (domain B)
-        end
-        Orch->>LLM: Synthesize answers
-        LLM-->>Orch: Merged answer
+    subgraph NONE["No domain matched"]
+        Greeting["Greeting / Out-of-scope reply\nNo agent invoked"]
     end
 
-    Orch-->>API: Answer + domain labels + citations
-    API-->>Web: JSON response
-    Web-->>Employee: Formatted answer
+    subgraph SINGLE["Single domain"]
+        AgentOne["Domain Specialist\nKG agent or Tree-Navigation agent"]
+        AnswerOne["Generate grounded answer\nGemini LLM + citations"]
+    end
+
+    subgraph MULTI["Multiple domains"]
+        Fanout["Fan-out to N specialists"]
+        AgentsN["Parallel domain answers\n(per-domain retrieval + LLM)"]
+        Synth["Synthesize merged answer\nGemini LLM"]
+    end
+
+    Response(["ChatResponse\nanswer · domain labels · citations"])
+
+    Q --> API --> Classify
+    Classify -- "no match" --> Greeting
+    Classify -- "1 domain" --> AgentOne --> AnswerOne
+    Classify -- "N domains" --> Fanout --> AgentsN --> Synth
+    Greeting & AnswerOne & Synth --> Response
 ```
 
 ---

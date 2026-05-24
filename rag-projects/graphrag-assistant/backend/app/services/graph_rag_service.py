@@ -3,7 +3,8 @@ from __future__ import annotations
 import structlog
 
 from app.config import settings
-from app.models.chat import ChatResponse
+from app.models.chat import ChatResponse, VerificationResult
+from app.prompts.verification_prompts import FALLBACK_ANSWER
 from app.models.graph import PolicySource, GraphData, GraphNode, GraphEdge
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
@@ -49,6 +50,12 @@ class GraphRAGService:
             user_message=message,
         )
 
+        verification: VerificationResult | None = None
+        if settings.enable_answer_verification:
+            verification = await self._llm.verify_answer(message, context, reply)
+            if not verification.is_grounded or verification.confidence < 3:
+                reply = FALLBACK_ANSWER
+
         self._sessions.append_message(session_id, "user", message)
         self._sessions.append_message(session_id, "assistant", reply)
 
@@ -58,6 +65,7 @@ class GraphRAGService:
             sources=sources,
             query_type=query_type,
             graph_data=graph_data,
+            verification=verification,
         )
 
     # ── LOCAL search ─────────────────────────────────────────────────────────
