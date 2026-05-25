@@ -24,6 +24,14 @@ class VerificationResult(BaseModel):
     issues: list[str] = []
 
 
+class TokenUsage(BaseModel):
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    model: str = ""
+    llm_provider: str = ""
+
+
 class ChatResponse(BaseModel):
     session_id: str
     reply: str
@@ -31,6 +39,7 @@ class ChatResponse(BaseModel):
     query_type: str = "LOCAL"
     graph_data: GraphData | None = None
     verification: VerificationResult | None = None
+    token_usage: TokenUsage | None = None
 
 
 class ChatHistoryResponse(BaseModel):

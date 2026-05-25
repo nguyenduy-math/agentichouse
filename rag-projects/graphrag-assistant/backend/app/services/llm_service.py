@@ -9,7 +9,7 @@ from google.genai import types
 from openai import AsyncOpenAI
 
 from app.config import settings
-from app.models.chat import VerificationResult
+from app.models.chat import TokenUsage, VerificationResult
 from app.prompts.extraction_prompts import (
     ENTITY_EXTRACTION_PROMPT,
     COMMUNITY_SUMMARY_PROMPT,
@@ -29,7 +29,7 @@ class LLMService(ABC):
         history: list[dict],
         user_message: str,
         temperature: float = 0.3,
-    ) -> str: ...
+    ) -> tuple[str, TokenUsage]: ...
 
     @abstractmethod
     async def generate_answer(self, question: str, context: str) -> str: ...
@@ -71,7 +71,7 @@ class GeminiLLMService(LLMService):
         history: list[dict],
         user_message: str,
         temperature: float = 0.3,
-    ) -> str:
+    ) -> tuple[str, TokenUsage]:
         gemini_history = [
             types.Content(
                 role="user" if msg["role"] == "user" else "model",
@@ -87,7 +87,18 @@ class GeminiLLMService(LLMService):
             full_message,
             config=types.GenerateContentConfig(temperature=temperature, max_output_tokens=2048),
         )
-        return response.text
+        try:
+            meta = response.usage_metadata
+            usage = TokenUsage(
+                prompt_tokens=meta.prompt_token_count or 0,
+                completion_tokens=meta.candidates_token_count or 0,
+                total_tokens=meta.total_token_count or 0,
+                model=self._model,
+                llm_provider="gemini",
+            )
+        except Exception:
+            usage = TokenUsage(model=self._model, llm_provider="gemini")
+        return response.text, usage
 
     async def generate_answer(self, question: str, context: str) -> str:
         prompt = ANSWER_GENERATION_PROMPT.format(question=question, context=context)
@@ -180,7 +191,7 @@ class OpenAILLMService(LLMService):
         history: list[dict],
         user_message: str,
         temperature: float = 0.3,
-    ) -> str:
+    ) -> tuple[str, TokenUsage]:
         messages: list[dict] = [{"role": "system", "content": system_prompt}]
         for msg in history:
             role = "assistant" if msg["role"] == "assistant" else "user"
@@ -193,7 +204,19 @@ class OpenAILLMService(LLMService):
             temperature=temperature,
             max_tokens=2048,
         )
-        return response.choices[0].message.content or ""
+        content = response.choices[0].message.content or ""
+        try:
+            u = response.usage
+            usage = TokenUsage(
+                prompt_tokens=u.prompt_tokens,
+                completion_tokens=u.completion_tokens,
+                total_tokens=u.total_tokens,
+                model=self._model,
+                llm_provider="openai",
+            )
+        except Exception:
+            usage = TokenUsage(model=self._model, llm_provider="openai")
+        return content, usage
 
     async def generate_answer(self, question: str, context: str) -> str:
         prompt = ANSWER_GENERATION_PROMPT.format(question=question, context=context)

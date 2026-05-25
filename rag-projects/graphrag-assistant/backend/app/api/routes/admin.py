@@ -8,9 +8,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from pydantic import BaseModel
 
-from app.dependencies import get_indexing_service, get_neo4j_store
+from app.dependencies import get_indexing_service, get_neo4j_store, get_token_logger
 from app.services.indexing_service import IndexingService
 from app.services.neo4j_store import Neo4jStore
+from app.services.token_logger import TokenLogger
 
 router = APIRouter()
 
@@ -104,3 +105,18 @@ async def get_stats(
     neo4j_store: Neo4jStore = Depends(get_neo4j_store),
 ) -> dict[str, Any]:
     return await neo4j_store.get_stats()
+
+
+@router.get("/token-usage", summary="Tổng hợp token đã dùng theo phiên hội thoại")
+async def get_token_usage_summary(
+    token_logger: TokenLogger = Depends(get_token_logger),
+) -> list[dict[str, Any]]:
+    return await token_logger.get_all_sessions_summary()
+
+
+@router.get("/token-usage/{session_id}", summary="Chi tiết token của một phiên hội thoại")
+async def get_session_token_usage(
+    session_id: str,
+    token_logger: TokenLogger = Depends(get_token_logger),
+) -> dict[str, Any]:
+    return await token_logger.get_session_totals(session_id)

@@ -3,13 +3,14 @@ from __future__ import annotations
 import structlog
 
 from app.config import settings
-from app.models.chat import ChatResponse, VerificationResult
+from app.models.chat import ChatResponse, TokenUsage, VerificationResult
 from app.prompts.verification_prompts import FALLBACK_ANSWER
 from app.models.graph import PolicySource, GraphData, GraphNode, GraphEdge
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
 from app.services.neo4j_store import Neo4jStore
 from app.services.session_service import SessionService
+from app.services.token_logger import TokenLogger
 
 logger = structlog.get_logger()
 
@@ -21,11 +22,13 @@ class GraphRAGService:
         embedding_service: EmbeddingService,
         neo4j_store: Neo4jStore,
         session_service: SessionService,
+        token_logger: TokenLogger | None = None,
     ) -> None:
         self._llm = llm_service
         self._emb = embedding_service
         self._store = neo4j_store
         self._sessions = session_service
+        self._token_logger = token_logger
 
     async def process_message(self, session_id: str, message: str) -> ChatResponse:
         session = self._sessions.get_session(session_id)
@@ -44,7 +47,9 @@ class GraphRAGService:
         else:
             context, sources, graph_data = await self._local_search(embedding)
 
-        reply = await self._llm.generate(
+        turn_number = len(history) // 2
+
+        reply, usage = await self._llm.generate(
             system_prompt=self._build_system_prompt(context),
             history=history,
             user_message=message,
@@ -59,6 +64,9 @@ class GraphRAGService:
         self._sessions.append_message(session_id, "user", message)
         self._sessions.append_message(session_id, "assistant", reply)
 
+        if self._token_logger is not None:
+            await self._token_logger.log_turn(session_id, turn_number, usage)
+
         return ChatResponse(
             session_id=session_id,
             reply=reply,
@@ -66,6 +74,7 @@ class GraphRAGService:
             query_type=query_type,
             graph_data=graph_data,
             verification=verification,
+            token_usage=usage,
         )
 
     # ── LOCAL search ─────────────────────────────────────────────────────────

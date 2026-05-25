@@ -8,6 +8,7 @@ from app.services.neo4j_store import Neo4jStore
 from app.services.llm_service import LLMService
 from app.services.indexing_service import IndexingService
 from app.services.graph_rag_service import GraphRAGService
+from app.services.token_logger import TokenLogger
 
 
 def get_session_service(request: Request) -> SessionService:
@@ -32,3 +33,7 @@ def get_indexing_service(request: Request) -> IndexingService:
 
 def get_graph_rag_service(request: Request) -> GraphRAGService:
     return request.app.state.graph_rag_service
+
+
+def get_token_logger(request: Request) -> TokenLogger:
+    return request.app.state.token_logger
