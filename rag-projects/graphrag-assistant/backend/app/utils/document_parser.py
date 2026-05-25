@@ -70,13 +70,10 @@ def _parse_text(file_path: str) -> list[dict[str, Any]]:
     try:
         with open(file_path, "r", encoding="utf-8", errors="replace") as f:
             content = f.read()
-        pages: list[dict[str, Any]] = []
-        page_size = 3000
-        for i, start in enumerate(range(0, len(content), page_size), 1):
-            chunk = content[start : start + page_size].strip()
-            if chunk:
-                pages.append({"page": i, "text": _normalize(chunk)})
-        return pages
+        content = _normalize(content)
+        if content.strip():
+            return [{"page": 1, "text": content}]
+        return []
     except Exception:
         return []
 

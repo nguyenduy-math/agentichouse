@@ -15,7 +15,7 @@ from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
 from app.services.neo4j_store import Neo4jStore
 from app.utils.document_parser import parse_document
-from app.utils.text_splitter import split_text
+from app.utils.text_splitter import split_by_article, split_text
 
 logger = structlog.get_logger()
 
@@ -129,7 +129,7 @@ class IndexingService:
                 pages = parse_document(fpath)
                 for page in pages:
                     for idx, chunk_text in enumerate(
-                        split_text(page["text"], settings.chunk_size, settings.chunk_overlap)
+                        split_by_article(page["text"], settings.chunk_size)
                     ):
                         chunks.append(
                             ChunkWithMeta(
