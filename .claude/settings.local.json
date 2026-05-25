@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/anaconda3/bin/pip show *)",
+      "Bash(/opt/anaconda3/bin/python -c \"import instructor; print\\(hasattr\\(instructor, 'from_genai'\\)\\)\")"
+    ]
+  }
+}

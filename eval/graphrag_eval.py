@@ -21,10 +21,11 @@ from pathlib import Path
 import httpx
 import pandas as pd
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from google import genai
+from openai import OpenAI
 from ragas import EvaluationDataset, SingleTurnSample, evaluate
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import GoogleEmbeddings
+from ragas.llms import llm_factory
 from ragas.metrics import (
     answer_correctness,
     answer_relevancy,
@@ -37,18 +38,23 @@ load_dotenv()
 
 GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
 GRAPHRAG_API_URL = os.getenv("GRAPHRAG_API_URL", "http://localhost:8000")
+SESSION_ENDPOINT = f"{GRAPHRAG_API_URL}/api/v1/session"
 CHAT_ENDPOINT = f"{GRAPHRAG_API_URL}/api/v1/chat"
 
 QUESTIONS_FILE = (
     Path(__file__).parent.parent
-    / "rag-projects/graphrag-assistant/backend/data/eval_questions.json"
+    / "rag-projects/graphrag-assistant/eval-sets/eval_questions.json"
 )
 RESULTS_DIR = Path(__file__).parent / "results"
 
 
-async def query_graphrag(client: httpx.AsyncClient, question_id: str, question: str) -> tuple[str, list[str]]:
-    payload = {"session_id": f"ragas-eval-{question_id}", "message": question}
-    response = await client.post(CHAT_ENDPOINT, json=payload, timeout=30.0)
+async def query_graphrag(client: httpx.AsyncClient, question: str) -> tuple[str, list[str]]:
+    session_resp = await client.post(SESSION_ENDPOINT, timeout=10.0)
+    session_resp.raise_for_status()
+    session_id = session_resp.json()["session_id"]
+
+    payload = {"session_id": session_id, "message": question}
+    response = await client.post(CHAT_ENDPOINT, json=payload, timeout=60.0)
     response.raise_for_status()
     data = response.json()
     answer = data.get("reply", "")
@@ -71,7 +77,7 @@ async def collect_responses(questions: list[dict]) -> list[tuple[dict, str, list
         for i, q in enumerate(questions, 1):
             print(f"  [{i}/{len(questions)}] {q['id']}: {q['question'][:60]}...")
             try:
-                answer, contexts = await query_graphrag(client, q["id"], q["question"])
+                answer, contexts = await query_graphrag(client, q["question"])
                 results.append((q, answer, contexts))
             except Exception as exc:
                 print(f"    WARNING: failed ({exc}), skipping")
@@ -93,14 +99,17 @@ def build_dataset(results: list[tuple[dict, str, list[str]]]) -> EvaluationDatas
 
 
 def run_ragas(dataset: EvaluationDataset) -> pd.DataFrame:
-    llm = LangchainLLMWrapper(
-        ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GOOGLE_API_KEY)
+    # LLM: use Gemini's OpenAI-compatible endpoint to avoid instructor/safety-settings bug
+    # (instructor.from_genai sends HARM_CATEGORY_JAILBREAK which Gemini rejects)
+    openai_client = OpenAI(
+        api_key=GOOGLE_API_KEY,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     )
-    embeddings = LangchainEmbeddingsWrapper(
-        GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004", google_api_key=GOOGLE_API_KEY
-        )
-    )
+    llm = llm_factory("gemini-2.5-flash", provider="openai", client=openai_client)
+
+    # Embeddings: use google.genai directly (no instructor involved)
+    genai_client = genai.Client(api_key=GOOGLE_API_KEY)
+    embeddings = GoogleEmbeddings(model="models/text-embedding-004", client=genai_client)
 
     result = evaluate(
         dataset=dataset,
@@ -144,13 +153,17 @@ def main() -> None:
     results = asyncio.run(collect_responses(questions))
     print(f"Collected {len(results)} responses.\n")
 
+    if not results:
+        print("ERROR: No responses collected — all queries failed. Check backend logs.")
+        sys.exit(1)
+
     print("Step 2/3: Building RAGAS dataset...")
     dataset = build_dataset(results)
 
-    print("Step 3/3: Running RAGAS evaluation (this calls Gemini as judge)...\n")
-    df = run_ragas(dataset)
+    # print("Step 3/3: Running RAGAS evaluation (this calls Gemini as judge)...\n")
+    # df = run_ragas(dataset)
 
-    save_and_print(df)
+    # save_and_print(df)
 
 
 if __name__ == "__main__":
