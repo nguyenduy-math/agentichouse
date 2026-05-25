@@ -15,6 +15,7 @@ from app.services.neo4j_store import Neo4jStore
 from app.services.llm_service import create_llm_service
 from app.services.indexing_service import IndexingService
 from app.services.graph_rag_service import GraphRAGService
+from app.services.token_log_service import TokenLogService
 
 logger = structlog.get_logger()
 
@@ -60,7 +61,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     neo4j_store = Neo4jStore()
     await neo4j_store.initialize()
 
-    llm_service = create_llm_service()
+    token_log_service = TokenLogService(settings.token_db_path)
+    await token_log_service.initialize()
+
+    llm_service = create_llm_service(token_log=token_log_service)
 
     indexing_service = IndexingService(
         llm_service=llm_service,
@@ -79,6 +83,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.embedding_service = embedding_service
     app.state.neo4j_store = neo4j_store
     app.state.llm_service = llm_service
+    app.state.token_log_service = token_log_service
     app.state.indexing_service = indexing_service
     app.state.graph_rag_service = graph_rag_service
     app.state.indexing_status = {

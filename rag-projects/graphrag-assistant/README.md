@@ -188,7 +188,7 @@ graphrag-assistant/
 │   │   ├── api/routes/
 │   │   │   ├── session.py             # POST/DELETE /session
 │   │   │   ├── chat.py                # POST /chat, GET /chat/{id}/history
-│   │   │   ├── admin.py               # POST /index, GET /stats, POST /ingest
+│   │   │   ├── admin.py               # POST /index, GET /stats, POST /ingest, GET /token-usage
 │   │   │   └── graph.py               # GET /graph/nodes, GET /graph/community/{id}
 │   │   ├── models/                    # Pydantic schemas
 │   │   ├── services/
@@ -197,7 +197,8 @@ graphrag-assistant/
 │   │   │   ├── neo4j_store.py         # Neo4j: graph + vector index (KEY FILE)
 │   │   │   ├── indexing_service.py    # 5-stage indexing pipeline
 │   │   │   ├── graph_rag_service.py   # LOCAL / GLOBAL query pipeline
-│   │   │   └── session_service.py     # In-memory sessions
+│   │   │   ├── session_service.py     # In-memory sessions
+│   │   │   └── token_log_service.py   # SQLite token usage logger
 │   │   ├── prompts/                   # Vietnamese prompts
 │   │   └── utils/                     # Document parser + text splitter
 │   ├── data/raw/
@@ -421,6 +422,25 @@ All settings in `backend/.env`:
 | `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K community summaries for GLOBAL search |
 | `GRAPH_HOP_DEPTH` | `2` | Cypher 2-hop traversal depth for entity expansion |
 | `ENABLE_ANSWER_VERIFICATION` | `true` | Run an LLM self-check after answer generation |
+
+### Token Logging
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TOKEN_DB_PATH` | `./data/token_logs.db` | SQLite file for token usage logs |
+
+Token counts are recorded automatically after every LLM call. Two admin endpoints expose the data:
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/admin/token-usage?limit=100` | Most recent N log rows (id, timestamp, provider, model, call_type, prompt_tokens, completion_tokens, total_tokens) |
+| `GET /api/v1/admin/token-usage/summary` | Aggregated totals — overall and broken down by `call_type / provider / model` |
+
+The SQLite file lives inside `backend/data/` which is already bind-mounted in Docker, so logs survive container restarts. You can also query it directly:
+
+```bash
+sqlite3 backend/data/token_logs.db "SELECT call_type, SUM(total_tokens) FROM token_logs GROUP BY call_type;"
+```
 
 ### Session & CORS
 

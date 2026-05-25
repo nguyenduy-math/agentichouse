@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Session
     session_ttl_seconds: int = 3600
 
+    # Token logging
+    token_db_path: str = "./data/token_logs.db"
+
     # CORS
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
 

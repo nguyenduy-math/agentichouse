@@ -17,6 +17,7 @@ from app.prompts.extraction_prompts import (
 )
 from app.prompts.rag_prompts import ANSWER_GENERATION_PROMPT
 from app.prompts.verification_prompts import ANSWER_VERIFICATION_PROMPT
+from app.services.token_log_service import TokenLogService
 
 logger = structlog.get_logger()
 
@@ -73,12 +74,22 @@ Câu hỏi độc lập:\
 
 
 class GeminiLLMService(LLMService):
-    def __init__(self) -> None:
+    _provider = "gemini"
+
+    def __init__(self, token_log: TokenLogService | None = None) -> None:
         self._client = genai.Client(
             api_key=settings.google_api_key,
             http_options={"api_version": "v1beta"},
         )
         self._model = settings.gemini_model
+        self._token_log = token_log
+
+    async def _log(self, call_type: str, usage_metadata: object) -> None:
+        if self._token_log is None or usage_metadata is None:
+            return
+        prompt_tokens = getattr(usage_metadata, "prompt_token_count", 0) or 0
+        completion_tokens = getattr(usage_metadata, "candidates_token_count", 0) or 0
+        await self._token_log.log(self._provider, self._model, call_type, prompt_tokens, completion_tokens)
 
     async def generate(
         self,
@@ -104,6 +115,7 @@ class GeminiLLMService(LLMService):
             ),
         )
         response = chat.send_message(user_message)
+        await self._log("generate", response.usage_metadata)
         return response.text
 
     async def generate_answer(self, question: str, context: str) -> str:
@@ -113,6 +125,7 @@ class GeminiLLMService(LLMService):
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=2048),
         )
+        await self._log("generate_answer", response.usage_metadata)
         return response.text
 
     async def extract_entities_and_relations(self, chunk_text: str) -> dict:
@@ -123,6 +136,7 @@ class GeminiLLMService(LLMService):
                 contents=prompt,
                 config=_GEMINI_JSON_CONFIG,
             )
+            await self._log("extract_entities", response.usage_metadata)
             return json.loads(response.text)
         except Exception as e:
             logger.warning("entity_extraction_failed", error=str(e))
@@ -147,6 +161,7 @@ class GeminiLLMService(LLMService):
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=512),
         )
+        await self._log("community_summary", response.usage_metadata)
         return response.text
 
     async def classify_query(self, question: str) -> str:
@@ -157,6 +172,7 @@ class GeminiLLMService(LLMService):
                 contents=prompt,
                 config=_GEMINI_JSON_CONFIG,
             )
+            await self._log("classify_query", response.usage_metadata)
             data = json.loads(response.text)
             return data.get("query_type", "LOCAL")
         except Exception:
@@ -176,6 +192,7 @@ class GeminiLLMService(LLMService):
                 contents=prompt,
                 config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=256),
             )
+            await self._log("rewrite_query", response.usage_metadata)
             return response.text.strip() or message
         except Exception:
             return message
@@ -192,6 +209,7 @@ class GeminiLLMService(LLMService):
                 contents=prompt,
                 config=_GEMINI_JSON_CONFIG,
             )
+            await self._log("verify_answer", response.usage_metadata)
             data = json.loads(response.text)
             confidence = max(1, min(5, int(data.get("confidence", 3))))
             return VerificationResult(
@@ -205,9 +223,19 @@ class GeminiLLMService(LLMService):
 
 
 class OpenAILLMService(LLMService):
-    def __init__(self) -> None:
+    _provider = "openai"
+
+    def __init__(self, token_log: TokenLogService | None = None) -> None:
         self._client = AsyncOpenAI(api_key=settings.openai_api_key)
         self._model = settings.openai_model
+        self._token_log = token_log
+
+    async def _log(self, call_type: str, usage: object) -> None:
+        if self._token_log is None or usage is None:
+            return
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        await self._token_log.log(self._provider, self._model, call_type, prompt_tokens, completion_tokens)
 
     async def generate(
         self,
@@ -228,6 +256,7 @@ class OpenAILLMService(LLMService):
             temperature=temperature,
             max_tokens=2048,
         )
+        await self._log("generate", response.usage)
         return response.choices[0].message.content or ""
 
     async def generate_answer(self, question: str, context: str) -> str:
@@ -238,6 +267,7 @@ class OpenAILLMService(LLMService):
             temperature=0.3,
             max_tokens=2048,
         )
+        await self._log("generate_answer", response.usage)
         return response.choices[0].message.content or ""
 
     async def extract_entities_and_relations(self, chunk_text: str) -> dict:
@@ -249,6 +279,7 @@ class OpenAILLMService(LLMService):
                 temperature=0.0,
                 response_format={"type": "json_object"},
             )
+            await self._log("extract_entities", response.usage)
             return json.loads(response.choices[0].message.content or "{}")
         except Exception as e:
             logger.warning("entity_extraction_failed", error=str(e))
@@ -274,6 +305,7 @@ class OpenAILLMService(LLMService):
             temperature=0.3,
             max_tokens=512,
         )
+        await self._log("community_summary", response.usage)
         return response.choices[0].message.content or ""
 
     async def classify_query(self, question: str) -> str:
@@ -285,6 +317,7 @@ class OpenAILLMService(LLMService):
                 temperature=0.0,
                 response_format={"type": "json_object"},
             )
+            await self._log("classify_query", response.usage)
             data = json.loads(response.choices[0].message.content or "{}")
             return data.get("query_type", "LOCAL")
         except Exception:
@@ -305,6 +338,7 @@ class OpenAILLMService(LLMService):
                 temperature=0.0,
                 max_tokens=256,
             )
+            await self._log("rewrite_query", response.usage)
             return (response.choices[0].message.content or "").strip() or message
         except Exception:
             return message
@@ -322,6 +356,7 @@ class OpenAILLMService(LLMService):
                 temperature=0.0,
                 response_format={"type": "json_object"},
             )
+            await self._log("verify_answer", response.usage)
             data = json.loads(response.choices[0].message.content or "{}")
             confidence = max(1, min(5, int(data.get("confidence", 3))))
             return VerificationResult(
@@ -334,10 +369,10 @@ class OpenAILLMService(LLMService):
             return VerificationResult(is_grounded=True, confidence=5, issues=[])
 
 
-def create_llm_service() -> LLMService:
+def create_llm_service(token_log: TokenLogService | None = None) -> LLMService:
     provider = settings.llm_provider.lower()
     if provider == "openai":
-        return OpenAILLMService()
+        return OpenAILLMService(token_log=token_log)
     if provider == "gemini":
-        return GeminiLLMService()
+        return GeminiLLMService(token_log=token_log)
     raise ValueError(f"Unknown LLM_PROVIDER: {settings.llm_provider!r} (expected 'gemini' or 'openai')")
