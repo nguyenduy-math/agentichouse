@@ -7,9 +7,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.services.embedding_service import EmbeddingService
+from app.services.embedding_service import create_embedding_service
 from app.services.indexing_service import IndexingService
-from app.services.llm_service import LLMService
+from app.services.llm_service import create_llm_service
 from app.services.neo4j_store import Neo4jStore
 
 
@@ -20,13 +20,13 @@ def progress_cb(stage: str, done: int, total: int) -> None:
 
 async def main() -> None:
     print("Khởi tạo dịch vụ...")
-    embedding_service = EmbeddingService()
+    embedding_service = create_embedding_service()
     await embedding_service.initialize()
 
     neo4j_store = Neo4jStore()
     await neo4j_store.initialize()
 
-    llm_service = LLMService()
+    llm_service = create_llm_service()
 
     indexing_service = IndexingService(
         llm_service=llm_service,
