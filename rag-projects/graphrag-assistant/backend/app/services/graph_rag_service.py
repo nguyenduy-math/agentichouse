@@ -93,6 +93,9 @@ class GraphRAGService:
 
         context = self._build_local_context(chunks, neighborhood)
         sources = self._build_sources(chunks)
+        graph_source = self._build_graph_source(neighborhood)
+        if graph_source:
+            sources.append(graph_source)
         graph_data = self._build_graph_data(neighborhood, set(seed_names))
         return context, sources, graph_data
 
@@ -128,7 +131,7 @@ class GraphRAGService:
         grounding_chunks = await self._store.vector_search_chunks(embedding, 3)
 
         context = self._build_global_context(communities, grounding_chunks)
-        sources = self._build_sources(grounding_chunks)
+        sources = self._build_community_sources(communities) + self._build_sources(grounding_chunks)
         return context, sources, None
 
     def _build_global_context(
@@ -163,12 +166,60 @@ class GraphRAGService:
                     source_file=c["source_file"],
                     doc_type=c.get("doc_type", ""),
                     page_number=c.get("page_number", 0),
-                    excerpt=c["text"][:300],
+                    excerpt=c["text"],
                     relevance_score=round(float(c.get("score", 0.0)), 4),
                     entities=", ".join((c.get("entity_names") or [])[:5]),
                 )
             )
         return sources
+
+    def _build_community_sources(self, communities: list[dict]) -> list[PolicySource]:
+        sources: list[PolicySource] = []
+        for idx, c in enumerate(communities, 1):
+            summary = c.get("summary") or ""
+            if not summary:
+                continue
+            community_id = c.get("community_id", idx)
+            sources.append(
+                PolicySource(
+                    source_file=f"community_{community_id}",
+                    doc_type="community_summary",
+                    page_number=0,
+                    excerpt=summary,
+                    relevance_score=round(float(c.get("score", 0.0)), 4),
+                    entities="",
+                )
+            )
+        return sources
+
+    def _build_graph_source(self, neighborhood: dict) -> PolicySource | None:
+        entities = neighborhood.get("entities", [])
+        triples = neighborhood.get("triples", [])
+        if not entities and not triples:
+            return None
+
+        parts: list[str] = []
+        if entities:
+            parts.append("Các thực thể liên quan:")
+            for e in entities[:20]:
+                desc = e.get("description") or ""
+                parts.append(f"- {e['name']} ({e.get('type', '')}): {desc}")
+        if triples:
+            if parts:
+                parts.append("")
+            parts.append("Quan hệ trong đồ thị tri thức:")
+            for t in triples[:30]:
+                parts.append(f"- {t['source']} --[{t['relation']}]--> {t['target']}")
+
+        entity_names = [e["name"] for e in entities[:5] if e.get("name")]
+        return PolicySource(
+            source_file="knowledge_graph",
+            doc_type="graph_relations",
+            page_number=0,
+            excerpt="\n".join(parts),
+            relevance_score=0.0,
+            entities=", ".join(entity_names),
+        )
 
     def _build_graph_data(self, neighborhood: dict, seed_names: set[str]) -> GraphData | None:
         all_entities = neighborhood.get("entities", [])

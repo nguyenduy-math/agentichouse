@@ -10,7 +10,7 @@ This is the successor to `eval/`, which used Gemini via an OpenAI-compatible pro
 
 | Requirement | Notes |
 |---|---|
-| Python 3.11+ | Tested on 3.12 |
+| Python 3.11–3.13 | Tested on 3.12 / 3.13. **Do not use 3.14** — `pydantic-core` and other Rust-backed deps don't yet ship 3.14 wheels |
 | OpenAI API key | Judge LLM + embeddings |
 | graphrag-assistant backend | Running on `http://localhost:8000` (default) |
 
@@ -20,15 +20,50 @@ The backend must be up and indexed before running. See `rag-projects/graphrag-as
 
 ## Setup
 
+### macOS / Linux
+
 ```bash
 cd eval-v2
 
-python -m venv .venv && source .venv/bin/activate
+py -3.13 -m venv .venv && source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 cp .env.example .env
 # open .env and fill in your OPENAI_API_KEY
 ```
+
+### Windows (PowerShell) — recreate with Python 3.13
+
+If you already have a `.venv` created with Python 3.14, delete it first — Rust-backed dependencies like `pydantic-core` will fail to build on 3.14.
+
+```powershell
+cd eval-v2
+
+# Remove the old venv if it exists
+Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
+
+# Create a new venv explicitly with Python 3.13
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Confirm — must print 3.13.x
+python --version
+
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+
+Copy-Item .env.example .env
+# open .env and fill in your OPENAI_API_KEY
+```
+
+> **Check available Python versions** with `py -0`. If `-V:3.13` isn't listed, install Python 3.13 (64-bit) from [python.org](https://www.python.org/downloads/) and restart your terminal.
+>
+> If `Activate.ps1` is blocked by execution policy, run once per session:
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+> ```
 
 ---
 

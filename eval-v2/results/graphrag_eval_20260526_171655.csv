@@ -1,0 +1,155 @@
+user_input,retrieved_contexts,response,reference,faithfulness,answer_relevancy,context_precision,context_recall,answer_correctness
+Một nhân viên vừa được tuyển và đang trong tháng đầu tiên thử việc có được đăng ký làm việc từ xa không?,"['Điều 2. Điều kiện tiên quyết\nĐể đăng ký làm việc từ xa, nhân viên phải đáp ứng đồng thời các điều kiện:\na) Đã qua thời gian thử việc và có đánh giá hiệu suất xếp loại ""Đạt"" trở lên trong kỳ gần nhất.\nb) Không đang trong giai đoạn kỷ luật hoặc cảnh cáo.\nc) Không có vị trí yêu cầu hiện diện vật lý bắt']","Chào bạn,
+
+Rất tiếc, theo Chính sách làm việc từ xa của công ty, một nhân viên đang trong tháng đầu tiên thử việc sẽ chưa đủ điều kiện để đăng ký làm việc từ xa bạn nhé.
+
+Cụ thể, chính sách quy định rằng:
+*   Để đăng ký làm việc từ xa, nhân viên phải **đã qua thời gian thử việc** và có đánh giá hiệu suất xếp loại ""Đạt"" trở lên trong kỳ gần nhất. [Chính sách làm việc từ xa - Điều 2a]
+*   Chính sách này áp dụng cho nhân viên chính thức **đã hoàn thành thời gian thử việc** (ít nhất 2 tháng). [Chính sách làm việc từ xa - Điều 1]
+
+Vì vậy, bạn cần hoàn thành thời gian thử việc của mình trước khi có thể đăng ký làm việc từ xa.
+
+Nếu bạn có bất kỳ câu hỏi nào khác hoặc muốn tìm hiểu thêm về các chính sách khác, đừng ngần ngại liên hệ Phòng Nhân sự để được hỗ trợ chi tiết nhé!",Không. Chính sách làm việc từ xa chỉ áp dụng cho nhân viên chính thức đã hoàn thành thời gian thử việc (ít nhất 2 tháng). Nhân viên đang trong tháng thử việc đầu tiên chưa đủ điều kiện.,,0.904724100011039,0.9999999999,0.3333333333333333,
+"Nhân viên nữ vừa đi làm lại sau kỳ nghỉ thai sản, con đang được 8 tháng tuổi, có được hưởng quyền lợi nào đặc biệt trong giờ làm việc không?","['Điều 8. Nghỉ nuôi con dưới 12 tháng\nNhân viên nữ đang nuôi con dưới 12 tháng tuổi được nghỉ 60 phút/ngày (chia 2 lần 30 phút) trong giờ làm việc để cho con bú, hưởng nguyên lương.', '=== PHẦN 4: QUY TRÌNH XIN NGHỈ THAI SẢN ===\n\nBước 1: Thông báo sớm\nNhân viên nữ thông báo cho Phòng Nhân sự về thai kỳ ít nhất 2 tháng trước ngày dự kiến nghỉ. Nộp giấy xác nhận thai kỳ của bệnh viện.\n\nBước 2: Lập kế hoạch bàn giao\nCùng Trưởng phòng và HR lập kế hoạch bàn giao công việc trước ngày n', 'Điều 4. Giờ linh hoạt\nNgoài giờ cốt lõi, nhân viên có thể tự sắp xếp 2–3 tiếng còn lại trong ngày (tổng 8 tiếng) theo giờ linh hoạt, phù hợp với công việc và múi giờ của dự án.', 'Điều 8. Thưởng Tết Nguyên Đán\nNhân viên làm việc đủ 6 tháng trở lên tính đến thời điểm trả thưởng Tết được nhận thưởng Tết tối thiểu 1 tháng lương. Thưởng Tết được chi trả trước kỳ nghỉ Tết Nguyên Đán ít nhất 5 ngày làm việc.\n\n=== CHƯƠNG 4: PHÁT TRIỂN NGHỀ NGHIỆP ===', '=== PHẦN 3: QUY ĐỊNH LÀM VIỆC ===\n\n3.1. Giờ làm việc\n- Giờ làm việc chính thức: 08:00 – 17:30, thứ Hai đến thứ Sáu (nghỉ trưa 12:00 – 13:30).\n- Phòng Kỹ thuật được phép làm việc theo lịch linh hoạt: Bắt đầu trong khung 08:00 – 10:00, đảm bảo đủ 8 tiếng và có mặt trong core hours (10:00 – 17:00).\n- L']","Chào bạn,
+
+Với trường hợp nhân viên nữ vừa đi làm lại sau kỳ nghỉ thai sản và con đang được 8 tháng tuổi, công ty có chính sách hỗ trợ đặc biệt dành cho bạn nhé!
+
+Cụ thể, bạn sẽ được **nghỉ 60 phút mỗi ngày** trong giờ làm việc để cho con bú, và thời gian này bạn vẫn được **hưởng nguyên lương**. Thời gian nghỉ này có thể chia thành 2 lần, mỗi lần 30 phút.
+
+Quy định này được nêu rõ trong [Chính sách nghỉ phép - Điều 8. Nghỉ nuôi con dưới 12 tháng].
+
+Nếu bạn có bất kỳ thắc mắc nào khác hoặc cần hỗ trợ thêm về việc sắp xếp thời gian này, đừng ngần ngại liên hệ với Phòng Nhân sự để được giải đáp chi tiết hơn nhé!",Có. Nhân viên nữ đang nuôi con dưới 12 tháng tuổi được nghỉ 60 phút/ngày (chia 2 lần 30 phút) trong giờ làm việc để cho con bú và vẫn hưởng nguyên lương. Con 8 tháng tuổi vẫn thuộc phạm vi áp dụng.,,0.8144558798020283,,0.6666666666666666,
+"Vào thứ Sáu, một Trưởng phòng Kinh doanh không có lịch tiếp khách. Anh ấy có thể mặc jeans và áo thun đến văn phòng không?","['Điều 7. Chính sách Casual Friday\nMỗi thứ Sáu, toàn bộ nhân viên (ngoại trừ những người có lịch tiếp khách chính thức) được phép mặc trang phục thông thường (casual):\n- Được phép: Jeans, áo thun có cổ, áo thun in logo công ty, giày thể thao, sneakers.\n- Không được phép: Quần short, dép lê, áo có hình']","Chào bạn,
+
+Đối với trường hợp của Trưởng phòng Kinh doanh vào thứ Sáu, quy định có một điểm đặc biệt cần lưu ý nhé.
+
+Theo **Điều 7. Chính sách Casual Friday** của [quy_dinh_trang_phuc.txt], vào mỗi thứ Sáu, toàn bộ nhân viên (ngoại trừ những người có lịch tiếp khách chính thức) được phép mặc trang phục thông thường như jeans, áo thun có cổ, áo thun in logo công ty, giày thể thao, sneakers.
+
+Tuy nhiên, **Điều 6. Ban Giám đốc và Quản lý cấp cao** của [quy_dinh_trang_phuc.txt] có quy định riêng cho các cấp quản lý: ""Ban Giám đốc và các Trưởng phòng, Phó phòng cần duy trì trang phục Business Formal trong toàn bộ tuần làm việc khi làm việc tại văn phòng hoặc tham dự cuộc họp cấp cao.""
+
+Vì vậy, dù không có lịch tiếp khách vào thứ Sáu, Trưởng phòng Kinh doanh vẫn thuộc diện quản lý cấp cao và cần duy trì trang phục Business Formal trong toàn bộ tuần làm việc, bao gồm cả thứ Sáu. Điều này có nghĩa là anh ấy sẽ không thể mặc jeans và áo thun đến văn phòng.
+
+Nếu bạn cần xác nhận thêm hoặc có bất kỳ câu hỏi nào khác, đừng ngần ngại liên hệ Phòng Nhân sự nhé!","Không. Dù là thứ Sáu và không có tiếp khách, Trưởng phòng vẫn phải duy trì trang phục Business Formal trong toàn bộ tuần làm việc. Chính sách Casual Friday chỉ áp dụng cho nhân viên thông thường, không áp dụng cho Ban Giám đốc và quản lý cấp cao (Trưởng phòng, Phó phòng).",,0.8526301827208022,0.0,0.0,
+Một nhân viên Senior muốn đăng ký khóa học AWS trên Coursera trị giá 8 triệu đồng. Công ty hỗ trợ như thế nào và cần làm thủ tục gì?,"['Điều 9. Ngân sách đào tạo\nMỗi nhân viên chính thức được cấp ngân sách đào tạo hàng năm:\n- Nhân viên: 5.000.000 VNĐ/năm.\n- Trưởng nhóm, Senior: 10.000.000 VNĐ/năm.\n- Trưởng phòng, Phó phòng: 15.000.000 VNĐ/năm.\nNgân sách dùng để đăng ký khóa học online (Udemy, Coursera, v.v.), sách chuyên môn, hội th', '=== PHẦN 3: QUY TRÌNH XIN LÀM THÊM GIỜ (OVERTIME) ===\n\nBước 1: Đề xuất làm thêm giờ\nTrưởng phòng hoặc nhân viên (sau khi trao đổi với Trưởng phòng) tạo ""Phiếu đề xuất OT"" trên HRM:\n- Lý do làm thêm giờ (tên dự án, task cụ thể).\n- Số giờ dự kiến và thời điểm làm (ngày thường/cuối tuần/ngày lễ).\n- Dan', 'Điều 5. Ngày bắt buộc đến văn phòng\nBất kể chính sách làm việc từ xa, nhân viên BẮT BUỘC có mặt tại văn phòng trong các trường hợp sau:\n- Họp toàn công ty (All-hands meeting) hàng quý.\n- Ngày onboarding thành viên mới trong team.\n- Demo sản phẩm, thuyết trình với khách hàng tại văn phòng.\n- Yêu cầu ']","Chào bạn,
+
+Với vai trò là một Senior, bạn sẽ được công ty hỗ trợ ngân sách đào tạo hàng năm là **10.000.000 VNĐ** [chinh_sach_phuc_loi.txt - Điều 9].
+
+Khóa học AWS trên Coursera trị giá 8.000.000 VNĐ hoàn toàn nằm trong ngân sách này và được công ty hỗ trợ, vì ngân sách đào tạo có thể dùng để đăng ký các khóa học online như Coursera, sách chuyên môn, hội thảo hoặc chứng chỉ nghề nghiệp [chinh_sach_phuc_loi.txt - Điều 9].
+
+Để được hỗ trợ chi phí này, bạn cần thực hiện các bước sau:
+1.  **Phê duyệt trước khi chi tiêu:** Bạn cần trình bày kế hoạch đăng ký khóa học này và nhận được sự phê duyệt từ Trưởng phòng của mình trước khi thực hiện chi tiêu.
+2.  **Hoàn ứng:** Sau khi đã chi trả cho khóa học, bạn cần nộp hóa đơn hoàn ứng trong vòng **30 ngày** kể từ ngày chi tiêu để công ty hoàn lại chi phí cho bạn.
+[chinh_sach_phuc_loi.txt - Điều 9]
+
+Nếu khóa học này bao gồm việc thi chứng chỉ AWS và bạn đang làm đúng chuyên ngành, công ty còn có chính sách hỗ trợ 100% chi phí thi chứng chỉ chuyên môn nữa đấy [chinh_sach_phuc_loi.txt - Điều 10]!
+
+Nếu bạn có bất kỳ thắc mắc nào khác hoặc cần hướng dẫn chi tiết hơn về quy trình, đừng ngần ngại liên hệ Phòng Nhân sự nhé!","Nhân viên Senior có ngân sách đào tạo 10 triệu VNĐ/năm, đủ để chi trả khóa học 8 triệu. Cần làm 2 bước: (1) xin phê duyệt Trưởng phòng trước khi đăng ký, (2) nộp hóa đơn cho Phòng Nhân sự/Kế toán hoàn ứng trong vòng 30 ngày. Ngoài ra, nếu muốn thi chứng chỉ AWS sau khóa học, công ty hỗ trợ 100% phí thi (nhưng phải cam kết làm ít nhất 1 năm sau khi đậu).",,0.5860722657870258,0.9999999999,0.3333333333333333,0.7231555119366285
+Điều gì xảy ra với quyền làm việc từ xa của một nhân viên nếu họ không đạt KPI hai kỳ liên tiếp và thường xuyên không phản hồi trong giờ cốt lõi?,['Điều 10. Thu hồi quyền làm việc từ xa\nQuyền làm việc từ xa có thể bị tạm đình chỉ hoặc thu hồi nếu:\n- Nhân viên không đạt KPI 2 kỳ liên tiếp.\n- Vi phạm quy định bảo mật thông tin.\n- Không phản hồi trong giờ cốt lõi nhiều lần mà không có lý do hợp lệ.\n- Bị xếp loại kỷ luật theo Nội quy Lao động.\nThu '],"Chào bạn,
+
+Theo Chính sách làm việc từ xa của công ty, nếu một nhân viên không đạt KPI hai kỳ liên tiếp **và/hoặc** thường xuyên không phản hồi trong giờ cốt lõi mà không có lý do hợp lệ, quyền làm việc từ xa của họ có thể bị tạm đình chỉ hoặc thu hồi.
+
+Cụ thể, Điều 10 của Chính sách nêu rõ các trường hợp thu hồi quyền làm việc từ xa bao gồm:
+*   Nhân viên không đạt KPI 2 kỳ liên tiếp.
+*   Không phản hồi trong giờ cốt lõi nhiều lần mà không có lý do hợp lệ.
+
+Khi quyền làm việc từ xa bị thu hồi, thời hạn tối thiểu là 3 tháng trước khi được xem xét lại. [chinh_sach_lam_viec_tu_xa.txt - Điều 10]
+
+Nếu bạn có bất kỳ câu hỏi nào khác hoặc cần làm rõ thêm về trường hợp cụ thể của mình, đừng ngần ngại liên hệ với Phòng Nhân sự nhé!","Quyền làm việc từ xa sẽ bị tạm đình chỉ hoặc thu hồi, vì nhân viên vi phạm hai điều kiện: không đạt KPI 2 kỳ liên tiếp và không phản hồi trong giờ cốt lõi nhiều lần. Sau khi bị thu hồi, phải chờ tối thiểu 3 tháng mới được xem xét phục hồi quyền làm việc từ xa.",0.6,0.6014306148819977,0.9999999999,0.5,0.8861076675972188
+Nhân viên muốn nghỉ phép 7 ngày liên tục để đi du lịch nước ngoài cần thực hiện những bước gì và đơn cần được ai phê duyệt?,"['Điều 3. Quy trình xin phép năm\n- Nghỉ 1–2 ngày: Nộp đơn xin phép trên hệ thống HRM ít nhất 3 ngày làm việc trước.\n- Nghỉ từ 3–5 ngày: Nộp đơn ít nhất 7 ngày trước, cần được Trưởng phòng phê duyệt.\n- Nghỉ từ 6 ngày trở lên: Nộp đơn ít nhất 14 ngày trước, cần được Trưởng phòng và Phòng Nhân sự phê duy', '=== PHẦN 1: QUY TRÌNH XIN NGHỈ PHÉP NĂM ===\n\nBước 1: Kiểm tra số ngày phép còn lại\nNhân viên đăng nhập hệ thống HRM tại hrm.agentichouse.vn hoặc ứng dụng Agentic House HRM trên điện thoại. Vào mục ""Nghỉ phép"" → ""Số ngày phép còn lại"" để kiểm tra.\n\nBước 2: Tạo đơn xin nghỉ phép\n- Vào HRM → ""Nghỉ phép']","Chào bạn,
+
+Để xin nghỉ phép 7 ngày liên tục đi du lịch nước ngoài, bạn cần thực hiện theo quy trình xin nghỉ phép năm và đảm bảo thời gian nộp đơn cũng như sự phê duyệt từ các cấp quản lý nhé.
+
+Dưới đây là các bước chi tiết:
+
+1.  **Kiểm tra số ngày phép còn lại:**
+    Bạn nên đăng nhập vào hệ thống HRM tại hrm.agentichouse.vn hoặc ứng dụng Agentic House HRM trên điện thoại. Vào mục ""Nghỉ phép"" → ""Số ngày phép còn lại"" để kiểm tra xem mình còn đủ ngày phép không nhé.
+    [chinh_sach_nghi_phep.txt - Điều 13], [quy_trinh_xin_phep.txt - Bước 1: Kiểm tra số ngày phép còn lại]
+
+2.  **Tạo đơn xin nghỉ phép:**
+    *   Bạn vào HRM → ""Nghỉ phép"" → ""Tạo đơn mới"".
+    *   Chọn loại phép là ""Phép năm"".
+    *   Nhập ngày bắt đầu, ngày kết thúc và lý do nghỉ (ví dụ: ""Đi du lịch nước ngoài"").
+    *   Vì bạn nghỉ từ 2 ngày trở lên, bạn cần nhập tên người bàn giao công việc trong thời gian nghỉ (đây là bước bắt buộc).
+    [quy_trinh_xin_phep.txt - Bước 2: Tạo đơn xin nghỉ phép]
+
+3.  **Thời hạn nộp đơn:**
+    Vì bạn nghỉ từ 6 ngày trở lên, bạn cần nộp đơn xin phép trên hệ thống HRM **ít nhất 14 ngày làm việc trước** ngày bạn dự định bắt đầu nghỉ.
+    [chinh_sach_nghi_phep.txt - Điều 3. Quy trình xin phép năm]
+
+4.  **Phê duyệt đơn:**
+    Đơn của bạn sẽ cần được **Trưởng phòng** và **Phòng Nhân sự** phê duyệt.
+    *   Đơn sẽ tự động gửi đến Trưởng nhóm/Trưởng phòng trực tiếp để phê duyệt cấp 1.
+    *   Sau khi Trưởng phòng duyệt, đơn sẽ tự động chuyển đến Phòng Nhân sự để xác nhận số ngày phép và phê duyệt cuối cùng.
+    Thời gian phê duyệt thông thường là 1–2 ngày làm việc. Bạn sẽ nhận được thông báo qua email và Teams khi đơn được duyệt hoặc từ chối.
+    [chinh_sach_nghi_phep.txt - Điều 3. Quy trình xin phép năm], [quy_trinh_xin_phep.txt - Bước 3: Nộp đơn và chờ phê duyệt]
+
+5.  **Bàn giao công việc:**
+    Trước ngày nghỉ, bạn cần đảm bảo:
+    *   Hoàn thành hoặc bàn giao các đầu việc đang dở dang.
+    *   Cập nhật trạng thái công việc trên Jira/Asana.
+    *   Thông báo cho team và người bàn giao qua Teams.
+    *   Cài đặt trả lời tự động email (Out of Office) với thông tin liên hệ của người phụ trách thay thế bạn.
+    [quy_trinh_xin_phep.txt - Bước 4: Bàn giao công việc]
+
+Nếu bạn có bất kỳ thắc mắc nào khác hoặc cần hỗ trợ trong quá trình nộp đơn, đừng ngần ngại liên hệ Phòng Nhân sự để được hướng dẫn chi tiết hơn nhé!","Với 7 ngày nghỉ liên tục (thuộc nhóm từ 6 ngày trở lên): (1) nộp đơn trên hệ thống HRM ít nhất 14 ngày trước ngày nghỉ, (2) đơn cần được Trưởng phòng phê duyệt cấp 1 và Phòng Nhân sự xác nhận cấp 2. Trước ngày nghỉ còn phải: bàn giao công việc, cập nhật Jira/Asana, thông báo trên Teams, và cài auto-reply email với thông tin người phụ trách thay.",0.2,0.7957696064486489,0.99999999995,0.5,0.6444081255545917
+So sánh chế độ bảo hiểm sức khỏe PTI Care giữa một nhân viên Junior và một Trưởng phòng khi cả hai phải nhập viện điều trị nội trú với chi phí 80 triệu đồng.,"['Điều 2. Bảo hiểm sức khỏe cao cấp (PTI Care)\nNhân viên chính thức từ tháng đầu tiên được tham gia gói bảo hiểm sức khỏe PTI Care do công ty chi trả 100%:\n- Gói cơ bản (dành cho tất cả nhân viên): Chi trả nội trú tối đa 50 triệu VNĐ/năm, ngoại trú 5 triệu VNĐ/năm.\n- Gói nâng cao (dành cho Trưởng phòn', '=== PHẦN 2: CƠ CẤU TỔ CHỨC ===\n\n2.1. Ban Giám đốc\n- Tổng Giám đốc (CEO): Phụ trách định hướng chiến lược toàn công ty.\n- Phó Tổng Giám đốc Kỹ thuật (CTO): Phụ trách tất cả các hoạt động kỹ thuật và sản phẩm.\n- Phó Tổng Giám đốc Kinh doanh (CCO): Phụ trách kinh doanh, marketing và quan hệ khách hàng.']","Chào bạn,
+
+Rất vui được giải đáp thắc mắc của bạn về chế độ bảo hiểm sức khỏe PTI Care!
+
+Dựa trên chính sách phúc lợi của công ty, chế độ bảo hiểm sức khỏe PTI Care sẽ có sự khác biệt rõ rệt giữa nhân viên Junior và Trưởng phòng, đặc biệt khi phải nhập viện điều trị nội trú với chi phí 80 triệu đồng.
+
+Cụ thể như sau:
+
+1.  **Đối với Nhân viên Junior:**
+    *   Nhân viên Junior thuộc nhóm ""tất cả nhân viên"" và sẽ được tham gia **Gói cơ bản** của bảo hiểm PTI Care.
+    *   Gói cơ bản này có mức chi trả tối đa cho điều trị nội trú là **50 triệu VNĐ/năm**.
+    *   Trong trường hợp chi phí điều trị nội trú là 80 triệu VNĐ, bảo hiểm sẽ chi trả tối đa 50 triệu VNĐ. Phần còn lại **30 triệu VNĐ** (80 triệu - 50 triệu) sẽ do nhân viên tự chi trả.
+    *   [chinh_sach_phuc_loi.txt - Điều 2]
+
+2.  **Đối với Trưởng phòng:**
+    *   Trưởng phòng thuộc nhóm ""Trưởng phòng và Phó phòng"" và sẽ được tham gia **Gói nâng cao** của bảo hiểm PTI Care.
+    *   Gói nâng cao này có mức chi trả tối đa cho điều trị nội trú là **100 triệu VNĐ/năm**.
+    *   Trong trường hợp chi phí điều trị nội trú là 80 triệu VNĐ, bảo hiểm sẽ chi trả toàn bộ **80 triệu VNĐ** vì chi phí này nằm trong hạn mức tối đa của gói.
+    *   [chinh_sach_phuc_loi.txt - Điều 2]
+
+Tóm lại, với cùng một chi phí điều trị nội trú 80 triệu VNĐ:
+*   **Nhân viên Junior** sẽ được bảo hiểm chi trả 50 triệu VNĐ và tự chi trả 30 triệu VNĐ.
+*   **Trưởng phòng** sẽ được bảo hiểm chi trả toàn bộ 80 triệu VNĐ.
+
+Hy vọng thông tin này hữu ích cho bạn! Nếu bạn có bất kỳ câu hỏi nào khác hoặc cần làm rõ thêm, đừng ngần ngại liên hệ với Phòng Hành chính – Nhân sự nhé.","Với chi phí nội trú 80 triệu đồng: Nhân viên Junior chỉ được PTI Care chi trả 50 triệu (giới hạn gói cơ bản), phải tự trả 30 triệu còn lại. Trưởng phòng được chi trả toàn bộ 80 triệu (gói nâng cao có giới hạn 100 triệu). Gói nâng cao của Trưởng phòng còn bao gồm thêm nha khoa 5 triệu/năm. Phí bảo hiểm cả hai trường hợp đều do công ty chi trả 100%.",0.6153846153846154,0.8368574707560276,0.9999999999,0.5,0.8070416855994811
+"Nhân viên bắt đầu làm việc chính thức từ ngày 15/07/2024. Đến kỳ thưởng Tết Nguyên Đán 2025 (dự kiến chi trả cuối tháng 01/2025), họ có đủ điều kiện nhận thưởng không?","['Điều 8. Thưởng Tết Nguyên Đán\nNhân viên làm việc đủ 6 tháng trở lên tính đến thời điểm trả thưởng Tết được nhận thưởng Tết tối thiểu 1 tháng lương. Thưởng Tết được chi trả trước kỳ nghỉ Tết Nguyên Đán ít nhất 5 ngày làm việc.\n\n=== CHƯƠNG 4: PHÁT TRIỂN NGHỀ NGHIỆP ===', 'Điều 2. Cách tính phép năm\nPhép năm được tính theo năm dương lịch (01/01 – 31/12). Nhân viên vào giữa năm được tính phép theo tỷ lệ tháng làm việc thực tế (phép tháng = phép năm / 12).', '=== PHẦN 5: ONBOARDING VÀ OFFBOARDING ===\n\n5.1. Quy trình onboarding\nTuần 1: Nhận thiết bị, cấp tài khoản, đọc sổ tay nhân viên, ký hợp đồng lao động và các cam kết.\nTuần 2–4: Buddy program – được phân công một đồng nghiệp cùng phòng làm người hướng dẫn.\nTháng 2–3: Thực hiện các nhiệm vụ thực tế đầu']","Chào bạn,
+
+Theo chính sách của công ty, để được nhận thưởng Tết Nguyên Đán, nhân viên cần ""làm việc đủ 6 tháng trở lên tính đến thời điểm trả thưởng Tết"" [chinh_sach_phuc_loi.txt - Điều 8].
+
+Với trường hợp nhân viên bắt đầu làm việc chính thức từ ngày 15/07/2024, và kỳ thưởng Tết Nguyên Đán 2025 dự kiến chi trả vào cuối tháng 01/2025, thì đến thời điểm đó, nhân viên đã làm việc được hơn 6 tháng (cụ thể là từ 15/07/2024 đến cuối tháng 01/2025).
+
+Do đó, nhân viên này **đủ điều kiện** để nhận thưởng Tết Nguyên Đán 2025 nhé.
+
+Nếu bạn cần xác nhận thêm hoặc có bất kỳ câu hỏi nào khác, đừng ngần ngại liên hệ với phòng HR để được hỗ trợ chi tiết hơn nha.","Có, nhân viên đủ điều kiện nhận thưởng Tết. Từ ngày 15/07/2024 đến cuối tháng 01/2025 tính ra khoảng 6,5 tháng, vượt qua ngưỡng yêu cầu 6 tháng làm việc liên tục tính đến thời điểm chi trả thưởng Tết. Mức thưởng tối thiểu là 1 tháng lương.",0.16666666666666666,0.942674670875709,0.9999999999,0.3333333333333333,0.6529098361851694
+"Nếu một nhân viên phải làm thêm giờ vào ngày Quốc khánh 2/9, quy trình phê duyệt cần đi qua bao nhiêu cấp và cụ thể là những ai?","['=== PHẦN 3: QUY TRÌNH XIN LÀM THÊM GIỜ (OVERTIME) ===\n\nBước 1: Đề xuất làm thêm giờ\nTrưởng phòng hoặc nhân viên (sau khi trao đổi với Trưởng phòng) tạo ""Phiếu đề xuất OT"" trên HRM:\n- Lý do làm thêm giờ (tên dự án, task cụ thể).\n- Số giờ dự kiến và thời điểm làm (ngày thường/cuối tuần/ngày lễ).\n- Dan', 'Điều 3. Quy trình xin phép năm\n- Nghỉ 1–2 ngày: Nộp đơn xin phép trên hệ thống HRM ít nhất 3 ngày làm việc trước.\n- Nghỉ từ 3–5 ngày: Nộp đơn ít nhất 7 ngày trước, cần được Trưởng phòng phê duyệt.\n- Nghỉ từ 6 ngày trở lên: Nộp đơn ít nhất 14 ngày trước, cần được Trưởng phòng và Phòng Nhân sự phê duy', '=== PHẦN 3: QUY ĐỊNH LÀM VIỆC ===\n\n3.1. Giờ làm việc\n- Giờ làm việc chính thức: 08:00 – 17:30, thứ Hai đến thứ Sáu (nghỉ trưa 12:00 – 13:30).\n- Phòng Kỹ thuật được phép làm việc theo lịch linh hoạt: Bắt đầu trong khung 08:00 – 10:00, đảm bảo đủ 8 tiếng và có mặt trong core hours (10:00 – 17:00).\n- L', 'Điều 14. Trách nhiệm\nPhòng Nhân sự chịu trách nhiệm phổ biến, hướng dẫn và giám sát việc thực hiện quy định này. Các Trưởng phòng có trách nhiệm nhắc nhở và quản lý nhân viên trong phòng ban của mình.', 'Điều 9. Đánh giá định kỳ\nPhòng Nhân sự phối hợp với Trưởng phòng xem xét hiệu quả làm việc từ xa của từng nhân viên mỗi 6 tháng. Tiêu chí đánh giá bao gồm: hoàn thành KPI, chất lượng công việc, thái độ phản hồi trong giờ cốt lõi, và phản hồi từ đồng nghiệp.']","Chào bạn,
+
+Nếu một nhân viên cần làm thêm giờ vào ngày Quốc khánh 2/9, quy trình phê duyệt sẽ cần đi qua **3 cấp** và cụ thể là những người sau:
+
+1.  **Cấp 1:** Trưởng phòng trực tiếp của nhân viên.
+2.  **Cấp 2:** Phòng Nhân sự hoặc Phòng Kế toán (đối với trường hợp làm thêm giờ vào ngày lễ nói chung).
+3.  **Cấp 3:** Ban Giám đốc (đối với trường hợp làm thêm giờ vào ngày lễ Quốc khánh hoặc Tết).
+
+Bạn có thể tham khảo chi tiết trong quy định về làm thêm giờ của công ty:
+*   [quy_trinh_xin_phep.txt - PHẦN 3: QUY TRÌNH XIN LÀM THÊM GIỜ (OVERTIME) - Bước 2: Phê duyệt]
+
+Nếu bạn có bất kỳ câu hỏi nào khác hoặc cần xác nhận thêm về trường hợp cụ thể của mình, đừng ngần ngại liên hệ với Phòng Nhân sự nhé!","Làm thêm giờ vào ngày Quốc khánh 2/9 cần 3 cấp phê duyệt: (1) Trưởng phòng, (2) Phòng Nhân sự hoặc Kế toán, (3) Ban Giám đốc (vì là ngày lễ Quốc khánh). Sau khi được duyệt, lương OT sẽ được tính ở mức 300% so với lương giờ cơ bản.",0.16666666666666666,0.782424672557187,0.9999999999,0.0,0.6820574670263295
+"Agentic House có những giá trị cốt lõi nào, và các chính sách về làm việc từ xa, phúc lợi đào tạo có phản ánh những giá trị đó không?","['=== PHẦN 1: GIỚI THIỆU CÔNG TY ===\n\n1.1. Về Agentic House\nCông ty Cổ phần Công nghệ Agentic House (Agentic House JSC) được thành lập năm 2015, chuyên cung cấp các giải pháp phần mềm doanh nghiệp, dịch vụ điện toán đám mây và tư vấn chuyển đổi số cho khách hàng trong nước và khu vực Đông Nam Á. Trụ s', 'CHÍNH SÁCH LÀM VIỆC TỪ XA (REMOTE WORK) – CÔNG TY AGENTICHOUSE\nPhiên bản: 1.2 | Ban hành: 01/03/2024 | Phòng Nhân sự & Phòng CNTT\n\n=== CHƯƠNG 1: ĐIỀU KIỆN ĐỦ TIÊU CHUẨN ===', 'CHÍNH SÁCH PHÚC LỢI NHÂN VIÊN – CÔNG TY AGENTIC HOUSE\nPhiên bản: 2.3 | Ban hành: 01/01/2024 | Phòng Nhân sự\n\n=== CHƯƠNG 1: BẢO HIỂM ===']","Chào bạn,
+
+Rất vui được hỗ trợ bạn tìm hiểu về Agentic House!
+
+Dựa trên các tài liệu nội quy được cung cấp, tôi chưa tìm thấy thông tin cụ thể về **các giá trị cốt lõi** của Công ty Agentic House. Phần giới thiệu công ty trong [so_tay_nhan_vien.txt - trang 1] có đề cập đến ""Tầm nhìn và Sứ mệnh"" nhưng không liệt kê các giá trị cốt lõi.
+
+Về phần thứ hai của câu hỏi, liệu các chính sách về làm việc từ xa, phúc lợi và đào tạo có phản ánh những giá trị đó không, tôi xin giải thích như sau:
+
+*   **Chính sách làm việc từ xa:** Công ty có ban hành [CHÍNH SÁCH LÀM VIỆC TỪ XA (REMOTE WORK)] rõ ràng, cho thấy sự linh hoạt và tin tưởng vào nhân viên.
+*   **Chính sách phúc lợi:** Công ty cũng có [CHÍNH SÁCH PHÚC LỢI NHÂN VIÊN] chi tiết, bao gồm các quy định về bảo hiểm và các phúc lợi khác.
+*   **Chính sách đào tạo:** Các tài liệu được cung cấp chưa nêu rõ một chính sách đào tạo riêng biệt, tuy nhiên, việc đào tạo thường là một phần của phúc lợi hoặc phát triển nhân sự.
+
+Vì tôi không có thông tin về các giá trị cốt lõi của Agentic House, nên tôi không thể đánh giá trực tiếp mức độ phản ánh của các chính sách này đối với những giá trị đó.
+
+Để có thông tin chính xác nhất về các giá trị cốt lõi và cách các chính sách này liên kết với chúng, bạn nên liên hệ trực tiếp với Phòng Nhân sự (HR) của công ty. Họ sẽ cung cấp cho bạn cái nhìn đầy đủ và chi tiết nhất nhé!","Agentic House có 4 giá trị cốt lõi PACE: Professional (Chuyên nghiệp), Agile (Linh hoạt), Collaborative (Hợp tác), Ethical (Đạo đức). Các chính sách phản ánh rõ ràng: (1) Agile — chính sách remote linh hoạt theo từng phòng ban và giờ cốt lõi; (2) Professional — ngân sách đào tạo (5–15 triệu/năm) và hỗ trợ 100% phí chứng chỉ chuyên môn; (3) Collaborative — quy trình bàn giao công việc bắt buộc và dùng Jira/Asana/Teams; (4) Ethical — quy định vi phạm rõ ràng và minh bạch trong xử lý kỷ luật.",0.4666666666666667,0.0,0.9999999999,0.0,0.42319478544108163

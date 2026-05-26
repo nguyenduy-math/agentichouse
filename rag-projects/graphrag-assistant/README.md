@@ -234,7 +234,7 @@ graphrag-assistant/
 
 ### Requirements
 
-- Python 3.12+
+- Python 3.12 or 3.13 — **do not use 3.14** (`pydantic-core` and other Rust-backed deps don't yet ship 3.14 wheels)
 - Node.js 20+
 - Docker & Docker Compose
 - Google API Key (Gemini) **or** OpenAI API Key — depending on your chosen `LLM_PROVIDER`
@@ -264,11 +264,41 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### 2. Install Dependencies
 
+#### macOS / Linux
+
 ```bash
-python -m venv venv
-source venv/bin/activate   # macOS/Linux
+python3.13 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
+
+#### Windows (PowerShell) — recreate with Python 3.13
+
+If you already have a `.venv` created with Python 3.14, delete it first — Rust-backed dependencies like `pydantic-core` will fail to build on 3.14.
+
+```powershell
+# Remove the old venv if it exists
+Remove-Item -Recurse -Force .venv -ErrorAction SilentlyContinue
+
+# Create a new venv explicitly with Python 3.13
+py -3.13 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Confirm — must print 3.13.x
+python --version
+
+python -m pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
+> **Check available Python versions** with `py -0`. If `-V:3.13` isn't listed, install Python 3.13 (64-bit) from [python.org](https://www.python.org/downloads/) and restart your terminal.
+>
+> If `Activate.ps1` is blocked by execution policy, run once per session:
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+> ```
 
 ### 3. Start Neo4j
 

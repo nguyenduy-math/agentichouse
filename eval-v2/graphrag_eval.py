@@ -16,6 +16,7 @@ Usage:
 import argparse
 import asyncio
 import json
+import logging
 import os
 import sys
 from datetime import datetime
@@ -35,6 +36,12 @@ from ragas.metrics import (
     context_recall,
     faithfulness,
 )
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(levelname)s [%(name)s] %(message)s",
+)
+logging.getLogger("ragas").setLevel(logging.WARNING)
 
 load_dotenv()
 
@@ -133,6 +140,29 @@ def run_ragas(
     return result.to_pandas()
 
 
+def audit_failures(df: pd.DataFrame, metric_cols: list[str]) -> None:
+    nan_mask = df[metric_cols].isna()
+    if not nan_mask.any().any():
+        return
+
+    print("\n=== WARNING: Missing metric cells (RAGAS per-sample failures) ===")
+    for metric in metric_cols:
+        failed_idx = nan_mask.index[nan_mask[metric]].tolist()
+        if not failed_idx:
+            continue
+        print(f"  {metric}: {len(failed_idx)}/{len(df)} failed (rows: {failed_idx})")
+        for i in failed_idx:
+            q = df.loc[i, "user_input"]
+            preview = (q[:70] + "...") if len(q) > 70 else q
+            print(f"      row {i}: {preview}")
+    print(
+        "Scroll up for the per-sample exception traceback "
+        "(logged by ragas.executor at WARNING level).\n"
+        "Common causes: OpenAI rate-limit after retries, judge JSON-parse error, "
+        "context exceeds model window.\n"
+    )
+
+
 def save_and_print(df: pd.DataFrame) -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -142,14 +172,20 @@ def save_and_print(df: pd.DataFrame) -> None:
 
     skip_cols = {"user_input", "response", "retrieved_contexts", "reference"}
     metric_cols = [c for c in df.columns if c not in skip_cols]
-    summary = df[metric_cols].mean().round(4)
 
     print("=== RAGAS Evaluation Summary (graphrag-assistant v2 / OpenAI judge) ===")
-    print(f"{'Metric':<30} {'Score':>8}")
-    print("-" * 40)
-    for metric, score in summary.items():
-        print(f"{metric:<30} {score:>8.4f}")
-    print("=" * 40)
+    print(f"{'Metric':<28} {'Score':>8}  {'Coverage':>10}")
+    print("-" * 52)
+    for metric in metric_cols:
+        score = df[metric].mean()
+        n = int(df[metric].notna().sum())
+        total = len(df)
+        coverage = f"{n}/{total}"
+        flag = "  (partial)" if n < total else ""
+        print(f"{metric:<28} {score:>8.4f}  {coverage:>10}{flag}")
+    print("=" * 52)
+
+    audit_failures(df, metric_cols)
 
 
 def parse_args() -> argparse.Namespace:
