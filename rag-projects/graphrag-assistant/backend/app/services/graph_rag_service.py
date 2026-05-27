@@ -87,12 +87,20 @@ class GraphRAGService:
             seed_names.extend(c.get("entity_names") or [])
         seed_names = list(dict.fromkeys(seed_names))[:20]
 
-        # Augment with chunks that co-mention multiple seed entities via graph edges.
-        # Requiring ≥2 entity co-occurrences prevents flooding the context with
-        # tangentially related chunks (e.g. every chunk mentioning 'Nhân viên').
-        entity_chunks = await self._store.get_chunks_by_entity_names(
-            seed_names, k=3, min_entity_hits=2
-        )
+        # Augment with entity-linked chunks using type-aware thresholds:
+        # - Specific-type entities (QUY_TAC, CHINH_SACH, etc.) are scoped to a single
+        #   policy area → min_hits=1 is safe and recovers cross-aspect recall.
+        # - Generic entities (VAI_TRO, PHONG_BAN) appear everywhere → require 2+
+        #   co-occurrences to avoid flooding the context with off-topic chunks.
+        specific_seeds = await self._store.get_specific_entity_names(seed_names)
+        if specific_seeds:
+            entity_chunks = await self._store.get_chunks_by_entity_names(
+                specific_seeds, k=3, min_entity_hits=1
+            )
+        else:
+            entity_chunks = await self._store.get_chunks_by_entity_names(
+                seed_names, k=3, min_entity_hits=2
+            )
         seen_ids = {c["id"] for c in chunks}
         for ec in entity_chunks:
             if ec["id"] not in seen_ids:

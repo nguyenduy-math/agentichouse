@@ -245,6 +245,31 @@ class Neo4jStore:
             )
             return [dict(r) for r in await result.data()]
 
+    _SPECIFIC_ENTITY_TYPES = frozenset(
+        {"QUY_TAC", "CHINH_SACH", "QUY_TRINH", "QUYEN_LOI", "NGOAI_LE"}
+    )
+
+    async def get_specific_entity_names(self, entity_names: list[str]) -> list[str]:
+        """Filter entity_names to only those with specific (non-generic) policy types.
+
+        Generic types (VAI_TRO, PHONG_BAN) appear in almost every chunk and produce
+        noisy single-hit matches. Specific types (QUY_TAC, CHINH_SACH, etc.) are
+        scoped to particular policies and are safe for min_entity_hits=1 retrieval.
+        """
+        if not entity_names:
+            return []
+        async with self._driver.session() as s:
+            result = await s.run(
+                """
+                MATCH (e:Entity)
+                WHERE e.name IN $names AND e.type IN $types
+                RETURN e.name AS name
+                """,
+                names=entity_names,
+                types=list(self._SPECIFIC_ENTITY_TYPES),
+            )
+            return [r["name"] for r in await result.data()]
+
     # ── Graph traversal ──────────────────────────────────────────────────────
 
     async def get_entity_neighborhood(

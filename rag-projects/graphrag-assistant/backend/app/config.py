@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 400
 
     # Retrieval tuning
-    max_local_chunks: int = 8
+    max_local_chunks: int = 12
     max_community_summaries: int = 5
     graph_hop_depth: int = 2
     entity_extraction_batch: int = 5

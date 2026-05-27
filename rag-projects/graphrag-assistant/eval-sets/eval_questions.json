@@ -3,8 +3,8 @@
     "version": "1.0",
     "created": "2026-05-24",
     "description": "Bộ câu hỏi đánh giá ngữ nghĩa (semantic eval) dùng để so sánh hiệu suất giữa các LLM (Gemini, OpenAI) trên hệ thống GraphRAG chính sách nội bộ Agentic House.",
-    "total_questions": 10,
-    "categories": ["nghỉ phép", "làm việc từ xa", "phúc lợi", "trang phục", "quy trình", "tổng hợp"],
+    "total_questions": 17,
+    "categories": ["nghỉ phép", "làm việc từ xa", "phúc lợi", "trang phục", "quy trình", "tổng hợp", "giờ làm việc", "lương thưởng", "onboarding"],
     "query_types": ["LOCAL", "GLOBAL"],
     "difficulty_levels": ["easy", "medium", "hard"]
   },
@@ -170,6 +170,113 @@
         "Quy định xử lý vi phạm rõ ràng, minh bạch phản ánh Ethical"
       ],
       "expected_answer_summary": "Agentic House có 4 giá trị cốt lõi PACE: Professional (Chuyên nghiệp), Agile (Linh hoạt), Collaborative (Hợp tác), Ethical (Đạo đức). Các chính sách phản ánh rõ ràng: (1) Agile — chính sách remote linh hoạt theo từng phòng ban và giờ cốt lõi; (2) Professional — ngân sách đào tạo (5–15 triệu/năm) và hỗ trợ 100% phí chứng chỉ chuyên môn; (3) Collaborative — quy trình bàn giao công việc bắt buộc và dùng Jira/Asana/Teams; (4) Ethical — quy định vi phạm rõ ràng và minh bạch trong xử lý kỷ luật."
+    },
+    {
+      "id": "SQ-011",
+      "question": "Nhân viên Phòng Kỹ thuật muốn bắt đầu làm việc lúc 9:30 sáng. Điều này có được phép không, và họ cần đảm bảo những điều kiện gì?",
+      "category": "giờ làm việc",
+      "query_type": "LOCAL",
+      "difficulty": "easy",
+      "reasoning_type": "factual_with_condition",
+      "source_docs": ["so_tay_nhan_vien.txt"],
+      "expected_key_facts": [
+        "Phòng Kỹ thuật được phép bắt đầu trong khung 08:00–10:00, tức 9:30 là hợp lệ",
+        "Phải làm đủ 8 tiếng trong ngày",
+        "Phải có mặt trong core hours từ 10:00 đến 17:00"
+      ],
+      "expected_answer_summary": "Có. Nhân viên Phòng Kỹ thuật được phép áp dụng lịch linh hoạt, bắt đầu trong khung 08:00–10:00, tức 9:30 là hợp lệ. Điều kiện: (1) làm đủ 8 tiếng trong ngày, (2) phải có mặt trong core hours từ 10:00 đến 17:00."
+    },
+    {
+      "id": "SQ-012",
+      "question": "Khi được phê duyệt làm việc từ xa, nhân viên nhận được phụ cấp hỗ trợ gì từ công ty về chi phí internet và được chi trả như thế nào?",
+      "category": "làm việc từ xa",
+      "query_type": "LOCAL",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Phụ cấp internet 200.000 VNĐ/tháng",
+        "Chi trả cùng lương tháng"
+      ],
+      "expected_answer_summary": "Nhân viên làm việc từ xa được nhận phụ cấp internet 200.000 VNĐ/tháng. Khoản phụ cấp này được thanh toán cùng với lương tháng."
+    },
+    {
+      "id": "SQ-013",
+      "question": "Một Trưởng phòng quyết định nghỉ việc. Họ phải thông báo trước bao lâu và cần hoàn thành những bước gì trong quá trình offboarding?",
+      "category": "onboarding",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["so_tay_nhan_vien.txt"],
+      "expected_key_facts": [
+        "Quản lý cấp Trưởng phòng trở lên phải thông báo ít nhất 45 ngày (nhân viên thông thường chỉ 30 ngày)",
+        "Checklist offboarding: bàn giao công việc, hoàn trả thiết bị, xóa tài khoản nội bộ",
+        "Sau offboarding sẽ nhận chứng nhận kinh nghiệm làm việc",
+        "Được thanh toán lương và ngày phép còn lại"
+      ],
+      "expected_answer_summary": "Trưởng phòng phải thông báo nghỉ việc ít nhất 45 ngày trước (so với 30 ngày cho nhân viên thông thường). Checklist offboarding gồm: bàn giao công việc, hoàn trả thiết bị, xóa tài khoản nội bộ. Sau khi hoàn tất sẽ nhận chứng nhận kinh nghiệm làm việc và được thanh toán toàn bộ lương cùng ngày phép còn lại."
+    },
+    {
+      "id": "SQ-014",
+      "question": "Nhân viên đạt xếp loại hiệu suất 'Tốt' với 87% KPI trong kỳ đánh giá cuối năm. Họ được nhận thưởng bao nhiêu tháng lương?",
+      "category": "lương thưởng",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "threshold_calculation",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Xếp loại 'Tốt' áp dụng cho nhân viên đạt 85–94% KPI",
+        "87% KPI nằm trong ngưỡng xếp loại Tốt",
+        "Mức thưởng xếp loại Tốt là 2–3 tháng lương gross"
+      ],
+      "expected_answer_summary": "Nhân viên đạt 87% KPI được xếp loại 'Tốt' (ngưỡng 85–94% KPI) và nhận thưởng hiệu suất cuối năm từ 2 đến 3 tháng lương gross. Mức cụ thể trong khoảng 2–3 tháng tùy thuộc vào quyết định của ban lãnh đạo."
+    },
+    {
+      "id": "SQ-015",
+      "question": "Nhân viên kỹ thuật làm thêm 6 tiếng vào thứ Bảy và đây là lần làm thêm đầu tiên trong tháng. Mức phụ cấp OT là bao nhiêu, cần phê duyệt những cấp nào, và có lựa chọn thay thế nào ngoài nhận tiền không?",
+      "category": "lương thưởng",
+      "query_type": "LOCAL",
+      "difficulty": "hard",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Cuối tuần: phụ cấp OT 200% lương giờ cơ bản",
+        "6 tiếng đầu tiên trong tháng không vượt ngưỡng 8 tiếng/tháng → chỉ cần Trưởng phòng phê duyệt cấp 1",
+        "Không phải ngày lễ → không cần phê duyệt cấp 2 và cấp 3",
+        "Có thể chọn nghỉ bù (comp-off day) thay vì nhận tiền, theo thỏa thuận với Trưởng phòng"
+      ],
+      "expected_answer_summary": "Thứ Bảy là cuối tuần nên phụ cấp OT là 200% lương giờ cơ bản. Vì đây là lần đầu trong tháng và chỉ 6 tiếng (chưa vượt 8 giờ/tháng) và không phải ngày lễ, chỉ cần Trưởng phòng phê duyệt cấp 1. Ngoài nhận tiền OT, nhân viên có thể thỏa thuận với Trưởng phòng để nghỉ bù (comp-off day) thay thế."
+    },
+    {
+      "id": "SQ-016",
+      "question": "Một nhân viên muốn đăng ký thi chứng chỉ Google Cloud (GCP) Professional. Công ty hỗ trợ như thế nào và có điều kiện gì kèm theo?",
+      "category": "phúc lợi",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "benefit_entitlement",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Công ty hỗ trợ 100% chi phí thi chứng chỉ chuyên môn (AWS, Google Cloud, PMP, ACCA, v.v.)",
+        "Điều kiện: nhân viên phải đang làm việc đúng chuyên ngành liên quan",
+        "Phải cam kết làm việc tại công ty ít nhất 1 năm sau khi đậu chứng chỉ"
+      ],
+      "expected_answer_summary": "Công ty hỗ trợ 100% chi phí thi chứng chỉ Google Cloud Professional với hai điều kiện: (1) nhân viên đang làm việc đúng chuyên ngành liên quan đến chứng chỉ đó, (2) cam kết tiếp tục làm việc tại công ty ít nhất 1 năm sau khi đậu. Khoản hỗ trợ này tách biệt với ngân sách đào tạo hàng năm."
+    },
+    {
+      "id": "SQ-017",
+      "question": "Tóm tắt các quy định làm việc đặc thù dành riêng cho Phòng Kỹ thuật & CNTT so với các phòng ban khác, bao gồm giờ làm việc, giới hạn làm việc từ xa và công cụ làm việc.",
+      "category": "tổng hợp",
+      "query_type": "GLOBAL",
+      "difficulty": "hard",
+      "reasoning_type": "cross_document_synthesis",
+      "source_docs": ["so_tay_nhan_vien.txt", "chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Giờ linh hoạt: bắt đầu trong khung 08:00–10:00, đảm bảo đủ 8 tiếng và core hours 10:00–17:00",
+        "Giới hạn remote tối đa 3 ngày/tuần (Marketing & Kế toán chỉ được 2 ngày/tuần)",
+        "Công cụ quản lý công việc: Jira (các phòng khác dùng Asana)",
+        "Bắt buộc kết nối VPN khi làm việc từ xa và truy cập hệ thống nội bộ"
+      ],
+      "expected_answer_summary": "Phòng Kỹ thuật & CNTT có 4 điểm khác biệt so với các phòng ban khác: (1) Giờ linh hoạt — được phép bắt đầu trong khung 08:00–10:00 thay vì cố định 08:00, miễn đủ 8 tiếng và có mặt core hours 10:00–17:00. (2) Remote nhiều hơn — tối đa 3 ngày/tuần (Marketing & Kế toán chỉ 2 ngày/tuần). (3) Công cụ riêng — dùng Jira để quản lý công việc thay vì Asana. (4) Bảo mật — bắt buộc kết nối VPN công ty khi làm việc từ xa."
     }
   ]
 }
