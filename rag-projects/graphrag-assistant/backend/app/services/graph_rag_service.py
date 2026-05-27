@@ -87,11 +87,23 @@ class GraphRAGService:
             seed_names.extend(c.get("entity_names") or [])
         seed_names = list(dict.fromkeys(seed_names))[:20]
 
+        # Augment with chunks that co-mention multiple seed entities via graph edges.
+        # Requiring ≥2 entity co-occurrences prevents flooding the context with
+        # tangentially related chunks (e.g. every chunk mentioning 'Nhân viên').
+        entity_chunks = await self._store.get_chunks_by_entity_names(
+            seed_names, k=3, min_entity_hits=2
+        )
+        seen_ids = {c["id"] for c in chunks}
+        for ec in entity_chunks:
+            if ec["id"] not in seen_ids:
+                chunks.append(ec)
+                seen_ids.add(ec["id"])
+
         neighborhood = await self._store.get_entity_neighborhood(
             seed_names, depth=settings.graph_hop_depth
         )
 
-        context = self._build_local_context(chunks, neighborhood)
+        context = self._build_local_context(chunks, neighborhood, seed_names=set(seed_names))
         sources = self._build_sources(chunks)
         graph_source = self._build_graph_source(neighborhood)
         if graph_source:
@@ -99,7 +111,9 @@ class GraphRAGService:
         graph_data = self._build_graph_data(neighborhood, set(seed_names))
         return context, sources, graph_data
 
-    def _build_local_context(self, chunks: list[dict], neighborhood: dict) -> str:
+    def _build_local_context(
+        self, chunks: list[dict], neighborhood: dict, seed_names: set[str] | None = None
+    ) -> str:
         parts: list[str] = ["## Đoạn văn bản liên quan:"]
         for c in chunks:
             parts.append(
@@ -114,6 +128,14 @@ class GraphRAGService:
 
         triples = neighborhood.get("triples", [])
         if triples:
+            # Only include triples where both endpoints are seed entities (directly from
+            # matched chunks). 2-hop neighbors produce unrelated triples that cause the
+            # LLM to hallucinate rules not present in the retrieved text.
+            if seed_names:
+                triples = [
+                    t for t in triples
+                    if t.get("source") in seed_names and t.get("target") in seed_names
+                ]
             parts.append("\n## Quan hệ trong đồ thị tri thức:")
             for t in triples[:30]:
                 parts.append(f"- {t['source']} --[{t['relation']}]--> {t['target']}")
@@ -128,7 +150,7 @@ class GraphRAGService:
         communities = await self._store.vector_search_communities(
             embedding, settings.max_community_summaries
         )
-        grounding_chunks = await self._store.vector_search_chunks(embedding, 3)
+        grounding_chunks = await self._store.vector_search_chunks(embedding, 6)
 
         context = self._build_global_context(communities, grounding_chunks)
         sources = self._build_community_sources(communities) + self._build_sources(grounding_chunks)

@@ -210,6 +210,41 @@ class Neo4jStore:
             )
             return [dict(r) for r in await result.data()]
 
+    async def get_chunks_by_entity_names(
+        self, entity_names: list[str], k: int = 3, min_entity_hits: int = 2
+    ) -> list[dict]:
+        """Return chunks that mention at least min_entity_hits of the given entities.
+
+        Requiring co-occurrence of multiple seed entities ensures the chunk is
+        topically focused on the query rather than tangentially related via a
+        single common entity (e.g. 'Nhân viên' appears everywhere).
+        """
+        if not entity_names:
+            return []
+        async with self._driver.session() as s:
+            result = await s.run(
+                """
+                MATCH (c:PolicyChunk)-[:MENTIONS]->(e:Entity)
+                WHERE e.name IN $names
+                WITH c, COUNT(DISTINCT e) AS hits
+                WHERE hits >= $min_hits
+                RETURN c.id           AS id,
+                       c.text         AS text,
+                       c.source_file  AS source_file,
+                       c.doc_type     AS doc_type,
+                       c.page_number  AS page_number,
+                       c.chunk_index  AS chunk_index,
+                       c.entity_names AS entity_names,
+                       0.5            AS score
+                ORDER BY hits DESC
+                LIMIT $k
+                """,
+                names=entity_names,
+                min_hits=min_entity_hits,
+                k=k,
+            )
+            return [dict(r) for r in await result.data()]
+
     # ── Graph traversal ──────────────────────────────────────────────────────
 
     async def get_entity_neighborhood(
