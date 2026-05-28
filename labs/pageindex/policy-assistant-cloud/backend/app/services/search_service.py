@@ -85,10 +85,18 @@ def _load_pdf_pages(pdf_path: Path, start: int, end: int) -> str:
 
 
 class SearchResult:
-    def __init__(self, answer: str, citations: list[dict], documents: list[str]) -> None:
+    def __init__(
+        self,
+        answer: str,
+        citations: list[dict],
+        documents: list[str],
+        retrieved_contexts: list[str] | None = None,
+    ) -> None:
         self.answer = answer
         self.citations = citations  # [{document, page, section}]
         self.documents = documents
+        # Văn bản đã đưa vào prompt sinh câu trả lời (mỗi phần tử là một section ghép).
+        self.retrieved_contexts = retrieved_contexts or []
 
 
 class SearchService:
@@ -157,14 +165,14 @@ class SearchService:
         question: str,
         history_block: str,
         persona: str,
-    ) -> tuple[str, list[dict]]:
+    ) -> tuple[str, list[dict], list[str]]:
         if not tree_path.exists():
-            return "", []
+            return "", [], []
         try:
             tree = json.loads(tree_path.read_text(encoding="utf-8"))
         except Exception as exc:
             logger.warning("Không đọc được cây %s: %s", tree_path, exc)
-            return "", []
+            return "", [], []
 
         # Bước 1: điều hướng cây (đã nén + cắt theo ngân sách token)
         tree_json = json.dumps(self._compact_tree(tree), ensure_ascii=False, indent=2)
@@ -187,12 +195,12 @@ class SearchService:
         except Exception:
             relevant = []
         if not relevant:
-            return "", []
+            return "", [], []
 
         node_ids = {r.get("node_id") for r in relevant if r.get("node_id")}
         sections = self._collect_node_text(tree, node_ids)[: settings.max_sections_per_doc]
         if not sections:
-            return "", []
+            return "", [], []
 
         # Bước 2: với mỗi mục, ghép node text (tóm tắt có cấu trúc của PageIndex) với
         # văn bản nguyên văn trang PDF tương ứng. Thiếu PDF → chỉ dùng node text.
@@ -228,7 +236,7 @@ class SearchService:
         try:
             parsed = json.loads(ans_resp.text or "{}")
         except Exception:
-            return "", []
+            return "", [], []
 
         answer_text = (parsed.get("answer") or "").strip()
         citations = [
@@ -240,7 +248,7 @@ class SearchService:
             for c in parsed.get("citations", [])
             if c.get("page")
         ]
-        return answer_text, citations
+        return answer_text, citations, content_parts
 
     # ------------------------------------------------------------------
     # Truy vấn toàn bộ kho (fan-out + tổng hợp)
@@ -254,7 +262,7 @@ class SearchService:
     ) -> SearchResult:
         paths = self._tree_source.tree_paths()
         if not paths:
-            return SearchResult(prompts.NO_DOCUMENTS_RESPONSE, [], [])
+            return SearchResult(prompts.NO_DOCUMENTS_RESPONSE, [], [], [])
 
         history_block = prompts.format_history(history)
         persona = system_prompt or prompts.DEFAULT_PAGEINDEX_PERSONA
@@ -269,29 +277,31 @@ class SearchService:
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        answers: list[tuple[str, str, list[dict]]] = []  # (filename, answer, citations)
+        # (filename, answer, citations, content_parts)
+        answers: list[tuple[str, str, list[dict], list[str]]] = []
         for (filename, _, _), r in zip(paths, results):
             if isinstance(r, Exception):
                 logger.warning("Lỗi truy vấn %s: %s", filename, r)
                 continue
-            answer_text, cits = r
+            answer_text, cits, parts = r
             if answer_text:
-                answers.append((filename, answer_text, cits))
+                answers.append((filename, answer_text, cits, parts))
 
         if not answers:
-            return SearchResult(prompts.NOT_FOUND_RESPONSE, [], [])
+            return SearchResult(prompts.NOT_FOUND_RESPONSE, [], [], [])
 
         if len(answers) == 1:
-            fn, ans, cits = answers[0]
-            return SearchResult(ans, cits, [fn])
+            fn, ans, cits, parts = answers[0]
+            return SearchResult(ans, cits, [fn], parts)
 
         # Tổng hợp nhiều câu trả lời (cắt theo ngân sách token)
-        sections = [f"Tài liệu «{fn}»:\n{ans}" for fn, ans, _ in answers]
+        sections = [f"Tài liệu «{fn}»:\n{ans}" for fn, ans, _, _ in answers]
         answers_block = fit_sections(
             sections, settings.synthesis_input_budget_tokens, label="doc answers"
         )
-        all_citations = [c for _, _, cits in answers for c in cits]
-        docs = [fn for fn, _, _ in answers]
+        all_citations = [c for _, _, cits, _ in answers for c in cits]
+        all_contexts = [p for _, _, _, parts in answers for p in parts]
+        docs = [fn for fn, _, _, _ in answers]
         synth_prompt = prompts.build_synthesis_prompt(
             n=len(answers), answers_block=answers_block, question=question
         )
@@ -306,4 +316,5 @@ class SearchService:
             answer=(synth.text or answers[0][1]).strip(),
             citations=all_citations,
             documents=docs,
+            retrieved_contexts=all_contexts,
         )

@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-05-28",
+    "description": "Bộ câu hỏi đánh giá single-turn cho policy-assistant-cloud, bám sát tài liệu chinh_sach_phuc_loi.pdf (Chính sách phúc lợi & đãi ngộ Agentic House).",
+    "total_questions": 10,
+    "categories": ["thưởng", "phụ cấp", "đào tạo", "quà tặng", "team building", "ngoài phạm vi"],
+    "difficulty_levels": ["easy", "medium", "hard"]
+  },
+  "questions": [
+    {
+      "id": "SQ-001",
+      "question": "Nhân viên được xếp loại đánh giá 'Tốt' thì được thưởng hiệu suất bao nhiêu?",
+      "category": "thưởng",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Thưởng hiệu suất xếp loại Tốt = 1 tháng lương cơ bản"
+      ],
+      "expected_answer_summary": "Nhân viên xếp loại 'Tốt' được thưởng hiệu suất bằng 1 tháng lương cơ bản, chi trả sau mỗi kỳ đánh giá (tháng 7 và tháng 1)."
+    },
+    {
+      "id": "SQ-002",
+      "question": "Nếu kỳ đánh giá xếp loại 'Cần cải thiện' thì có được thưởng hiệu suất không?",
+      "category": "thưởng",
+      "difficulty": "easy",
+      "reasoning_type": "factual_negative",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Xếp loại 'Cần cải thiện' không có thưởng hiệu suất"
+      ],
+      "expected_answer_summary": "Không. Xếp loại 'Cần cải thiện' không được hưởng thưởng hiệu suất."
+    },
+    {
+      "id": "SQ-003",
+      "question": "Một nhân viên mới vào làm 6 tháng thì thưởng Tết Nguyên Đán được tính thế nào?",
+      "category": "thưởng",
+      "difficulty": "medium",
+      "reasoning_type": "conditional_application",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Nhân viên dưới 1 năm: thưởng Tết tính theo tỷ lệ số tháng làm việc",
+        "Chỉ nhân viên có thâm niên từ 1 năm trở lên mới được mức tối thiểu 1 tháng lương"
+      ],
+      "expected_answer_summary": "Vì thâm niên dưới 1 năm, thưởng Tết của bạn sẽ được tính theo tỷ lệ số tháng làm việc (không áp dụng mức tối thiểu 1 tháng lương cơ bản dành cho nhân viên từ 1 năm trở lên)."
+    },
+    {
+      "id": "SQ-004",
+      "question": "Thưởng Tết được chi trả vào thời điểm nào so với ngày nghỉ Tết?",
+      "category": "thưởng",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Chi trả trước ngày nghỉ Tết ít nhất 5 ngày làm việc"
+      ],
+      "expected_answer_summary": "Thưởng Tết được chi trả trước ngày nghỉ Tết ít nhất 5 ngày làm việc."
+    },
+    {
+      "id": "SQ-005",
+      "question": "Khi nhóm dự án hoàn thành vượt KPI hoặc cá nhân có sáng kiến cải tiến được áp dụng thì mức thưởng là bao nhiêu?",
+      "category": "thưởng",
+      "difficulty": "medium",
+      "reasoning_type": "compound_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Dự án vượt KPI: thưởng nhóm 5–20 triệu đồng/dự án",
+        "Sáng kiến cải tiến được áp dụng: thưởng 1–5 triệu đồng"
+      ],
+      "expected_answer_summary": "Dự án hoàn thành vượt KPI được thưởng nhóm 5–20 triệu đồng/dự án; sáng kiến cải tiến được áp dụng được thưởng 1–5 triệu đồng."
+    },
+    {
+      "id": "SQ-006",
+      "question": "Phụ cấp ăn trưa của công ty là bao nhiêu? Nếu văn phòng có canteen thì sao?",
+      "category": "phụ cấp",
+      "difficulty": "medium",
+      "reasoning_type": "factual_with_alternative",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Trợ cấp ăn trưa 50.000 đồng/ngày làm việc thực tế (~1,1 triệu đồng/tháng)",
+        "Hoặc sử dụng canteen nội bộ (văn phòng Hà Nội) miễn phí suất ăn trưa"
+      ],
+      "expected_answer_summary": "Trợ cấp ăn trưa 50.000 đồng/ngày làm việc thực tế (khoảng 1,1 triệu đồng/tháng). Nếu văn phòng (Hà Nội) có canteen nội bộ thì sử dụng canteen với suất ăn trưa miễn phí."
+    },
+    {
+      "id": "SQ-007",
+      "question": "Ngân sách hỗ trợ đào tạo hàng năm cho nhân viên thường và cho cấp Trưởng phòng trở lên là bao nhiêu?",
+      "category": "đào tạo",
+      "difficulty": "easy",
+      "reasoning_type": "comparison_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Cấp nhân viên: 5 triệu đồng/người/năm",
+        "Trưởng phòng trở lên: 10 triệu đồng/người/năm",
+        "Áp dụng cho khóa học chuyên môn, chứng chỉ, hội thảo"
+      ],
+      "expected_answer_summary": "Cấp nhân viên: 5 triệu đồng/người/năm. Trưởng phòng trở lên: 10 triệu đồng/người/năm. Ngân sách dùng cho khóa học chuyên môn, chứng chỉ, hội thảo."
+    },
+    {
+      "id": "SQ-008",
+      "question": "Vào ngày sinh nhật nhân viên, công ty tặng quà gì?",
+      "category": "quà tặng",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Sinh nhật nhân viên: voucher 500.000 đồng"
+      ],
+      "expected_answer_summary": "Sinh nhật nhân viên được tặng voucher trị giá 500.000 đồng."
+    },
+    {
+      "id": "SQ-009",
+      "question": "Ngân sách team building hàng năm tính trên mỗi người là bao nhiêu? Câu lạc bộ thể thao được hỗ trợ thế nào?",
+      "category": "team building",
+      "difficulty": "medium",
+      "reasoning_type": "compound_lookup",
+      "source_docs": ["chinh_sach_phuc_loi.pdf"],
+      "expected_key_facts": [
+        "Ngân sách team building 1,5 triệu đồng/người/năm",
+        "Câu lạc bộ thể thao (bóng đá, cầu lông, yoga) được hỗ trợ phí sân/lớp học 50%"
+      ],
+      "expected_answer_summary": "Ngân sách team building là 1,5 triệu đồng/người/năm. Câu lạc bộ thể thao (bóng đá, cầu lông, yoga) được công ty hỗ trợ 50% phí sân/lớp học."
+    },
+    {
+      "id": "SQ-010",
+      "question": "Nhân viên nữ nghỉ thai sản được nghỉ bao nhiêu tháng theo chính sách công ty?",
+      "category": "ngoài phạm vi",
+      "difficulty": "hard",
+      "reasoning_type": "out_of_scope_fallback",
+      "source_docs": [],
+      "expected_key_facts": [
+        "Tài liệu chinh_sach_phuc_loi.pdf không quy định nghỉ thai sản",
+        "Câu trả lời nên nói không tìm thấy thông tin và hướng dẫn liên hệ phòng ban phụ trách"
+      ],
+      "expected_answer_summary": "Tài liệu chính sách phúc lợi & đãi ngộ hiện có không đề cập đến chế độ nghỉ thai sản. Vui lòng liên hệ phòng Nhân sự để được tư vấn chi tiết về chính sách thai sản."
+    }
+  ]
+}

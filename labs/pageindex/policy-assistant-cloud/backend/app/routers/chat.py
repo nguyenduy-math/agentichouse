@@ -26,4 +26,5 @@ async def chat(request: Request, payload: ChatRequest) -> ChatResponse:
         answer=result.answer,
         citations=[ChatCitation(**c) for c in result.citations],
         documents_consulted=result.documents,
+        retrieved_contexts=result.retrieved_contexts,
     )

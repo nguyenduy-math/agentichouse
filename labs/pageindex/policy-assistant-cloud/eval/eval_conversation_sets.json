@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-05-28",
+    "description": "Bộ hội thoại nhiều lượt cho policy-assistant-cloud — kiểm tra khả năng ghi nhớ ngữ cảnh giữa các lượt.",
+    "total_sets": 3
+  },
+  "conversation_sets": [
+    {
+      "set_id": "CS-001",
+      "title": "Thưởng cuối năm",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Công ty có thưởng Tết Nguyên Đán không? Mức tối thiểu là bao nhiêu?",
+          "context_dependency": "none",
+          "expected_answer_summary": "Có. Nhân viên có thâm niên từ 1 năm trở lên được thưởng Tết tối thiểu 1 tháng lương cơ bản."
+        },
+        {
+          "turn": 2,
+          "question": "Vậy nếu tôi mới vào làm 8 tháng thì sao?",
+          "context_dependency": "uses_previous_turn",
+          "expected_answer_summary": "Vì thâm niên dưới 1 năm, thưởng Tết của bạn được tính theo tỷ lệ số tháng làm việc (8/12), không áp dụng mức tối thiểu 1 tháng lương."
+        },
+        {
+          "turn": 3,
+          "question": "Tiền thưởng được chi trả trước Tết bao lâu?",
+          "context_dependency": "same_topic_continuation",
+          "expected_answer_summary": "Thưởng Tết được chi trả trước ngày nghỉ Tết ít nhất 5 ngày làm việc."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-002",
+      "title": "Đào tạo & phát triển",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Công ty có hỗ trợ chi phí đào tạo cho nhân viên không?",
+          "context_dependency": "none",
+          "expected_answer_summary": "Có. Công ty có ngân sách đào tạo hàng năm cho nhân viên, áp dụng cho khóa học chuyên môn, chứng chỉ và hội thảo."
+        },
+        {
+          "turn": 2,
+          "question": "Cụ thể là bao nhiêu mỗi năm cho một nhân viên thường?",
+          "context_dependency": "uses_previous_turn",
+          "expected_answer_summary": "Cấp nhân viên: 5 triệu đồng/người/năm."
+        },
+        {
+          "turn": 3,
+          "question": "Còn nếu là Trưởng phòng thì khác không?",
+          "context_dependency": "comparison_followup",
+          "expected_answer_summary": "Trưởng phòng trở lên có ngân sách 10 triệu đồng/người/năm — cao gấp đôi cấp nhân viên thường."
+        }
+      ]
+    },
+    {
+      "set_id": "CS-003",
+      "title": "Phúc lợi đời thường",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Trợ cấp ăn trưa hàng ngày là bao nhiêu?",
+          "context_dependency": "none",
+          "expected_answer_summary": "Trợ cấp ăn trưa 50.000 đồng/ngày làm việc thực tế (khoảng 1,1 triệu đồng/tháng)."
+        },
+        {
+          "turn": 2,
+          "question": "Nếu văn phòng có canteen nội bộ thì còn nhận trợ cấp đó nữa không?",
+          "context_dependency": "uses_previous_turn",
+          "expected_answer_summary": "Không. Nếu văn phòng (Hà Nội) có canteen nội bộ thì nhân viên sử dụng canteen với suất ăn trưa miễn phí, thay vì nhận trợ cấp tiền mặt."
+        },
+        {
+          "turn": 3,
+          "question": "Ngoài ăn trưa, công ty có chăm sóc sức khỏe định kỳ không?",
+          "context_dependency": "topic_shift_within_set",
+          "expected_answer_summary": "Có. Công ty tổ chức khám sức khỏe định kỳ hàng năm miễn phí tại bệnh viện đối tác."
+        }
+      ]
+    }
+  ]
+}

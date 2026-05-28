@@ -58,6 +58,9 @@ class ChatResponse(BaseModel):
     answer: str
     citations: list[ChatCitation] = Field(default_factory=list)
     documents_consulted: list[str] = Field(default_factory=list)
+    # Văn bản thực sự đưa vào prompt sinh câu trả lời (node text + trích PDF).
+    # Phục vụ chấm điểm RAGAS (faithfulness / context_precision / context_recall).
+    retrieved_contexts: list[str] = Field(default_factory=list)
 
 
 class IngestResponse(BaseModel):
