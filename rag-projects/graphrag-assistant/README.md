@@ -104,8 +104,10 @@ flowchart TD
     Embed["Embed rewritten query\nGemini Embeddings"]
 
     subgraph LOCAL["LOCAL search"]
-        VecChunk["Vector search\nTopK PolicyChunks\n(Neo4j cosine)"]
-        Cypher["Cypher 2-hop traversal\nEntity neighborhood"]
+        VecChunk["Vector search\nOverfetch candidates\n(Neo4j cosine)"]
+        EntAug["Entity-linked\naugmentation"]
+        Rerank["Cohere Rerank\nrerank-multilingual-v3.0\nkeep top-N"]
+        Cypher["Cypher 2-hop traversal\nEntity neighborhood\n(anchored on winners)"]
         LocalCtx["Build Context\nchunks + entities + triples"]
     end
 
@@ -130,7 +132,7 @@ flowchart TD
     Classify -- "GLOBAL" --> VecComm
     Rewrite --> Embed
     Embed --> VecChunk & VecComm
-    VecChunk --> Cypher --> LocalCtx --> Generate
+    VecChunk --> EntAug --> Rerank --> Cypher --> LocalCtx --> Generate
     VecComm --> GlobalCtx --> Generate
     Generate --> Judge
     Judge --> Pass
@@ -142,7 +144,7 @@ flowchart TD
 
 | Type | When | How |
 |------|------|-----|
-| **LOCAL** | Specific questions (number of vacation days, dress code by department) | Vector search chunks → Cypher 2-hop traversal → answer with citations |
+| **LOCAL** | Specific questions (number of vacation days, dress code by department) | Vector search (overfetch) → entity-linked augmentation → Cohere rerank → Cypher 2-hop traversal → answer with citations |
 | **GLOBAL** | General questions, summaries, policy comparisons | Vector search community summaries → synthesized answer |
 
 > **Answer Verification** — when `ENABLE_ANSWER_VERIFICATION=true` (default), a second LLM call checks that the generated answer is grounded in the retrieved context before returning the response.
@@ -169,6 +171,7 @@ Three mechanisms keep answer quality high across a long conversation:
 | Embeddings (Gemini) | `models/gemini-embedding-exp-03-07` (3072 dims) |
 | Embeddings (OpenAI) | `text-embedding-3-large` |
 | Graph + Vector Store | **Neo4j 5** (replaces both ChromaDB + NetworkX) |
+| Reranker | **Cohere `rerank-multilingual-v3.0`** (LOCAL search, two-stage funnel) |
 | Community Detection | python-louvain (results stored in Neo4j) |
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
 | State | Zustand |
@@ -197,6 +200,7 @@ graphrag-assistant/
 │   │   │   ├── neo4j_store.py         # Neo4j: graph + vector index (KEY FILE)
 │   │   │   ├── indexing_service.py    # 5-stage indexing pipeline
 │   │   │   ├── graph_rag_service.py   # LOCAL / GLOBAL query pipeline
+│   │   │   ├── rerank_service.py      # Cohere reranker (LOCAL search precision stage)
 │   │   │   ├── session_service.py     # In-memory sessions
 │   │   │   └── token_log_service.py   # SQLite token usage logger
 │   │   ├── prompts/                   # Vietnamese prompts
@@ -452,6 +456,20 @@ All settings in `backend/.env`:
 | `MAX_COMMUNITY_SUMMARIES` | `5` | Top-K community summaries for GLOBAL search |
 | `GRAPH_HOP_DEPTH` | `2` | Cypher 2-hop traversal depth for entity expansion |
 | `ENABLE_ANSWER_VERIFICATION` | `true` | Run an LLM self-check after answer generation |
+
+### Reranking (Cohere)
+
+LOCAL search uses a two-stage retrieval funnel: vector + entity recall fetches a large candidate pool, then a Cohere cross-encoder rerank trims it to the most relevant chunks before context is built. The reranker is **optional** — leave `COHERE_API_KEY` empty (or set `ENABLE_RERANK=false`) and the pipeline gracefully falls back to the top `MAX_LOCAL_CHUNKS` by cosine similarity.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_RERANK` | `true` | Master switch for the rerank stage |
+| `COHERE_API_KEY` | — | Cohere API key (get one at [dashboard.cohere.com](https://dashboard.cohere.com)). Empty = disabled |
+| `COHERE_RERANK_MODEL` | `rerank-multilingual-v3.0` | Strong Vietnamese support |
+| `RERANK_CANDIDATE_POOL` | `25` | Overfetch size from vector + entity recall (fed to reranker) |
+| `RERANK_TOP_N` | `8` | Final chunks kept after rerank and passed to Gemini |
+
+> When reranking is active, `sources[].relevance_score` in the chat response reflects the Cohere score (0.0–1.0), not the raw cosine similarity. The graph 2-hop neighborhood is anchored on entities from the *post-rerank* winners, so the knowledge graph view also benefits.
 
 ### Token Logging
 

@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     graph_hop_depth: int = 2
     entity_extraction_batch: int = 5
 
+    # Reranking (Cohere)
+    enable_rerank: bool = True
+    cohere_api_key: str = ""
+    cohere_rerank_model: str = "rerank-multilingual-v3.0"
+    rerank_candidate_pool: int = 25
+    rerank_top_n: int = 8
+
     # Answer verification
     enable_answer_verification: bool = True
     max_chat_retries: int = 3

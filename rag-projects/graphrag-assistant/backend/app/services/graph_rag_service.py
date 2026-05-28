@@ -9,6 +9,7 @@ from app.models.graph import PolicySource, GraphData, GraphNode, GraphEdge
 from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import LLMService
 from app.services.neo4j_store import Neo4jStore
+from app.services.rerank_service import RerankService
 from app.services.session_service import SessionService
 
 logger = structlog.get_logger()
@@ -21,11 +22,13 @@ class GraphRAGService:
         embedding_service: EmbeddingService,
         neo4j_store: Neo4jStore,
         session_service: SessionService,
+        rerank_service: RerankService | None = None,
     ) -> None:
         self._llm = llm_service
         self._emb = embedding_service
         self._store = neo4j_store
         self._sessions = session_service
+        self._rerank = rerank_service
 
     async def process_message(self, session_id: str, message: str) -> ChatResponse:
         session = self._sessions.get_session(session_id)
@@ -44,7 +47,7 @@ class GraphRAGService:
         if query_type == "GLOBAL":
             context, sources, graph_data = await self._global_search(embedding)
         else:
-            context, sources, graph_data = await self._local_search(embedding)
+            context, sources, graph_data = await self._local_search(embedding, retrieval_query)
 
         reply = await self._llm.generate(
             system_prompt=self._build_system_prompt(context),
@@ -76,36 +79,53 @@ class GraphRAGService:
     # ── LOCAL search ─────────────────────────────────────────────────────────
 
     async def _local_search(
-        self, embedding: list[float]
+        self, embedding: list[float], retrieval_query: str
     ) -> tuple[str, list[PolicySource], GraphData | None]:
-        chunks = await self._store.vector_search_chunks(
-            embedding, settings.max_local_chunks
+        # Overfetch from vector search to give the reranker headroom.
+        pool_size = (
+            settings.rerank_candidate_pool
+            if (settings.enable_rerank and self._rerank is not None)
+            else settings.max_local_chunks
         )
+        chunks = await self._store.vector_search_chunks(embedding, pool_size)
 
-        seed_names: list[str] = []
+        # Entity-augmentation seeds come from the raw vector pool (broad recall).
+        seed_pool: list[str] = []
         for c in chunks:
-            seed_names.extend(c.get("entity_names") or [])
-        seed_names = list(dict.fromkeys(seed_names))[:20]
+            seed_pool.extend(c.get("entity_names") or [])
+        seed_pool = list(dict.fromkeys(seed_pool))[:20]
 
         # Augment with entity-linked chunks using type-aware thresholds:
         # - Specific-type entities (QUY_TAC, CHINH_SACH, etc.) are scoped to a single
         #   policy area → min_hits=1 is safe and recovers cross-aspect recall.
         # - Generic entities (VAI_TRO, PHONG_BAN) appear everywhere → require 2+
         #   co-occurrences to avoid flooding the context with off-topic chunks.
-        specific_seeds = await self._store.get_specific_entity_names(seed_names)
+        specific_seeds = await self._store.get_specific_entity_names(seed_pool)
         if specific_seeds:
             entity_chunks = await self._store.get_chunks_by_entity_names(
                 specific_seeds, k=3, min_entity_hits=1
             )
         else:
             entity_chunks = await self._store.get_chunks_by_entity_names(
-                seed_names, k=3, min_entity_hits=2
+                seed_pool, k=3, min_entity_hits=2
             )
         seen_ids = {c["id"] for c in chunks}
         for ec in entity_chunks:
             if ec["id"] not in seen_ids:
                 chunks.append(ec)
                 seen_ids.add(ec["id"])
+
+        # Two-stage funnel: vector + entity recall → cross-encoder precision.
+        if settings.enable_rerank and self._rerank is not None:
+            chunks = await self._rerank.rerank(retrieval_query, chunks)
+        else:
+            chunks = chunks[: settings.max_local_chunks]
+
+        # Anchor the graph neighborhood on the *winning* entities post-rerank.
+        seed_names: list[str] = []
+        for c in chunks:
+            seed_names.extend(c.get("entity_names") or [])
+        seed_names = list(dict.fromkeys(seed_names))[:20]
 
         neighborhood = await self._store.get_entity_neighborhood(
             seed_names, depth=settings.graph_hop_depth
@@ -197,7 +217,7 @@ class GraphRAGService:
                     doc_type=c.get("doc_type", ""),
                     page_number=c.get("page_number", 0),
                     excerpt=c["text"],
-                    relevance_score=round(float(c.get("score", 0.0)), 4),
+                    relevance_score=round(float(c.get("rerank_score", c.get("score", 0.0))), 4),
                     entities=", ".join((c.get("entity_names") or [])[:5]),
                 )
             )

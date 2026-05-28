@@ -15,6 +15,7 @@ from app.services.neo4j_store import Neo4jStore
 from app.services.llm_service import create_llm_service
 from app.services.indexing_service import IndexingService
 from app.services.graph_rag_service import GraphRAGService
+from app.services.rerank_service import RerankService
 from app.services.token_log_service import TokenLogService
 
 logger = structlog.get_logger()
@@ -72,11 +73,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         neo4j_store=neo4j_store,
     )
 
+    rerank_service: RerankService | None = None
+    if settings.enable_rerank and settings.cohere_api_key:
+        rerank_service = RerankService(
+            api_key=settings.cohere_api_key,
+            model=settings.cohere_rerank_model,
+            top_n=settings.rerank_top_n,
+        )
+        logger.info(
+            "rerank_service_initialized",
+            model=settings.cohere_rerank_model,
+            top_n=settings.rerank_top_n,
+            candidate_pool=settings.rerank_candidate_pool,
+        )
+    else:
+        logger.info("rerank_service_disabled", reason="no_api_key_or_disabled")
+
     graph_rag_service = GraphRAGService(
         llm_service=llm_service,
         embedding_service=embedding_service,
         neo4j_store=neo4j_store,
         session_service=session_service,
+        rerank_service=rerank_service,
     )
 
     app.state.session_service = session_service
