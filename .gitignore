@@ -20,3 +20,4 @@ postgres_data_v2/
 # RAGAS eval results
 rag-projects/graphrag-assistant/backend/data/*.db
 labs/fraud-phase2/models/fraud_classifier.joblib
+insurance-guide-virtual-assistant/backend/.venv/
