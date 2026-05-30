@@ -19,6 +19,7 @@ Người dùng chọn chế độ ngay trên màn hình chào, sau đó trợ l�
 - **Điểm xác nhận trước khi tạo kết quả** — Pha `confirming` hiển thị toàn bộ thông tin đã thu thập và hỏi: xác nhận / sửa / bắt đầu lại
 - **Phát hiện sửa lỗi** — Khi người dùng đính chính thông tin cũ, trợ lý xác nhận thay đổi trước khi hỏi tiếp
 - **Trích xuất có cấu trúc** — Gemini `response_schema` parse ngày tháng/số tiền từ câu trả lời tự nhiên
+- **Đề xuất bám sát danh mục** — Gói bảo hiểm chỉ được chọn từ catalog JSON cục bộ (`packages_catalog.json`), lọc theo điều kiện + ngân sách trước khi đưa cho Gemini — không bịa gói/công ty/mức phí
 - **Thanh tiến trình thời gian thực** — % thông tin đã hoàn thiện theo loại hình/chế độ
 - **Kết quả tải xuống được** — Hồ sơ bồi thường (JSON) hoặc đề xuất gói bảo hiểm (JSON)
 
@@ -39,6 +40,8 @@ Browser (React SPA)
               mode=claim_filing    mode=recommendation
                     │                    │
                agent.py          advisor_agent.py
+                    │                    │
+                    │            catalog.py (lọc gói theo hồ sơ)
                     │                    │
             Gemini API           Gemini API
          (extract + guide)   (extract + guide + recommend)
@@ -120,9 +123,19 @@ Merge vào session state
 | Số người cần bảo hiểm | Có | — |
 | Ưu tiên quyền lợi | Có | Nội trú / Ngoại trú / Bệnh hiểm nghèo / Tai nạn / Nhân thọ |
 
+### Cách đề xuất hoạt động (catalog grounding)
+
+Trợ lý **không** dựa vào kiến thức mở của mô hình mà bám sát một danh mục cục bộ `backend/app/packages_catalog.json` (12 gói từ các công ty bảo hiểm hư cấu: An Tín, Trường Phúc Life, Minh An Life, Việt Khang Life, Hồng Ân…):
+
+1. **Load** — `load_catalog()` đọc + cache JSON (`lru_cache`)
+2. **Lọc** — `filter_by_profile()` áp điều kiện cứng (tuổi, hút thuốc, nghề loại trừ) → chấm điểm theo ưu tiên quyền lợi + ngân sách → giữ top 6
+3. **Format** — `format_for_prompt()` chọn tier hợp ngân sách nhất, dựng văn bản đưa vào prompt
+4. **Ràng buộc** — `RECOMMENDATION_SYSTEM` cấm bịa gói ngoài danh sách; `response_schema=RecommendationOutput` khóa cấu trúc đầu ra
+5. **Fallback** — nếu lọc ra rỗng thì dùng 6 gói đầu của danh mục (ghi log cảnh báo)
+
 ### Kết quả
 
-Gemini sinh ra 2-3 gói đề xuất (seeded với kiến thức về Bảo Việt, Manulife, Prudential, AIA, Generali):
+Gemini chọn 2-3 gói phù hợp nhất từ danh mục và trả về JSON:
 
 ```json
 {
@@ -130,7 +143,7 @@ Gemini sinh ra 2-3 gói đề xuất (seeded với kiến thức về Bảo Vi�
     {
       "rank": 1,
       "package_type": "Bảo hiểm sức khỏe toàn diện",
-      "insurer_examples": ["Bảo Việt", "Manulife"],
+      "insurer_examples": ["An Tín", "Trường Phúc Life"],
       "estimated_premium_range": "500.000 – 1.500.000 VNĐ/tháng",
       "coverage_highlights": ["Nội trú không giới hạn", "Ngoại trú 30 lần/năm"],
       "why_suitable": "Phù hợp vì...",
@@ -147,7 +160,7 @@ Gemini sinh ra 2-3 gói đề xuất (seeded với kiến thức về Bảo Vi�
 ## Cấu trúc dự án
 
 ```
-insurance-guide-virtual-assistant/
+healthcare-assistant/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI lifespan, CORS, router registration
@@ -158,6 +171,8 @@ insurance-guide-virtual-assistant/
 │   │   ├── session_store.py         # In-memory store, asyncio.Lock, TTL tự động
 │   │   ├── agent.py                 # Claim flow: extract → guide → proposal (phase dispatcher)
 │   │   ├── advisor_agent.py         # Recommendation flow: extract → guide → recommend
+│   │   ├── catalog.py               # Lọc/chấm điểm gói bảo hiểm theo hồ sơ + format cho prompt
+│   │   ├── packages_catalog.json    # Danh mục 12 gói bảo hiểm (nguồn dữ liệu đề xuất)
 │   │   ├── prompts.py               # Tất cả system prompts và prompt builders
 │   │   └── routers/
 │   │       ├── chat.py              # POST /chat — dispatch theo mode
@@ -195,7 +210,7 @@ insurance-guide-virtual-assistant/
 ### Backend
 
 ```bash
-cd insurance-guide-virtual-assistant/backend
+cd labs/healthcare-assistant/backend
 
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -213,7 +228,7 @@ API docs tương tác: [http://localhost:8002/docs](http://localhost:8002/docs)
 ### Frontend
 
 ```bash
-cd insurance-guide-virtual-assistant/frontend
+cd labs/healthcare-assistant/frontend
 
 npm install
 npm run dev

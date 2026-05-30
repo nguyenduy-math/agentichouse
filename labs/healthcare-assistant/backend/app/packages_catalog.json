@@ -1,8 +1,8 @@
 [
   {
-    "id": "bv-health-care",
-    "insurer": "Bảo Việt",
-    "name": "Bảo Việt Healthcare",
+    "id": "antin-health-care",
+    "insurer": "An Tín",
+    "name": "An Tín Healthcare",
     "product_line": "Bảo hiểm sức khỏe",
     "eligibility": {
       "min_age": 1,
@@ -17,7 +17,7 @@
     ],
     "coverage_types": ["nội trú", "ngoại trú"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Gói bảo hiểm sức khỏe cá nhân toàn diện của Bảo Việt, chi trả nội trú và ngoại trú tại các bệnh viện trên toàn quốc.",
+    "description_vi": "Gói bảo hiểm sức khỏe cá nhân toàn diện của An Tín, chi trả nội trú và ngoại trú tại các bệnh viện trên toàn quốc.",
     "key_benefits_vi": [
       "Bồi thường 100% chi phí nội trú theo mức bảo hiểm",
       "Khám ngoại trú tối đa 30 lần/năm",
@@ -31,9 +31,9 @@
     ]
   },
   {
-    "id": "bv-accident",
-    "insurer": "Bảo Việt",
-    "name": "Bảo Việt An Khang",
+    "id": "antin-accident",
+    "insurer": "An Tín",
+    "name": "An Tín An Khang",
     "product_line": "Bảo hiểm tai nạn",
     "eligibility": {
       "min_age": 1,
@@ -62,9 +62,9 @@
     ]
   },
   {
-    "id": "manulife-mcare",
-    "insurer": "Manulife Việt Nam",
-    "name": "ManulifeCARE",
+    "id": "truongphuc-mcare",
+    "insurer": "Trường Phúc Life",
+    "name": "Trường Phúc Care",
     "product_line": "Bảo hiểm sức khỏe",
     "eligibility": {
       "min_age": 14,
@@ -79,7 +79,7 @@
     ],
     "coverage_types": ["nội trú", "ngoại trú", "nha khoa"],
     "suitable_occupations": ["văn phòng", "ngoài trời"],
-    "description_vi": "Gói bảo hiểm sức khỏe cao cấp của Manulife với phạm vi bảo hiểm rộng bao gồm nội trú, ngoại trú, nha khoa và thai sản.",
+    "description_vi": "Gói bảo hiểm sức khỏe cao cấp của Trường Phúc Life với phạm vi bảo hiểm rộng bao gồm nội trú, ngoại trú, nha khoa và thai sản.",
     "key_benefits_vi": [
       "Giới hạn bồi thường hàng năm lên đến 600 triệu VNĐ",
       "Bao gồm bảo hiểm nha khoa (gói Gold, Platinum)",
@@ -94,9 +94,9 @@
     ]
   },
   {
-    "id": "manulife-critical",
-    "insurer": "Manulife Việt Nam",
-    "name": "Manulife Bảo Hiểm Bệnh Hiểm Nghèo",
+    "id": "truongphuc-critical",
+    "insurer": "Trường Phúc Life",
+    "name": "Trường Phúc Bảo Hiểm Bệnh Hiểm Nghèo",
     "product_line": "Bảo hiểm bệnh hiểm nghèo",
     "eligibility": {
       "min_age": 18,
@@ -124,9 +124,9 @@
     ]
   },
   {
-    "id": "prudential-pru-health",
-    "insurer": "Prudential Việt Nam",
-    "name": "PRU-Sức Khỏe Toàn Diện",
+    "id": "minhan-health",
+    "insurer": "Minh An Life",
+    "name": "Minh An Sức Khỏe Toàn Diện",
     "product_line": "Bảo hiểm sức khỏe",
     "eligibility": {
       "min_age": 1,
@@ -141,7 +141,7 @@
     ],
     "coverage_types": ["nội trú", "ngoại trú"],
     "suitable_occupations": ["văn phòng", "ngoài trời"],
-    "description_vi": "Bảo hiểm sức khỏe toàn diện của Prudential với mạng lưới bệnh viện liên kết rộng và dịch vụ hỗ trợ khách hàng 24/7.",
+    "description_vi": "Bảo hiểm sức khỏe toàn diện của Minh An Life với mạng lưới bệnh viện liên kết rộng và dịch vụ hỗ trợ khách hàng 24/7.",
     "key_benefits_vi": [
       "Bồi thường trực tiếp với 300+ bệnh viện liên kết",
       "Không cần đặt cọc khi nhập viện tại bệnh viện liên kết",
@@ -155,9 +155,9 @@
     ]
   },
   {
-    "id": "prudential-pru-critical",
-    "insurer": "Prudential Việt Nam",
-    "name": "PRU-Bệnh Hiểm Nghèo Toàn Diện",
+    "id": "minhan-critical",
+    "insurer": "Minh An Life",
+    "name": "Minh An Bệnh Hiểm Nghèo Toàn Diện",
     "product_line": "Bảo hiểm bệnh hiểm nghèo",
     "eligibility": {
       "min_age": 18,
@@ -185,9 +185,9 @@
     ]
   },
   {
-    "id": "aia-health-protect",
-    "insurer": "AIA Việt Nam",
-    "name": "AIA Health Protect",
+    "id": "vietkhang-health-protect",
+    "insurer": "Việt Khang Life",
+    "name": "Việt Khang Health Protect",
     "product_line": "Bảo hiểm sức khỏe",
     "eligibility": {
       "min_age": 1,
@@ -202,7 +202,7 @@
     ],
     "coverage_types": ["nội trú", "ngoại trú"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Gói bảo hiểm sức khỏe quốc tế của AIA, phù hợp cả trong nước và nước ngoài với hạn mức bảo hiểm cao nhất thị trường.",
+    "description_vi": "Gói bảo hiểm sức khỏe quốc tế của Việt Khang Life, phù hợp cả trong nước và nước ngoài với hạn mức bảo hiểm cao nhất thị trường.",
     "key_benefits_vi": [
       "Hạn mức lên đến 1 tỷ VNĐ/năm (gói Elite)",
       "Bảo hiểm quốc tế (điều trị ở nước ngoài được bồi thường)",
@@ -216,9 +216,9 @@
     ]
   },
   {
-    "id": "aia-accident-care",
-    "insurer": "AIA Việt Nam",
-    "name": "AIA Accident Care",
+    "id": "vietkhang-accident-care",
+    "insurer": "Việt Khang Life",
+    "name": "Việt Khang Accident Care",
     "product_line": "Bảo hiểm tai nạn",
     "eligibility": {
       "min_age": 1,
@@ -233,7 +233,7 @@
     ],
     "coverage_types": ["tai nạn"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Bảo hiểm tai nạn cá nhân 24/7 của AIA với phạm vi bảo vệ rộng, phí thấp, thủ tục bồi thường nhanh chóng.",
+    "description_vi": "Bảo hiểm tai nạn cá nhân 24/7 của Việt Khang Life với phạm vi bảo vệ rộng, phí thấp, thủ tục bồi thường nhanh chóng.",
     "key_benefits_vi": [
       "Bảo vệ suốt 24 giờ, 7 ngày trong tuần",
       "Bồi thường nhanh trong 3 ngày làm việc",
@@ -247,9 +247,9 @@
     ]
   },
   {
-    "id": "generali-vitality",
-    "insurer": "Generali Việt Nam",
-    "name": "Generali Vitality",
+    "id": "hongan-songkhoe",
+    "insurer": "Hồng Ân",
+    "name": "Hồng Ân Sống Khỏe",
     "product_line": "Bảo hiểm nhân thọ & sức khỏe",
     "eligibility": {
       "min_age": 18,
@@ -264,10 +264,10 @@
     ],
     "coverage_types": ["nội trú", "bệnh hiểm nghèo", "nhân thọ"],
     "suitable_occupations": ["văn phòng", "ngoài trời"],
-    "description_vi": "Gói bảo hiểm kết hợp nhân thọ và sức khỏe của Generali với chương trình khuyến khích lối sống lành mạnh, giảm phí khi hoạt động thể chất đều đặn.",
+    "description_vi": "Gói bảo hiểm kết hợp nhân thọ và sức khỏe của Hồng Ân với chương trình khuyến khích lối sống lành mạnh, giảm phí khi hoạt động thể chất đều đặn.",
     "key_benefits_vi": [
       "Kết hợp bảo vệ nhân thọ và sức khỏe trong một sản phẩm",
-      "Giảm phí đến 25% khi duy trì lối sống lành mạnh (Vitality program)",
+      "Giảm phí đến 25% khi duy trì lối sống lành mạnh (chương trình Sống Khỏe)",
       "Bảo hiểm bệnh hiểm nghèo từ gói Active",
       "Tích lũy giá trị hoàn lại sau 10 năm"
     ],
@@ -278,9 +278,9 @@
     ]
   },
   {
-    "id": "pti-health-care",
-    "insurer": "PTI",
-    "name": "PTI Care",
+    "id": "thaison-care",
+    "insurer": "Thái Sơn",
+    "name": "Thái Sơn Care",
     "product_line": "Bảo hiểm sức khỏe",
     "eligibility": {
       "min_age": 1,
@@ -295,7 +295,7 @@
     ],
     "coverage_types": ["nội trú", "tai nạn"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Gói bảo hiểm sức khỏe phổ thông của PTI với mức phí hợp lý, bao gồm nội trú và bảo hiểm tai nạn, phù hợp cho lao động phổ thông và công nhân.",
+    "description_vi": "Gói bảo hiểm sức khỏe phổ thông của Thái Sơn với mức phí hợp lý, bao gồm nội trú và bảo hiểm tai nạn, phù hợp cho lao động phổ thông và công nhân.",
     "key_benefits_vi": [
       "Nhận bảo hiểm đến 70 tuổi",
       "Không phân biệt nghề nghiệp, kể cả lao động nặng",
@@ -309,9 +309,9 @@
     ]
   },
   {
-    "id": "bsh-worker-protect",
-    "insurer": "BSH",
-    "name": "BSH Bảo Vệ Người Lao Động",
+    "id": "dongdo-worker-protect",
+    "insurer": "Đông Đô",
+    "name": "Đông Đô Bảo Vệ Người Lao Động",
     "product_line": "Bảo hiểm tai nạn nghề nghiệp",
     "eligibility": {
       "min_age": 16,
@@ -326,7 +326,7 @@
     ],
     "coverage_types": ["tai nạn"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Bảo hiểm tai nạn nghề nghiệp của BSH dành riêng cho người lao động ở mọi ngành nghề, kể cả công việc nặng nhọc nguy hiểm.",
+    "description_vi": "Bảo hiểm tai nạn nghề nghiệp của Đông Đô dành riêng cho người lao động ở mọi ngành nghề, kể cả công việc nặng nhọc nguy hiểm.",
     "key_benefits_vi": [
       "Chấp nhận mọi nghề nghiệp kể cả lao động nặng, xây dựng, khai khoáng",
       "Phí theo nhóm nghề nghiệp — lao động nặng không bị tính quá cao",
@@ -340,9 +340,9 @@
     ]
   },
   {
-    "id": "manulife-mlife",
-    "insurer": "Manulife Việt Nam",
-    "name": "Manulife Bảo Hiểm Nhân Thọ Thuần Túy",
+    "id": "truongphuc-mlife",
+    "insurer": "Trường Phúc Life",
+    "name": "Trường Phúc Bảo Hiểm Nhân Thọ Thuần Túy",
     "product_line": "Bảo hiểm nhân thọ",
     "eligibility": {
       "min_age": 18,
@@ -357,7 +357,7 @@
     ],
     "coverage_types": ["nhân thọ"],
     "suitable_occupations": ["văn phòng", "ngoài trời", "lao động nặng"],
-    "description_vi": "Bảo hiểm nhân thọ thuần túy (Term Life) của Manulife, bảo vệ gia đình với mức quyền lợi lớn và phí thấp nhất trong các loại bảo hiểm nhân thọ.",
+    "description_vi": "Bảo hiểm nhân thọ thuần túy (Term Life) của Trường Phúc Life, bảo vệ gia đình với mức quyền lợi lớn và phí thấp nhất trong các loại bảo hiểm nhân thọ.",
     "key_benefits_vi": [
       "Số tiền bảo hiểm cao (đến 2 tỷ VNĐ) với phí thấp",
       "Chi trả toàn bộ số tiền bảo hiểm khi tử vong hoặc thương tật toàn phần vĩnh viễn",
