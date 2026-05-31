@@ -87,6 +87,7 @@ class SessionState(BaseModel):
     is_complete: bool = False
     phase: SessionPhase = SessionPhase.identifying
     cached_proposal: dict | None = None
+    pdf_context: str = ""
     # recommendation state
     health_profile: HealthProfile = HealthProfile()
     recommendation: dict | None = None
@@ -120,3 +121,8 @@ class NewSessionResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class PdfUploadResponse(BaseModel):
+    extracted_fields: ClaimData
+    summary_text: str

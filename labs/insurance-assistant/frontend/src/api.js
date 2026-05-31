@@ -19,3 +19,15 @@ export async function sendMessage(sessionId, message) {
   if (!res.ok) throw new Error('Chat request failed')
   return res.json()
 }
+
+export async function uploadPdf(sessionId, file) {
+  const formData = new FormData()
+  formData.append('session_id', sessionId)
+  formData.append('file', file)
+  const res = await fetch(`${BASE}/upload-pdf`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || 'PDF upload failed')
+  }
+  return res.json()
+}

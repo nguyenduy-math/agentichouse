@@ -1,141 +1,153 @@
 # Insurance Guide Virtual Assistant
 
-Trợ lý hội thoại bảo hiểm hai chế độ dành cho thị trường Việt Nam:
+A Vietnamese-market insurance assistant with two modes — a conversational chat interface and a structured claim form page — backed by a FastAPI backend, React + Vite frontend, and an optional MCP server for PDF extraction and currency conversion.
 
-| Chế độ | Mô tả |
+| Mode | Description |
 |---|---|
-| **Khai thác bảo hiểm** | Hướng dẫn người dùng nộp hồ sơ yêu cầu bồi thường BHYT hoặc bảo hiểm thương mại |
-| **Tư vấn gói bảo hiểm** | Thu thập hồ sơ sức khỏe và đề xuất 2-3 gói bảo hiểm phù hợp nhất |
+| **Khai thác bảo hiểm** | Guides users through filing a BHYT or commercial insurance claim |
+| **Tư vấn gói bảo hiểm** | Collects a health profile and recommends 2–3 matching insurance packages |
 
-Người dùng chọn chế độ ngay trên màn hình chào, sau đó trợ lý dẫn dắt qua từng bước bằng hội thoại tự nhiên tiếng Việt.
-
----
-
-## Tính năng
-
-- **Hai chế độ trên cùng giao diện** — Màn hình chọn chế độ trước khi bắt đầu hội thoại
-- **Luồng theo pha** — `identifying → collecting → confirming → complete`; mỗi pha có phong cách phản hồi riêng
-- **Option chips tại điểm quyết định** — Trợ lý đề xuất 2-3 lựa chọn nhanh (giới tính, loại công việc, ưu tiên quyền lợi…) thay vì chỉ hỏi mở
-- **Điểm xác nhận trước khi tạo kết quả** — Pha `confirming` hiển thị toàn bộ thông tin đã thu thập và hỏi: xác nhận / sửa / bắt đầu lại
-- **Phát hiện sửa lỗi** — Khi người dùng đính chính thông tin cũ, trợ lý xác nhận thay đổi trước khi hỏi tiếp
-- **Trích xuất có cấu trúc** — Gemini `response_schema` parse ngày tháng/số tiền từ câu trả lời tự nhiên
-- **Đề xuất bám sát danh mục** — Gói bảo hiểm chỉ được chọn từ catalog JSON cục bộ (`packages_catalog.json`), lọc theo điều kiện + ngân sách trước khi đưa cho Gemini — không bịa gói/công ty/mức phí
-- **Thanh tiến trình thời gian thực** — % thông tin đã hoàn thiện theo loại hình/chế độ
-- **Kết quả tải xuống được** — Hồ sơ bồi thường (JSON) hoặc đề xuất gói bảo hiểm (JSON)
+Users pick a mode on the welcome screen; the assistant guides them step-by-step in natural Vietnamese.
 
 ---
 
-## Kiến trúc
+## Features
 
-### Tổng quan
+- **Two modes, one interface** — mode selector before the conversation starts
+- **Phase-based flow** — `identifying → collecting → confirming → complete`; each phase has its own response style
+- **Option chips at decision points** — the assistant suggests 2–3 quick choices (gender, job type, benefit priority…) instead of open-ended questions
+- **Confirmation gate** — the `confirming` phase shows all collected data and asks: confirm / edit / restart
+- **Correction detection** — when users amend earlier info, the assistant confirms the change before continuing
+- **Structured extraction** — Gemini `response_schema` parses dates/amounts from natural language
+- **Catalog-grounded recommendations** — packages are selected only from a local `packages_catalog.json`; Gemini never invents insurers or premiums
+- **Real-time progress bar** — % completion by claim type / mode
+- **Downloadable results** — claim proposal or insurance recommendations as JSON
+
+### Claim Form page (`/claim`)
+
+- Vietnamese UI with claim type selector (ngoại trú / nội trú / bảo hiểm thương mại)
+- Conditional fields that appear based on the selected claim type
+- Live progress bar
+- Submit → summary/review card
+- **Floating chat widget** — bottom-right chat bubble that connects to the existing `/chat` backend; when the bot returns `collected` fields they are synced into the form automatically
+- **PDF upload in chat** — paperclip button lets users upload a claim-related PDF; extracted fields are shown in a confirmation card; clicking "Xác nhận điền form" populates the form
+
+---
+
+## Architecture
+
+### Overview
 
 ```
 Browser (React SPA)
     │
-    ├─ ModeSelector ──► POST /api/session/new { mode }
+    ├─ / (Chat interface)
+    │   ├─ ModeSelector ──► POST /api/session/new { mode }
+    │   └─ Chat ──────────► POST /api/chat { session_id, message }
     │
-    └─ Chat ──────────► POST /api/chat { session_id, message }
+    └─ /claim (Claim Form page)
+        ├─ ClaimForm ─────────────────────────── standalone form
+        └─ FloatingChat ──► POST /api/chat      chat widget
+                        ──► POST /api/upload-pdf  PDF upload
                               │
                     ┌─────────┴──────────┐
               mode=claim_filing    mode=recommendation
                     │                    │
                agent.py          advisor_agent.py
                     │                    │
-                    │            catalog.py (lọc gói theo hồ sơ)
+                    │            catalog.py (filter packages)
                     │                    │
             Gemini API           Gemini API
          (extract + guide)   (extract + guide + recommend)
 ```
 
-### Vòng lặp Extract → Guide (dùng chung cho cả hai chế độ)
+### Extract → Guide loop (shared by both modes)
 
 ```
 User message
     │
     ▼
 [Call 1: Extract]  response_schema=<DataModel>  temp=0.0
-    │   Chỉ trả về trường được đề cập rõ ràng, còn lại = null
+    │   Only returns fields explicitly mentioned; rest = null
     ▼
-Merge vào session state
+Merge into session state
     │
-    ├─ Còn thiếu trường? ──► [Call 2: Guide] temp=0.3  ──► Câu hỏi tiếp theo + option chips
+    ├─ Missing fields? ──► [Call 2: Guide] temp=0.3  ──► Next question + option chips
     │
-    └─ Đủ thông tin?  ──────► Pha confirming (text summary + 3 option chips)
+    └─ All fields present? ──► confirming phase (text summary + 3 option chips)
                                     │
-                          User xác nhận
+                          User confirms
                                     │
                               [Call 3: Result]
-                          claim: summary text        recommend: response_schema=RecommendationOutput
+                          claim: summary text   recommend: response_schema=RecommendationOutput
 ```
 
-### Máy trạng thái phiên (`SessionPhase`)
+### Session state machine (`SessionPhase`)
 
 ```
-                        ┌─────────────┐
-                        │  identifying │  (chỉ claim flow — xác định ngoại/nội trú/thương mại)
-                        └──────┬──────┘
-                               │ claim_type xác định
-                               ▼
-  [mode=recommendation] ──► collecting ◄── [sửa thông tin từ confirming]
-                               │
-                    tất cả trường bắt buộc đủ
-                               │
-                               ▼
-                          confirming  ──► option chips: [Xác nhận | Sửa | Bắt đầu lại]
-                               │
-                     user xác nhận ("đúng", "1", "xác nhận")
-                               │
-                               ▼
-                           complete  ──► kết quả được cache, bỏ qua tin nhắn tiếp theo
+                    ┌─────────────┐
+                    │  identifying │  (claim flow only — outpatient/inpatient/commercial)
+                    └──────┬──────┘
+                           │ claim_type determined
+                           ▼
+[mode=recommendation] ──► collecting ◄── [edit from confirming]
+                           │
+                all required fields present
+                           │
+                           ▼
+                      confirming  ──► chips: [Confirm | Edit | Restart]
+                           │
+                 user confirms ("đúng", "1", "xác nhận")
+                           │
+                           ▼
+                       complete  ──► result cached, subsequent messages skipped
 ```
 
 ---
 
-## Chế độ khai thác bảo hiểm
+## Claim Filing Mode
 
-### Trường bắt buộc theo loại hình
+### Required fields by claim type
 
-| Loại hình | Trường bắt buộc |
+| Type | Required fields |
 |---|---|
-| Ngoại trú (`outpatient`) | Họ tên, Ngày sinh, Mã BHXH, Cơ sở KCB, Ngày khám, Chẩn đoán, Tổng chi phí |
-| Nội trú (`inpatient`) | + Ngày nhập viện, Ngày xuất viện, Tiền tự trả |
-| Thương mại (`private`) | Thay Mã BHXH bằng Số hợp đồng; thêm Ngày sự kiện, Số tài khoản ngân hàng |
+| Outpatient (`outpatient`) | Full name, DOB, BHXH code, facility, visit date, diagnosis, total cost |
+| Inpatient (`inpatient`) | + Admission date, discharge date, out-of-pocket amount |
+| Commercial (`private`) | Replaces BHXH code with contract number; adds event date, bank account |
 
-### Kết quả
+### Output
 
-- Đoạn tóm tắt hồ sơ bằng tiếng Việt
-- `ProposalCard` — bảng thông tin + nút "Tải xuống JSON"
+- Vietnamese-language claim summary
+- `ProposalCard` — data table + "Download JSON" button
 
 ---
 
-## Chế độ tư vấn gói bảo hiểm
+## Insurance Recommendation Mode
 
-### Trường hồ sơ sức khỏe thu thập
+### Health profile fields
 
-| Trường | Bắt buộc | Option chips |
+| Field | Required | Option chips |
 |---|---|---|
-| Tuổi | Có | — |
-| Giới tính | Có | Nam / Nữ |
-| Loại công việc | Có | Văn phòng / Ngoài trời / Lao động nặng |
-| Bệnh nền | Không | — |
-| Hút thuốc | Có | Có hút thuốc / Không hút thuốc |
-| Ngân sách hàng tháng (VNĐ) | Có | — |
-| Số người cần bảo hiểm | Có | — |
-| Ưu tiên quyền lợi | Có | Nội trú / Ngoại trú / Bệnh hiểm nghèo / Tai nạn / Nhân thọ |
+| Age | Yes | — |
+| Gender | Yes | Nam / Nữ |
+| Job type | Yes | Văn phòng / Ngoài trời / Lao động nặng |
+| Pre-existing conditions | No | — |
+| Smoker | Yes | Có hút thuốc / Không hút thuốc |
+| Monthly budget (VND) | Yes | — |
+| Number of people to insure | Yes | — |
+| Benefit priority | Yes | Nội trú / Ngoại trú / Bệnh hiểm nghèo / Tai nạn / Nhân thọ |
 
-### Cách đề xuất hoạt động (catalog grounding)
+### How recommendations work (catalog grounding)
 
-Trợ lý **không** dựa vào kiến thức mở của mô hình mà bám sát một danh mục cục bộ `backend/app/packages_catalog.json` (12 gói từ các công ty bảo hiểm hư cấu: An Tín, Trường Phúc Life, Minh An Life, Việt Khang Life, Hồng Ân…):
+The assistant relies on a local `backend/app/packages_catalog.json` (12 packages from fictional insurers: An Tín, Trường Phúc Life, Minh An Life, Việt Khang Life, Hồng Ân…):
 
-1. **Load** — `load_catalog()` đọc + cache JSON (`lru_cache`)
-2. **Lọc** — `filter_by_profile()` áp điều kiện cứng (tuổi, hút thuốc, nghề loại trừ) → chấm điểm theo ưu tiên quyền lợi + ngân sách → giữ top 6
-3. **Format** — `format_for_prompt()` chọn tier hợp ngân sách nhất, dựng văn bản đưa vào prompt
-4. **Ràng buộc** — `RECOMMENDATION_SYSTEM` cấm bịa gói ngoài danh sách; `response_schema=RecommendationOutput` khóa cấu trúc đầu ra
-5. **Fallback** — nếu lọc ra rỗng thì dùng 6 gói đầu của danh mục (ghi log cảnh báo)
+1. **Load** — `load_catalog()` reads and caches JSON (`lru_cache`)
+2. **Filter** — `filter_by_profile()` applies hard conditions (age, smoking, excluded jobs) → scores by benefit priority + budget → keeps top 6
+3. **Format** — `format_for_prompt()` selects the best-fit tier, builds prompt text
+4. **Constraint** — `RECOMMENDATION_SYSTEM` forbids inventing packages outside the catalog; `response_schema=RecommendationOutput` locks the output structure
+5. **Fallback** — if filtering yields nothing, use the first 6 catalog entries (logged as a warning)
 
-### Kết quả
-
-Gemini chọn 2-3 gói phù hợp nhất từ danh mục và trả về JSON:
+### Output
 
 ```json
 {
@@ -153,59 +165,113 @@ Gemini chọn 2-3 gói phù hợp nhất từ danh mục và trả về JSON:
 }
 ```
 
-`RecommendationCard` hiển thị từng gói với màu sắc theo thứ hạng + nút "Tải xuống JSON".
+`RecommendationCard` renders each package with rank-based colours and a "Download JSON" button.
 
 ---
 
-## Cấu trúc dự án
+## PDF Upload Flow
+
+Users can upload a PDF (e.g. a hospital invoice or existing policy) inside the floating chat widget on the `/claim` page.
 
 ```
-healthcare-assistant/
+User clicks paperclip → selects PDF
+    │
+    ▼
+POST /api/upload-pdf  (multipart/form-data)
+    │
+    ▼
+backend extracts text via mcp_server/tools/pdf_tool.py (PyPDFLoader)
+    │
+    ▼
+Extracted text stored in session as pdf_context
+    │
+    ▼
+On every subsequent /chat turn, pdf_context is injected into the agent prompt
+    │
+    ▼
+Agent returns collected fields → FloatingChat renders ConfirmationCard
+    │
+    ├─ User clicks "Xác nhận điền form" → form fields auto-populated
+    └─ User clicks "Bỏ qua" → card dismissed, chat continues
+```
+
+---
+
+## MCP Server
+
+A standalone Python MCP server (`mcp_server/`) built with LangChain + FastMCP. It exposes two tools:
+
+| Tool | Description |
+|---|---|
+| `scan_pdf(file_path)` | Extracts text from a PDF using PyPDFLoader |
+| `convert_currency(amount, from_currency, to_currency)` | Live exchange rates via frankfurter.app |
+
+The backend imports `pdf_tool.py` directly for the `/upload-pdf` endpoint — no running MCP server required for that use case. The MCP server is for external integrations (e.g. Claude Desktop).
+
+See [`mcp_server/README.md`](mcp_server/README.md) for full setup and tool reference.
+
+---
+
+## Project Structure
+
+```
+insurance-assistant/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI lifespan, CORS, router registration
-│   │   ├── config.py                # Pydantic-settings (đọc từ .env)
-│   │   ├── schemas.py               # Tất cả models: ClaimData, HealthProfile, SessionState, …
-│   │   ├── claim_schema.py          # REQUIRED_FIELDS + FIELD_META cho claim flow
+│   │   ├── config.py                # Pydantic-settings (reads from .env)
+│   │   ├── schemas.py               # All models: ClaimData, HealthProfile, SessionState, …
+│   │   ├── claim_schema.py          # REQUIRED_FIELDS + FIELD_META for claim flow
 │   │   ├── health_profile_schema.py # REQUIRED_PROFILE_FIELDS + PROFILE_FIELD_META + FIELD_CHIPS
-│   │   ├── session_store.py         # In-memory store, asyncio.Lock, TTL tự động
+│   │   ├── session_store.py         # In-memory store, asyncio.Lock, auto TTL
 │   │   ├── agent.py                 # Claim flow: extract → guide → proposal (phase dispatcher)
 │   │   ├── advisor_agent.py         # Recommendation flow: extract → guide → recommend
-│   │   ├── catalog.py               # Lọc/chấm điểm gói bảo hiểm theo hồ sơ + format cho prompt
-│   │   ├── packages_catalog.json    # Danh mục 12 gói bảo hiểm (nguồn dữ liệu đề xuất)
-│   │   ├── prompts.py               # Tất cả system prompts và prompt builders
+│   │   ├── catalog.py               # Filter/score packages by profile + format for prompt
+│   │   ├── packages_catalog.json    # 12-package insurance catalog (recommendation source)
+│   │   ├── prompts.py               # All system prompts and prompt builders
 │   │   └── routers/
-│   │       ├── chat.py              # POST /chat — dispatch theo mode
+│   │       ├── chat.py              # POST /chat (mode dispatch) + POST /upload-pdf
 │   │       ├── session.py           # POST /session/new { mode }, DELETE /session/{id}
 │   │       └── health.py            # GET /health
 │   ├── requirements.txt
 │   └── .env.example
-└── frontend/
-    ├── src/
-    │   ├── App.jsx                  # State management, mode routing
-    │   ├── api.js                   # newSession(mode), sendMessage()
-    │   └── components/
-    │       ├── ModeSelector.jsx     # Hai thẻ chọn chế độ ban đầu
-    │       ├── ChatWindow.jsx       # Danh sách tin nhắn + auto-scroll
-    │       ├── MessageBubble.jsx    # Bubble người dùng / trợ lý
-    │       ├── OptionChips.jsx      # Hàng nút lựa chọn nhanh
-    │       ├── ProgressBar.jsx      # Thanh tiến trình (% hoàn thiện)
-    │       ├── ProposalCard.jsx     # Bảng hồ sơ bồi thường + tải JSON
-    │       └── RecommendationCard.jsx # Các gói bảo hiểm được đề xuất + tải JSON
-    ├── index.html
-    ├── package.json
-    └── vite.config.js               # Dev proxy /api → localhost:8002
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx                  # State management, route configuration
+│   │   ├── api.js                   # newSession(mode), sendMessage(), uploadPdf()
+│   │   ├── pages/
+│   │   │   └── ClaimPage.jsx        # /claim route — wraps ClaimForm + FloatingChat
+│   │   └── components/
+│   │       ├── ModeSelector.jsx     # Mode selection cards
+│   │       ├── ChatWindow.jsx       # Message list + auto-scroll
+│   │       ├── MessageBubble.jsx    # User / assistant bubbles
+│   │       ├── OptionChips.jsx      # Quick-choice button row
+│   │       ├── ProgressBar.jsx      # Completion % bar
+│   │       ├── ProposalCard.jsx     # Claim proposal table + download JSON
+│   │       ├── RecommendationCard.jsx # Recommended packages + download JSON
+│   │       ├── ClaimForm.jsx        # Structured claim form with conditional fields
+│   │       └── FloatingChat.jsx     # Floating chat bubble + PDF upload + ConfirmationCard
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js               # Dev proxy /api → localhost:8002
+└── mcp_server/
+    ├── server.py                    # FastMCP server entry point
+    ├── tools/
+    │   ├── pdf_tool.py              # scan_pdf tool (PyPDFLoader)
+    │   └── currency_tool.py         # convert_currency tool (frankfurter.app)
+    ├── requirements.txt
+    └── README.md
 ```
 
 ---
 
-## Cài đặt và chạy
+## Getting Started
 
-### Yêu cầu
+### Requirements
 
 - Python 3.11+
 - Node.js 18+
-- API key của một nhà cung cấp LLM: Google Gemini ([lấy tại đây](https://aistudio.google.com/app/apikey)) **hoặc** SiliconFlow ([lấy tại đây](https://cloud.siliconflow.cn))
+- LLM API key: Google Gemini ([get one](https://aistudio.google.com/app/apikey)) **or** SiliconFlow ([get one](https://cloud.siliconflow.cn))
 
 ### Backend
 
@@ -218,12 +284,12 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Mở .env: chọn LLM_PROVIDER và điền API key tương ứng (GEMINI_API_KEY hoặc SILICONFLOW_API_KEY)
+# Edit .env: set LLM_PROVIDER and fill in the matching API key
 
 uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload
 ```
 
-API docs tương tác: [http://localhost:8002/docs](http://localhost:8002/docs)
+Interactive API docs: [http://localhost:8002/docs](http://localhost:8002/docs)
 
 ### Frontend
 
@@ -232,45 +298,52 @@ cd labs/insurance-assistant/frontend
 
 npm install
 npm run dev
-# Mở http://localhost:5173
+# Open http://localhost:5173
 ```
 
-> Khi build production (`npm run build`), FastAPI phục vụ SPA trực tiếp — không cần chạy frontend server riêng.
+The `/claim` route is at [http://localhost:5173/claim](http://localhost:5173/claim).
+
+> In production (`npm run build`), FastAPI serves the SPA directly — no separate frontend server needed.
+
+### MCP Server (optional)
+
+Only needed for Claude Desktop integration. The backend uses `pdf_tool.py` directly and does not require the MCP server to be running.
+
+```bash
+cd labs/insurance-assistant/mcp_server
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+python server.py
+```
 
 ---
 
-## Biến môi trường
+## Environment Variables
 
-| Biến | Bắt buộc | Mô tả |
+| Variable | Required | Description |
 |---|---|---|
-| `LLM_PROVIDER` | Không | Nhà cung cấp LLM: `gemini` (mặc định) hoặc `siliconflow` |
-| `GEMINI_API_KEY` | Khi dùng Gemini | Google Gemini API key |
-| `GEMINI_LLM_MODEL` | Không | Mặc định: `gemini-2.5-flash` |
-| `SILICONFLOW_API_KEY` | Khi dùng SiliconFlow | SiliconFlow API key ([lấy tại đây](https://cloud.siliconflow.cn)) |
-| `SILICONFLOW_BASE_URL` | Không | Mặc định: `https://api.siliconflow.cn/v1` |
-| `SILICONFLOW_LLM_MODEL` | Không | Mặc định: `Qwen/Qwen2.5-72B-Instruct` |
-| `SESSION_TTL_MINUTES` | Không | Thời gian phiên (mặc định: 60 phút) |
+| `LLM_PROVIDER` | No | `gemini` (default) or `siliconflow` |
+| `GEMINI_API_KEY` | When using Gemini | Google Gemini API key |
+| `GEMINI_LLM_MODEL` | No | Default: `gemini-2.5-flash` |
+| `SILICONFLOW_API_KEY` | When using SiliconFlow | SiliconFlow API key |
+| `SILICONFLOW_BASE_URL` | No | Default: `https://api.siliconflow.cn/v1` |
+| `SILICONFLOW_LLM_MODEL` | No | Default: `Qwen/Qwen2.5-72B-Instruct` |
+| `SESSION_TTL_MINUTES` | No | Session lifetime (default: 60 min) |
 
-### Đổi nhà cung cấp LLM
-
-Backend hỗ trợ hai nhà cung cấp LLM sau cùng một giao diện (`app/llm.py`), chọn bằng `LLM_PROVIDER` trong `.env`:
-
-- **Gemini** (`google-genai`) — mặc định, dùng `response_schema` cho đầu ra có cấu trúc.
-- **SiliconFlow** (OpenAI-compatible, ví dụ Qwen/DeepSeek) — dùng `response_format=json_object` + schema chèn vào prompt.
-
-Chỉ cần đổi `LLM_PROVIDER` và điền API key tương ứng — không cần sửa code. Mỗi lần chỉ một nhà cung cấp hoạt động; nếu thiếu API key của nhà cung cấp đang chọn, ứng dụng báo lỗi rõ ràng.
+The backend supports both providers through the same interface (`app/llm.py`). Switch by changing `LLM_PROVIDER` and filling in the matching key — no code changes needed. Only one provider is active at a time; a missing key produces a clear error.
 
 ---
 
-## API
+## API Reference
 
 ### `POST /api/session/new`
 
-Tạo phiên làm việc mới với chế độ được chỉ định.
-
 ```json
 // Request
-{ "mode": "claim_filing" }          // hoặc "recommendation"
+{ "mode": "claim_filing" }   // or "recommendation"
 
 // Response
 { "session_id": "uuid-string" }
@@ -278,20 +351,15 @@ Tạo phiên làm việc mới với chế độ được chỉ định.
 
 ### `POST /api/chat`
 
-Gửi tin nhắn và nhận phản hồi.
-
 ```json
 // Request
-{
-  "session_id": "uuid-string",
-  "message": "Tôi nhập viện điều trị tuần trước"
-}
+{ "session_id": "uuid-string", "message": "Tôi nhập viện điều trị tuần trước" }
 
-// Response (claim_filing)
+// Response
 {
   "session_id": "uuid-string",
   "reply": "Bạn điều trị tại bệnh viện nào ạ?",
-  "collected": { "claim_type": "inpatient", "name": null, ... },
+  "collected": { "claim_type": "inpatient", "name": null },
   "health_profile": {},
   "proposal": null,
   "recommendation": null,
@@ -300,112 +368,47 @@ Gửi tin nhắn và nhận phản hồi.
   "session_phase": "collecting",
   "options": null
 }
+```
 
-// Response (recommendation) — khi đến pha confirming
+### `POST /api/upload-pdf`
+
+Multipart form upload (`file` field). Returns extracted text and any fields the agent detected:
+
+```json
 {
-  "session_id": "uuid-string",
-  "reply": "Đây là hồ sơ tôi đã ghi nhận: ...",
-  "collected": {},
-  "health_profile": { "age": 30, "gender": "nam", ... },
-  "proposal": null,
-  "recommendation": null,
-  "is_complete": false,
-  "progress_pct": 100,
-  "session_phase": "confirming",
-  "options": ["Xác nhận, đề xuất gói bảo hiểm", "Tôi muốn sửa thông tin", "Bắt đầu lại từ đầu"]
+  "text": "Extracted PDF text...",
+  "collected": { "name": "Nguyễn Văn A", "diagnosis": "..." }
 }
 ```
 
 ### `DELETE /api/session/{session_id}`
 
-Xóa phiên làm việc.
+Deletes a session.
 
 ### `GET /api/health`
 
-Kiểm tra trạng thái dịch vụ.
+Service health check.
 
 ---
 
-## Luồng hội thoại mẫu
+## Extending the Project
 
-### Chế độ khai thác bảo hiểm
+### Add a health profile field
 
-```
-[ModeSelector] User chọn "Khai thác bảo hiểm"
+1. Add the field to `HealthProfile` in `backend/app/schemas.py`
+2. Add metadata to `PROFILE_FIELD_META` in `backend/app/health_profile_schema.py`
+3. Add to `REQUIRED_PROFILE_FIELDS` if mandatory
+4. Add `FIELD_CHIPS` if you want quick-choice buttons
 
-Trợ lý: Xin chào! Bạn muốn khai thác BHYT hay bảo hiểm thương mại?
-[Chips] BHYT ngoại trú  |  BHYT nội trú  |  Bảo hiểm thương mại
+### Add a new claim type
 
-User: [click] BHYT nội trú
+1. Add a value to the `ClaimType` enum in `backend/app/schemas.py`
+2. Add the field list to `REQUIRED_FIELDS` in `backend/app/claim_schema.py`
+3. Update the claim type description in the extraction system prompt in `backend/app/prompts.py`
 
-Trợ lý: Bạn điều trị tại bệnh viện nào ạ?
+### Add a new mode
 
-User: Bệnh viện Bạch Mai, nhập viện 20/5, ra viện 25/5
-
-Trợ lý: Cảm ơn! Chẩn đoán bệnh của bạn là gì ạ?
-
-... [thu thập đến khi đủ thông tin]
-
-Trợ lý: Đây là thông tin tôi đã thu thập:
-         • Họ tên: Nguyễn Văn A  • Ngày sinh: 15/03/1990
-         • Loại: Nội trú — BV Bạch Mai  ...
-         Thông tin trên có chính xác không?
-[Chips] Xác nhận, tạo hồ sơ  |  Tôi muốn sửa thông tin  |  Bắt đầu lại từ đầu
-
-User: [click] Xác nhận, tạo hồ sơ
-
-Trợ lý: [Tóm tắt hồ sơ tiếng Việt. Hồ sơ đã sẵn sàng tải xuống.]
-[ProposalCard hiển thị với nút "Tải xuống JSON"]
-```
-
-### Chế độ tư vấn gói bảo hiểm
-
-```
-[ModeSelector] User chọn "Tư vấn gói bảo hiểm"
-
-Trợ lý: Xin chào! Bạn bao nhiêu tuổi?
-
-User: 32 tuổi
-
-Trợ lý: Bạn là nam hay nữ ạ?
-[Chips] Nam  |  Nữ
-
-User: [click] Nam
-
-Trợ lý: Công việc hiện tại của bạn thuộc loại nào?
-[Chips] Văn phòng  |  Ngoài trời / di chuyển nhiều  |  Lao động nặng
-
-... [thu thập hồ sơ sức khỏe]
-
-Trợ lý: Đây là hồ sơ tôi đã ghi nhận: ...
-[Chips] Xác nhận, đề xuất gói bảo hiểm  |  Tôi muốn sửa  |  Bắt đầu lại
-
-User: [click] Xác nhận, đề xuất gói bảo hiểm
-
-Trợ lý: Dựa trên hồ sơ của bạn, tôi đề xuất 3 gói bảo hiểm phù hợp nhất...
-[RecommendationCard: 3 gói với chi tiết + nút "Tải xuống JSON"]
-```
-
----
-
-## Mở rộng
-
-### Thêm trường vào hồ sơ sức khỏe
-
-1. Thêm field vào `HealthProfile` trong [backend/app/schemas.py](backend/app/schemas.py)
-2. Thêm metadata vào `PROFILE_FIELD_META` trong [backend/app/health_profile_schema.py](backend/app/health_profile_schema.py)
-3. Thêm vào `REQUIRED_PROFILE_FIELDS` nếu bắt buộc
-4. Thêm `FIELD_CHIPS` nếu muốn hiển thị option chips cho trường đó
-
-### Thêm loại hình bảo hiểm mới (claim flow)
-
-1. Thêm giá trị vào `ClaimType` enum trong [backend/app/schemas.py](backend/app/schemas.py)
-2. Thêm danh sách trường vào `REQUIRED_FIELDS` trong [backend/app/claim_schema.py](backend/app/claim_schema.py)
-3. Cập nhật mô tả loại hình trong extraction system prompt ở [backend/app/prompts.py](backend/app/prompts.py)
-
-### Thêm chế độ mới
-
-1. Thêm giá trị vào `AssistantMode` enum trong [backend/app/schemas.py](backend/app/schemas.py)
-2. Tạo agent mới (theo mẫu `advisor_agent.py`)
-3. Thêm dispatch case trong [backend/app/routers/chat.py](backend/app/routers/chat.py)
-4. Thêm thẻ chọn chế độ trong [frontend/src/components/ModeSelector.jsx](frontend/src/components/ModeSelector.jsx)
+1. Add a value to `AssistantMode` in `backend/app/schemas.py`
+2. Create a new agent (follow `advisor_agent.py` as a template)
+3. Add a dispatch case in `backend/app/routers/chat.py`
+4. Add a mode card in `frontend/src/components/ModeSelector.jsx`

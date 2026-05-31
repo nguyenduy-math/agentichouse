@@ -1,9 +1,22 @@
-from fastapi import APIRouter, HTTPException, Request
+import sys
+import os
+import tempfile
+
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+
+# Allow direct import of mcp_server tools
+_mcp_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "mcp_server"))
+if _mcp_root not in sys.path:
+    sys.path.insert(0, _mcp_root)
+
+from tools.pdf_tool import scan_pdf  # noqa: E402
 
 from app import advisor_agent, agent as claim_agent
 from app.advisor_agent import get_profile_progress
 from app.claim_schema import compute_progress
-from app.schemas import AssistantMode, ChatRequest, ChatResponse, ClaimType, HealthProfile
+from app.llm import get_provider
+from app.prompts import get_extraction_system
+from app.schemas import AssistantMode, ChatRequest, ChatResponse, ClaimData, ClaimDataExtraction, ClaimType, HealthProfile, PdfUploadResponse
 
 router = APIRouter(tags=["chat"])
 
@@ -83,3 +96,85 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
             session_phase=new_phase,
             options=options,
         )
+
+
+@router.post("/upload-pdf", response_model=PdfUploadResponse)
+async def upload_pdf(
+    request: Request,
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+) -> PdfUploadResponse:
+    store = request.app.state.session_store
+    session = await store.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    # Save uploaded PDF to a temp file
+    suffix = os.path.splitext(file.filename or "upload.pdf")[1] or ".pdf"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    try:
+        pdf_text = scan_pdf(file_path=tmp_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+    if pdf_text.startswith("Error"):
+        raise HTTPException(status_code=422, detail=pdf_text)
+
+    # Store PDF context in session (additive)
+    session.pdf_context = pdf_text
+    await store.save(session)
+
+    # Extract claim fields from PDF text via LLM
+    try:
+        data = await get_provider().generate_structured(
+            messages=[{"role": "user", "content": f"Trích xuất thông tin từ tài liệu PDF sau:\n\n{pdf_text}"}],
+            system=get_extraction_system(),
+            temperature=0.0,
+            schema=ClaimDataExtraction,
+        )
+        extracted = ClaimDataExtraction(**data)
+    except Exception:
+        extracted = ClaimDataExtraction()
+
+    # Build summary text
+    field_labels = {
+        "claim_type": "Loại bảo hiểm",
+        "name": "Họ tên",
+        "dob": "Ngày sinh",
+        "insurance_id": "Mã BHXH",
+        "policy_number": "Số hợp đồng",
+        "hospital": "Bệnh viện",
+        "visit_date": "Ngày khám",
+        "admission_date": "Ngày nhập viện",
+        "discharge_date": "Ngày xuất viện",
+        "event_date": "Ngày xảy ra sự kiện",
+        "diagnosis": "Chẩn đoán",
+        "diagnosis_code": "Mã ICD-10",
+        "total_cost": "Tổng chi phí",
+        "patient_paid": "Bệnh nhân tự trả",
+        "bank_account": "Tài khoản ngân hàng",
+        "notes": "Ghi chú",
+    }
+    found_lines = []
+    for field, label in field_labels.items():
+        val = getattr(extracted, field, None)
+        if val is not None:
+            found_lines.append(f"- {label}: {val}")
+
+    if found_lines:
+        summary = (
+            "Tôi đã đọc file PDF và tìm thấy các thông tin sau:\n"
+            + "\n".join(found_lines)
+            + "\n\nBạn có muốn điền vào form không?"
+        )
+    else:
+        summary = "Tôi đã đọc file PDF nhưng không tìm thấy thông tin bảo hiểm nào. Bạn có thể nhập thông tin thủ công."
+
+    return PdfUploadResponse(
+        extracted_fields=ClaimData(**extracted.model_dump()),
+        summary_text=summary,
+    )

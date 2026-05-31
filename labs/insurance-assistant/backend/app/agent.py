@@ -97,15 +97,20 @@ async def _guide(
     missing_fields: list[str],
     history: list[dict],
     correction_field: str | None = None,
+    pdf_context: str = "",
 ) -> str:
     guide_prompt = build_guide_prompt(collected, missing_fields, correction_field)
     context_turns = history[-6:] if len(history) > 6 else history
     messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
     messages.append({"role": "user", "content": guide_prompt})
 
+    system = get_guide_system()
+    if pdf_context:
+        system = f"{system}\n\nNGỮ CẢNH TỪ FILE PDF:\n{pdf_context[:3000]}"
+
     return await get_provider().generate_text(
         messages=messages,
-        system=get_guide_system(),
+        system=system,
         temperature=0.3,
     )
 
@@ -163,6 +168,8 @@ async def process_turn(
             None,
         )
 
+    pdf_ctx = getattr(session, "pdf_context", "")
+
     # -----------------------------------------------------------------------
     # Phase: identifying — determine claim type
     # -----------------------------------------------------------------------
@@ -173,11 +180,11 @@ async def process_turn(
         if merged.claim_type and merged.claim_type != ClaimType.unknown:
             # Advance to collecting; ask first real question
             missing = get_missing_fields(merged.model_dump(), merged.claim_type)
-            reply = await _guide(merged, missing, session.history)
+            reply = await _guide(merged, missing, session.history, pdf_context=pdf_ctx)
             return reply, merged, None, False, SessionPhase.collecting, None
 
         # Still unknown — prompt with explicit options
-        reply = await _guide(merged, [], session.history)
+        reply = await _guide(merged, [], session.history, pdf_context=pdf_ctx)
         return reply, merged, None, False, SessionPhase.identifying, _OPTIONS_CLAIM_TYPE
 
     # -----------------------------------------------------------------------
@@ -204,7 +211,7 @@ async def process_turn(
             )
 
         # Still collecting — ask next question (acknowledging correction if any)
-        reply = await _guide(merged, missing, session.history, correction_field)
+        reply = await _guide(merged, missing, session.history, correction_field, pdf_context=pdf_ctx)
         options = _OPTIONS_CORRECTION if correction_field else None
         return reply, merged, None, False, SessionPhase.collecting, options
 
@@ -234,7 +241,7 @@ async def process_turn(
         merged = _merge(session.collected, extraction)
         claim_type = merged.claim_type or ClaimType.unknown
         missing = get_missing_fields(merged.model_dump(), claim_type)
-        reply = await _guide(merged, missing, session.history, correction_field)
+        reply = await _guide(merged, missing, session.history, correction_field, pdf_context=pdf_ctx)
         return reply, merged, None, False, SessionPhase.collecting, None
 
     # Should never reach here

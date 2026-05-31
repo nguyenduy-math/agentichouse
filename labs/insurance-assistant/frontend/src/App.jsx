@@ -1,17 +1,45 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { newSession, sendMessage } from './api'
 import ChatWindow from './components/ChatWindow'
 import ModeSelector from './components/ModeSelector'
 import OptionChips from './components/OptionChips'
 import ProgressBar from './components/ProgressBar'
+import ClaimPage from './pages/ClaimPage'
 
 const MODE_META = {
   claim_filing:   { label: 'Khai thác bảo hiểm',   color: '#3b82f6' },
   recommendation: { label: 'Tư vấn gói bảo hiểm',  color: '#16a34a' },
 }
 
+function usePathname() {
+  const [pathname, setPathname] = useState(window.location.pathname)
+  useEffect(() => {
+    function onPop() { setPathname(window.location.pathname) }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  return pathname
+}
+
+export function navigate(path) {
+  window.history.pushState({}, '', path)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 export default function App() {
-  const [mode, setMode] = useState(null)          // null = show ModeSelector
+  const pathname = usePathname()
+
+  // Route: /claim
+  if (pathname === '/claim') {
+    return <ClaimPage />
+  }
+
+  // Default route: home (chat assistant)
+  return <HomeApp />
+}
+
+function HomeApp() {
+  const [mode, setMode] = useState(null)
   const [sessionId, setSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [options, setOptions] = useState(null)
@@ -95,11 +123,19 @@ export default function App() {
             {mode ? MODE_META[mode]?.label : 'Hỗ trợ khai thác & tư vấn bảo hiểm'}
           </div>
         </div>
-        {mode && (
-          <button onClick={handleReset} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-            Bắt đầu lại
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a
+            href="/claim"
+            style={{ background: 'rgba(255,255,255,0.2)', textDecoration: 'none', color: '#fff', padding: '6px 12px', borderRadius: 8, fontSize: 13 }}
+          >
+            Form khai thác
+          </a>
+          {mode && (
+            <button onClick={handleReset} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+              Bắt đầu lại
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Mode selector or chat */}
