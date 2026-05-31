@@ -213,7 +213,7 @@ export default function FloatingChat({ onFieldsCollected }) {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,application/pdf"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               style={{ display: 'none' }}
               onChange={handlePdfSelect}
             />

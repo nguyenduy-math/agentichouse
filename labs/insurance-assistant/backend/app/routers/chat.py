@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import tempfile
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -9,7 +10,8 @@ _mcp_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 
 if _mcp_root not in sys.path:
     sys.path.insert(0, _mcp_root)
 
-from tools.pdf_tool import scan_pdf  # noqa: E402
+from tools.pdf_tool import scan_pdf      # noqa: E402
+from tools.image_tool import scan_image  # noqa: E402
 
 from app import advisor_agent, agent as claim_agent
 from app.advisor_agent import get_profile_progress
@@ -24,6 +26,10 @@ _FIRST_ADVISOR_MSG = (
     "Xin chào! Tôi sẽ giúp bạn tìm gói bảo hiểm phù hợp nhất. "
     "Trước tiên, bạn bao nhiêu tuổi?"
 )
+
+# MIME types treated as images
+_IMAGE_MIME_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"}
+_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -98,83 +104,115 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
         )
 
 
+def _is_image_file(filename: str | None, content_type: str | None) -> bool:
+    """Determine if uploaded file is an image (vs PDF)."""
+    if content_type and content_type.lower() in _IMAGE_MIME_TYPES:
+        return True
+    if filename:
+        ext = os.path.splitext(filename)[1].lower()
+        return ext in _IMAGE_EXTENSIONS
+    return False
+
+
+async def _process_upload(
+    request: Request,
+    session_id: str,
+    file: UploadFile,
+) -> PdfUploadResponse:
+    """Core logic shared by /upload-document and /upload-pdf."""
+    store = request.app.state.session_store
+    session = await store.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    filename = file.filename or "upload"
+    content_type = file.content_type or ""
+    is_image = _is_image_file(filename, content_type)
+
+    suffix = os.path.splitext(filename)[1] or (".png" if is_image else ".pdf")
+
+    # Write upload to a temp file
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    try:
+        # ------------------------------------------------------------------
+        # Call the appropriate vision tool
+        # ------------------------------------------------------------------
+        if is_image:
+            raw_result = scan_image(file_path=tmp_path)
+        else:
+            raw_result = scan_pdf(file_path=tmp_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+    # ------------------------------------------------------------------
+    # Parse vision tool result
+    # ------------------------------------------------------------------
+    try:
+        result = json.loads(raw_result)
+    except (json.JSONDecodeError, TypeError):
+        raise HTTPException(status_code=422, detail="Vision tool returned unexpected output.")
+
+    if "error" in result:
+        raise HTTPException(status_code=422, detail=result["error"])
+
+    extracted_fields: dict = result.get("extracted_fields", {})
+    summary_text: str = result.get("summary_text", "")
+
+    # Store document context in session (as JSON text, additive)
+    session.pdf_context = json.dumps(extracted_fields, ensure_ascii=False)
+    await store.save(session)
+
+    # ------------------------------------------------------------------
+    # Build ClaimData from vision-extracted fields
+    # ------------------------------------------------------------------
+    # The vision provider already returns the backend ClaimType enum values
+    # (outpatient/inpatient/private/unknown). Pydantic will coerce them.
+    try:
+        extracted = ClaimDataExtraction(**{
+            k: v for k, v in extracted_fields.items()
+            if not k.startswith("_")  # skip internal error keys
+        })
+    except Exception:
+        extracted = ClaimDataExtraction()
+
+    # If vision extraction produced nothing meaningful, fall back to backend LLM
+    if not any(getattr(extracted, f, None) for f in extracted.model_fields):
+        try:
+            data = await get_provider().generate_structured(
+                messages=[{"role": "user", "content": f"Trích xuất thông tin từ tài liệu sau:\n\n{raw_result}"}],
+                system=get_extraction_system(),
+                temperature=0.0,
+                schema=ClaimDataExtraction,
+            )
+            extracted = ClaimDataExtraction(**data)
+        except Exception:
+            extracted = ClaimDataExtraction()
+
+    return PdfUploadResponse(
+        extracted_fields=ClaimData(**extracted.model_dump()),
+        summary_text=summary_text,
+    )
+
+
+@router.post("/upload-document", response_model=PdfUploadResponse)
+async def upload_document(
+    request: Request,
+    session_id: str = Form(...),
+    file: UploadFile = File(...),
+) -> PdfUploadResponse:
+    """Upload a PDF or image (JPG/PNG) to extract insurance claim fields via vision LLM."""
+    return await _process_upload(request, session_id, file)
+
+
 @router.post("/upload-pdf", response_model=PdfUploadResponse)
 async def upload_pdf(
     request: Request,
     session_id: str = Form(...),
     file: UploadFile = File(...),
 ) -> PdfUploadResponse:
-    store = request.app.state.session_store
-    session = await store.get(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
-
-    # Save uploaded PDF to a temp file
-    suffix = os.path.splitext(file.filename or "upload.pdf")[1] or ".pdf"
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(await file.read())
-        tmp_path = tmp.name
-
-    try:
-        pdf_text = scan_pdf(file_path=tmp_path)
-    finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-
-    if pdf_text.startswith("Error"):
-        raise HTTPException(status_code=422, detail=pdf_text)
-
-    # Store PDF context in session (additive)
-    session.pdf_context = pdf_text
-    await store.save(session)
-
-    # Extract claim fields from PDF text via LLM
-    try:
-        data = await get_provider().generate_structured(
-            messages=[{"role": "user", "content": f"Trích xuất thông tin từ tài liệu PDF sau:\n\n{pdf_text}"}],
-            system=get_extraction_system(),
-            temperature=0.0,
-            schema=ClaimDataExtraction,
-        )
-        extracted = ClaimDataExtraction(**data)
-    except Exception:
-        extracted = ClaimDataExtraction()
-
-    # Build summary text
-    field_labels = {
-        "claim_type": "Loại bảo hiểm",
-        "name": "Họ tên",
-        "dob": "Ngày sinh",
-        "insurance_id": "Mã BHXH",
-        "policy_number": "Số hợp đồng",
-        "hospital": "Bệnh viện",
-        "visit_date": "Ngày khám",
-        "admission_date": "Ngày nhập viện",
-        "discharge_date": "Ngày xuất viện",
-        "event_date": "Ngày xảy ra sự kiện",
-        "diagnosis": "Chẩn đoán",
-        "diagnosis_code": "Mã ICD-10",
-        "total_cost": "Tổng chi phí",
-        "patient_paid": "Bệnh nhân tự trả",
-        "bank_account": "Tài khoản ngân hàng",
-        "notes": "Ghi chú",
-    }
-    found_lines = []
-    for field, label in field_labels.items():
-        val = getattr(extracted, field, None)
-        if val is not None:
-            found_lines.append(f"- {label}: {val}")
-
-    if found_lines:
-        summary = (
-            "Tôi đã đọc file PDF và tìm thấy các thông tin sau:\n"
-            + "\n".join(found_lines)
-            + "\n\nBạn có muốn điền vào form không?"
-        )
-    else:
-        summary = "Tôi đã đọc file PDF nhưng không tìm thấy thông tin bảo hiểm nào. Bạn có thể nhập thông tin thủ công."
-
-    return PdfUploadResponse(
-        extracted_fields=ClaimData(**extracted.model_dump()),
-        summary_text=summary,
-    )
+    """Backward-compatible alias for /upload-document. Accepts PDF and images."""
+    return await _process_upload(request, session_id, file)

@@ -1,135 +1,131 @@
 # Insurance Assistant MCP Server
 
-A standalone Python MCP server built with LangChain + FastMCP. It exposes two tools for use with Claude Desktop or any MCP-compatible client.
+Exposes three tools via the Model Context Protocol (MCP):
 
-The backend also imports `tools/pdf_tool.py` directly to serve the `POST /api/upload-pdf` endpoint — no running MCP server is required for that use case.
+| Tool | Description |
+|------|-------------|
+| `scan_pdf` | Extract claim fields from a PDF using a vision LLM |
+| `scan_image` | Extract claim fields from a JPG/PNG using a vision LLM |
+| `convert_currency` | Convert amounts between currencies using live rates |
 
-## Tools
-
-### `scan_pdf`
-
-Extracts text from a PDF file.
-
-| Parameter | Type | Description |
-|---|---|---|
-| `file_path` | string | Absolute path to a local `.pdf` file |
-| `base64_pdf` | string | Base64-encoded PDF content (alternative to `file_path`) |
-
-Provide one or the other. Returns extracted text grouped by page.
-
-**Example input:**
-```json
-{ "file_path": "/home/user/documents/claim.pdf" }
-```
-
-**Example output:**
-```
-Page 1:
-Bệnh viện Bạch Mai
-Ngày khám: 20/05/2025
-Chẩn đoán: Viêm phổi cấp
-Tổng chi phí: 3.200.000 VNĐ
-...
-```
-
-### `convert_currency`
-
-Converts an amount between currencies using live rates from [Frankfurter](https://api.frankfurter.app/currencies).
-
-| Parameter | Type | Description |
-|---|---|---|
-| `amount` | float | Positive amount to convert |
-| `from_currency` | string | Source ISO 4217 code (e.g. `"USD"`) |
-| `to_currency` | string | Target ISO 4217 code (e.g. `"VND"`) |
-
-**Example input:**
-```json
-{ "amount": 100, "from_currency": "USD", "to_currency": "VND" }
-```
-
-**Example output:**
-```
-100 USD = 2,534,200.00 VND
-Rate: 25342.0 (as of 2025-05-30)
-```
-
-Supported currencies: all currencies available on Frankfurter.
+The backend also imports `tools/pdf_tool.py` and `tools/image_tool.py` directly to serve the `POST /api/upload-document` endpoint — no running MCP server is required for that use case.
 
 ---
 
 ## Setup
 
-Requirements: Python 3.10+
-
 ```bash
 cd mcp_server
-
-python -m venv .venv
-source .venv/bin/activate        # macOS/Linux
-.venv\Scripts\activate           # Windows
-
 pip install -r requirements.txt
-```
-
-## Running the server
-
-```bash
-# From inside mcp_server/
+cp .env.example .env   # then fill in your API key(s)
 python server.py
 ```
 
-The server communicates over stdio (standard MCP transport).
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+### `VISION_PROVIDER`
+
+Controls which vision LLM is used for document extraction.
+
+| Value | Provider | Model |
+|-------|----------|-------|
+| `gemini` *(default)* | Google Gemini | `gemini-2.0-flash` |
+| `siliconflow` | Siliconflow | `Qwen/Qwen2-VL-72B-Instruct` |
+
+```env
+VISION_PROVIDER=gemini        # or: siliconflow
+```
+
+### `GOOGLE_API_KEY`
+
+Required when `VISION_PROVIDER=gemini`.  
+Get a key at <https://aistudio.google.com/app/apikey>.
+
+```env
+GOOGLE_API_KEY=your_google_api_key_here
+```
+
+### `SILICONFLOW_API_KEY`
+
+Required when `VISION_PROVIDER=siliconflow`.  
+Get a key at <https://siliconflow.cn>.
+
+```env
+SILICONFLOW_API_KEY=your_siliconflow_api_key_here
+```
 
 ---
 
-## Register with Claude Desktop
+## Tool Reference
 
-Edit your `claude_desktop_config.json`:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+### `scan_pdf`
 
+Converts the first 1–2 pages of a PDF to images and sends them to the vision LLM.
+
+**Parameters** (provide one):
+- `file_path` — absolute path to a local PDF file
+- `base64_pdf` — PDF content encoded as a base64 string
+
+**Returns:** JSON string
 ```json
 {
-  "mcpServers": {
-    "insurance-tools": {
-      "command": "python",
-      "args": [
-        "C:/Users/<your-username>/Documents/dshouse/agentichouse/labs/insurance-assistant/mcp_server/server.py"
-      ],
-      "env": {}
-    }
-  }
+  "extracted_fields": {
+    "claim_type": "outpatient",
+    "name": "Nguyễn Văn A",
+    "dob": "15/03/1990",
+    "hospital": "Bệnh viện Bạch Mai",
+    "...": "..."
+  },
+  "summary_text": "Tôi đã đọc tài liệu và tìm thấy các thông tin sau:\n..."
 }
 ```
 
-If using a virtual environment, replace `"python"` with the full path to the venv interpreter:
-
+On error:
 ```json
-{
-  "mcpServers": {
-    "insurance-tools": {
-      "command": "C:/Users/<your-username>/Documents/dshouse/agentichouse/labs/insurance-assistant/mcp_server/.venv/Scripts/python.exe",
-      "args": [
-        "C:/Users/<your-username>/Documents/dshouse/agentichouse/labs/insurance-assistant/mcp_server/server.py"
-      ],
-      "env": {}
-    }
-  }
-}
+{ "error": "description of what went wrong" }
 ```
-
-Restart Claude Desktop after saving.
 
 ---
 
-## Using from the Insurance Assistant backend
+### `scan_image`
 
-The backend imports `pdf_tool.py` directly — no MCP server process needed:
+Sends a JPG or PNG directly to the vision LLM.
 
-```python
-from mcp_server.tools.pdf_tool import scan_pdf
+**Parameters** (provide one):
+- `file_path` — absolute path to a local image file (JPG/PNG/WebP)
+- `base64_image` + `mime_type` — image as base64 with its MIME type (e.g. `"image/jpeg"`)
 
-text = scan_pdf(file_path="/tmp/uploaded_claim.pdf")
+**Returns:** Same JSON shape as `scan_pdf`.
+
+---
+
+### `convert_currency`
+
+Converts an amount between currencies using live exchange rates.
+
+**Parameters:**
+- `amount` — positive number
+- `from_currency` — ISO code (e.g. `"VND"`)
+- `to_currency` — ISO code (e.g. `"USD"`)
+
+---
+
+## Architecture
+
+```
+mcp_server/
+├── server.py                  # FastMCP server — registers all tools
+├── .env.example               # template for environment variables
+├── requirements.txt
+└── tools/
+    ├── vision_provider.py     # VisionProvider base + Gemini/Siliconflow impls
+    ├── pdf_tool.py            # PDF → page images → vision LLM → JSON
+    ├── image_tool.py          # image file → vision LLM → JSON
+    └── currency_tool.py       # live FX conversion (unchanged)
 ```
 
-This is how `POST /api/upload-pdf` works: it calls `scan_pdf`, stores the extracted text in the session as `pdf_context`, and injects it into the agent prompt on every subsequent chat turn.
+The `VisionProvider` abstraction in `vision_provider.py` makes it easy to add new providers: implement `extract_claim_fields(image_bytes: bytes, mime_type: str) -> dict` and register in the `_PROVIDERS` dict.
