@@ -205,12 +205,12 @@ healthcare-assistant/
 
 - Python 3.11+
 - Node.js 18+
-- Google Gemini API key ([lấy tại đây](https://aistudio.google.com/app/apikey))
+- API key của một nhà cung cấp LLM: Google Gemini ([lấy tại đây](https://aistudio.google.com/app/apikey)) **hoặc** SiliconFlow ([lấy tại đây](https://cloud.siliconflow.cn))
 
 ### Backend
 
 ```bash
-cd labs/healthcare-assistant/backend
+cd labs/insurance-assistant/backend
 
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -218,7 +218,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Mở .env và điền GEMINI_API_KEY
+# Mở .env: chọn LLM_PROVIDER và điền API key tương ứng (GEMINI_API_KEY hoặc SILICONFLOW_API_KEY)
 
 uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload
 ```
@@ -228,7 +228,7 @@ API docs tương tác: [http://localhost:8002/docs](http://localhost:8002/docs)
 ### Frontend
 
 ```bash
-cd labs/healthcare-assistant/frontend
+cd labs/insurance-assistant/frontend
 
 npm install
 npm run dev
@@ -243,9 +243,22 @@ npm run dev
 
 | Biến | Bắt buộc | Mô tả |
 |---|---|---|
-| `GEMINI_API_KEY` | Có | Google Gemini API key |
+| `LLM_PROVIDER` | Không | Nhà cung cấp LLM: `gemini` (mặc định) hoặc `siliconflow` |
+| `GEMINI_API_KEY` | Khi dùng Gemini | Google Gemini API key |
 | `GEMINI_LLM_MODEL` | Không | Mặc định: `gemini-2.5-flash` |
+| `SILICONFLOW_API_KEY` | Khi dùng SiliconFlow | SiliconFlow API key ([lấy tại đây](https://cloud.siliconflow.cn)) |
+| `SILICONFLOW_BASE_URL` | Không | Mặc định: `https://api.siliconflow.cn/v1` |
+| `SILICONFLOW_LLM_MODEL` | Không | Mặc định: `Qwen/Qwen2.5-72B-Instruct` |
 | `SESSION_TTL_MINUTES` | Không | Thời gian phiên (mặc định: 60 phút) |
+
+### Đổi nhà cung cấp LLM
+
+Backend hỗ trợ hai nhà cung cấp LLM sau cùng một giao diện (`app/llm.py`), chọn bằng `LLM_PROVIDER` trong `.env`:
+
+- **Gemini** (`google-genai`) — mặc định, dùng `response_schema` cho đầu ra có cấu trúc.
+- **SiliconFlow** (OpenAI-compatible, ví dụ Qwen/DeepSeek) — dùng `response_format=json_object` + schema chèn vào prompt.
+
+Chỉ cần đổi `LLM_PROVIDER` và điền API key tương ứng — không cần sửa code. Mỗi lần chỉ một nhà cung cấp hoạt động; nếu thiếu API key của nhà cung cấp đang chọn, ứng dụng báo lỗi rõ ràng.
 
 ---
 

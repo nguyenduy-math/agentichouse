@@ -1,0 +1,45 @@
+🤖 I built a two-mode conversational Insurance Assistant for the Vietnamese market — and the most interesting part isn't the chatbot, it's what keeps it from making things up.
+
+Insurance is full of numbers, dates, and rules. A friendly chatbot that hallucinates a premium or invents a policy is worse than no chatbot at all. So I designed this one around two ideas: structured extraction and catalog grounding.
+
+What it does — two modes, one interface:
+
+📋 Claim filing — guides a user step-by-step through filing a health-insurance (BHYT) or commercial claim, then produces a clean, downloadable claim dossier.
+
+💡 Package recommendation — collects a short health profile (age, occupation, smoker status, budget, coverage priorities) and recommends the 2–3 best-fit insurance packages.
+
+Under the hood:
+
+🔄 Every turn runs an Extract → Guide loop. One LLM call extracts only what the user explicitly said into a strict schema (temp 0.0); a second decides the single best next question (temp 0.3). No firehose of questions — just natural conversation with quick-pick option chips at decision points.
+
+✅ A 4-state session machine (identifying → collecting → confirming → complete) always pauses to confirm everything before generating a result — and detects when a user corrects an earlier answer.
+
+🔒 Catalog grounding is the key trust mechanism: recommendations are never drawn from the model's open-world memory. The system filters a local catalog of real packages by hard eligibility rules (age, smoker, occupation), scores them against the user's priorities and budget, and only then lets the model rank and explain. The model handles language and reasoning; it can't invent an insurer, a plan, or a price.
+
+🔌 The backend speaks to two interchangeable LLM providers (Google Gemini + an OpenAI-compatible endpoint) behind one interface — swap providers with a single env var, no code changes.
+
+The takeaway: for high-stakes domains, the LLM should be the interface and the reasoner — not the source of truth. Constrain the inputs, ground the outputs, and confirm before you commit.
+
+Built with FastAPI + React. 🇻🇳
+
+#AI #LLM #InsurTech #Gemini #SoftwareEngineering #ConversationalAI #FastAPI #RAG
+
+=========================================================================================================================================================================
+
+I built another virtual assistant to guide a user through a few steps to fill a health-insurance claim or even recommend a few insurance packages based on what the user inputs, while keeping the conversation between the user and the assistant natural. I designed this with three tips I just learned to minimise LLM hallucinations. Here are some things I learned.  
+
++ The Extract-Guide Loop: Every turn runs a loop to extract user input into a strict schema( temp 0.0) and decides the best next question (temp 0.3).
++ State-Based Flow: A 4-state session flow (identifying --> collecting --> confirming --> complete) pauses to verify information before generating a result and detects when user corrects a previous answer. 
++ Constraint Logic: A few eligibility rules (age, smoker, occupation) with pre-installed data to evaluate user input and then let LLM provide the explanation, coordinating prompts and based on validated results. 
+
+My takeaway: the LLM should be the interface and the reasoner --> constrain the inputs, ground the outputs, and confirm before committing.
+
+TechStack: FastAPI + React
+
+=========================================================================================================================================================================
+
+I just dove into handling LLM hallucinations by applying a few new tips: structured output (JSON prompt), confirmation loop, constraint logic/rules (coding), state-based flow (identifying --> collecting --> confirming --> complete), and short-focused prompts. I applied them to build an assistant that guides a user through a few steps to fill out a health-insurance claim or even recommends a few insurance packages based on what the user inputs, while keeping the conversation between the user and the assistant natural. 🙂 
+
+Tech Stack: FastAPI + React
+
+Here is my result :)

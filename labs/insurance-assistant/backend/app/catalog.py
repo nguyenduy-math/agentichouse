@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.schemas import HealthProfile
 
-_CATALOG_PATH = Path(__file__).parent / "packages_catalog.json"
+_CATALOG_PATH = Path(__file__).parent.parent / "data" / "packages_catalog.json"
 _TOP_N = 6  # max packages passed to Gemini
 
 

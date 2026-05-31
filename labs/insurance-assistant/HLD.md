@@ -62,6 +62,22 @@ graph TB
 
 All routes are registered twice — bare (`/chat`) and under `/api` (`/api/chat`). The Vite dev proxy forwards `/api/*` to `localhost:8002`.
 
+### LLM provider layer (`llm.py`)
+
+Both agents call the model only through `app/llm.py`, which exposes one interface
+(`generate_text` / `generate_structured`) implemented by two interchangeable
+providers, selected by the `LLM_PROVIDER` setting:
+
+| Provider | SDK | Structured output | Roles |
+|---|---|---|---|
+| **Gemini** (default) | `google-genai` | native `response_schema=<PydanticModel>` | `user` / `model` |
+| **SiliconFlow** | `openai` (base_url `…siliconflow.cn/v1`) | `response_format=json_object` + JSON schema injected into the system prompt, tolerant parsing | `model`→`assistant`, separate `system` |
+
+Agents pass the canonical message shape `{"role": "user"|"model", "content": str}`
+(matching `session.history`); each provider adapts it to its SDK. One provider is
+active per process (`get_provider()` singleton), and it raises a clear error if the
+selected provider's API key is missing.
+
 ---
 
 ## 2. Per-Turn Data Flow (Sequence Diagram)
@@ -127,7 +143,7 @@ stateDiagram-v2
     identifying --> identifying : claim_type still unknown<br/>(re-ask with type chips)
     identifying --> collecting  : claim_type resolved
 
-    collecting --> collecting : fields still missing<br/>(ask next; correction-aware)
+    collecting --> collecting : fields still missing<br/>(ask next -> correction-aware)
     collecting --> confirming : all required fields filled
 
     confirming --> complete   : user confirms → generate result

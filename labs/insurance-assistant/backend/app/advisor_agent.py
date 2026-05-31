@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
-from google import genai
-from google.genai import types
 from pydantic import BaseModel
 
 from app.catalog import filter_by_profile, format_for_prompt, load_catalog
-from app.config import settings
 from app.health_profile_schema import (
     PROFILE_FIELD_META,
     compute_profile_progress,
     get_field_chips,
     get_missing_profile_fields,
 )
+from app.llm import get_provider
 from app.prompts import (
     build_profile_confirmation_prompt,
     build_profile_guide_prompt,
@@ -31,11 +28,9 @@ logger = logging.getLogger(__name__)
 _OPTIONS_CONFIRM = ["Xác nhận, đề xuất gói bảo hiểm", "Tôi muốn sửa thông tin", "Bắt đầu lại từ đầu"]
 _OPTIONS_CORRECTION = ["Vâng, tiếp tục", "Tôi cần sửa thêm"]
 
-_client: genai.Client | None = None
-
 
 # ---------------------------------------------------------------------------
-# Gemini response schema for recommendation output
+# Recommendation output schema (structured LLM response)
 # ---------------------------------------------------------------------------
 
 class PackageRecommendation(BaseModel):
@@ -55,13 +50,6 @@ class RecommendationOutput(BaseModel):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=settings.gemini_api_key)
-    return _client
-
 
 def _merge_profile(base: HealthProfile, patch: HealthProfileExtraction) -> HealthProfile:
     base_dict = base.model_dump()
@@ -98,24 +86,17 @@ def _user_wants_restart(message: str) -> bool:
 
 async def _extract(user_message: str, history: list[dict]) -> HealthProfileExtraction:
     context_turns = history[-4:] if len(history) > 4 else history
-    contents = [
-        types.Content(role=t["role"], parts=[types.Part(text=t["content"])])
-        for t in context_turns
-    ]
-    contents.append(types.Content(role="user", parts=[types.Part(text=user_message)]))
+    messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
+    messages.append({"role": "user", "content": user_message})
 
     try:
-        response = await get_client().aio.models.generate_content(
-            model=settings.gemini_llm_model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=get_health_extraction_system(),
-                temperature=0.0,
-                response_mime_type="application/json",
-                response_schema=HealthProfileExtraction,
-            ),
+        data = await get_provider().generate_structured(
+            messages=messages,
+            system=get_health_extraction_system(),
+            temperature=0.0,
+            schema=HealthProfileExtraction,
         )
-        return HealthProfileExtraction(**json.loads(response.text))
+        return HealthProfileExtraction(**data)
     except Exception:
         logger.exception("Health profile extraction failed; returning empty patch")
         return HealthProfileExtraction()
@@ -129,21 +110,14 @@ async def _guide(
 ) -> str:
     guide_prompt = build_profile_guide_prompt(profile, missing_fields, correction_field)
     context_turns = history[-6:] if len(history) > 6 else history
-    contents = [
-        types.Content(role=t["role"], parts=[types.Part(text=t["content"])])
-        for t in context_turns
-    ]
-    contents.append(types.Content(role="user", parts=[types.Part(text=guide_prompt)]))
+    messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
+    messages.append({"role": "user", "content": guide_prompt})
 
-    response = await get_client().aio.models.generate_content(
-        model=settings.gemini_llm_model,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=get_advisor_guide_system(),
-            temperature=0.3,
-        ),
+    return await get_provider().generate_text(
+        messages=messages,
+        system=get_advisor_guide_system(),
+        temperature=0.3,
     )
-    return response.text.strip()
 
 
 async def _generate_recommendation(profile: HealthProfile) -> dict[str, Any]:
@@ -155,35 +129,27 @@ async def _generate_recommendation(profile: HealthProfile) -> dict[str, Any]:
         logger.warning("No eligible packages found for profile; using full catalog")
         catalog_text = format_for_prompt(catalog[:6], profile.monthly_budget_vnd)
 
-    response = await get_client().aio.models.generate_content(
-        model=settings.gemini_llm_model,
-        contents=build_recommendation_prompt(profile, catalog_text),
-        config=types.GenerateContentConfig(
-            system_instruction=get_recommendation_system(),
-            temperature=0.2,
-            response_mime_type="application/json",
-            response_schema=RecommendationOutput,
-        ),
+    return await get_provider().generate_structured(
+        messages=[{"role": "user", "content": build_recommendation_prompt(profile, catalog_text)}],
+        system=get_recommendation_system(),
+        temperature=0.2,
+        schema=RecommendationOutput,
     )
-    return json.loads(response.text)
 
 
 async def _generate_recommendation_intro(recommendation: dict) -> str:
     """Generate a short Vietnamese intro message to accompany the recommendation card."""
     n = len(recommendation.get("recommendations", []))
-    response = await get_client().aio.models.generate_content(
-        model=settings.gemini_llm_model,
-        contents=(
-            f"Dựa trên hồ sơ của khách hàng, tôi đã đề xuất {n} loại gói bảo hiểm phù hợp. "
-            "Viết 2-3 câu giới thiệu ngắn gọn, thân thiện bằng tiếng Việt, "
-            "mời khách hàng xem chi tiết các gói đề xuất bên dưới."
-        ),
-        config=types.GenerateContentConfig(
-            system_instruction=get_advisor_guide_system(),
-            temperature=0.3,
-        ),
+    prompt = (
+        f"Dựa trên hồ sơ của khách hàng, tôi đã đề xuất {n} loại gói bảo hiểm phù hợp. "
+        "Viết 2-3 câu giới thiệu ngắn gọn, thân thiện bằng tiếng Việt, "
+        "mời khách hàng xem chi tiết các gói đề xuất bên dưới."
     )
-    return response.text.strip()
+    return await get_provider().generate_text(
+        messages=[{"role": "user", "content": prompt}],
+        system=get_advisor_guide_system(),
+        temperature=0.3,
+    )
 
 
 # ---------------------------------------------------------------------------

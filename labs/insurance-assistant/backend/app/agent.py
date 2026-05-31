@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import json
 import logging
 
-from google import genai
-from google.genai import types
-
 from app.claim_schema import FIELD_META, compute_progress, get_missing_fields
-from app.config import settings
+from app.llm import get_provider
 from app.prompts import (
     build_confirmation_prompt,
     build_guide_prompt,
@@ -29,15 +25,6 @@ logger = logging.getLogger(__name__)
 _OPTIONS_CLAIM_TYPE = ["BHYT ngoại trú", "BHYT nội trú", "Bảo hiểm thương mại"]
 _OPTIONS_CONFIRM    = ["Xác nhận, tạo hồ sơ", "Tôi muốn sửa thông tin", "Bắt đầu lại từ đầu"]
 _OPTIONS_CORRECTION = ["Vâng, tiếp tục", "Tôi cần sửa thêm"]
-
-_client: genai.Client | None = None
-
-
-def get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=settings.gemini_api_key)
-    return _client
 
 
 # ---------------------------------------------------------------------------
@@ -89,24 +76,17 @@ def _user_wants_edit(message: str) -> bool:
 
 async def _extract(user_message: str, history: list[dict]) -> ClaimDataExtraction:
     context_turns = history[-4:] if len(history) > 4 else history
-    contents = [
-        types.Content(role=t["role"], parts=[types.Part(text=t["content"])])
-        for t in context_turns
-    ]
-    contents.append(types.Content(role="user", parts=[types.Part(text=user_message)]))
+    messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
+    messages.append({"role": "user", "content": user_message})
 
     try:
-        response = await get_client().aio.models.generate_content(
-            model=settings.gemini_llm_model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=get_extraction_system(),
-                temperature=0.0,
-                response_mime_type="application/json",
-                response_schema=ClaimDataExtraction,
-            ),
+        data = await get_provider().generate_structured(
+            messages=messages,
+            system=get_extraction_system(),
+            temperature=0.0,
+            schema=ClaimDataExtraction,
         )
-        return ClaimDataExtraction(**json.loads(response.text))
+        return ClaimDataExtraction(**data)
     except Exception:
         logger.exception("Extraction call failed; returning empty patch")
         return ClaimDataExtraction()
@@ -120,33 +100,22 @@ async def _guide(
 ) -> str:
     guide_prompt = build_guide_prompt(collected, missing_fields, correction_field)
     context_turns = history[-6:] if len(history) > 6 else history
-    contents = [
-        types.Content(role=t["role"], parts=[types.Part(text=t["content"])])
-        for t in context_turns
-    ]
-    contents.append(types.Content(role="user", parts=[types.Part(text=guide_prompt)]))
+    messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
+    messages.append({"role": "user", "content": guide_prompt})
 
-    response = await get_client().aio.models.generate_content(
-        model=settings.gemini_llm_model,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=get_guide_system(),
-            temperature=0.3,
-        ),
+    return await get_provider().generate_text(
+        messages=messages,
+        system=get_guide_system(),
+        temperature=0.3,
     )
-    return response.text.strip()
 
 
 async def _generate_summary(collected: ClaimData) -> str:
-    response = await get_client().aio.models.generate_content(
-        model=settings.gemini_llm_model,
-        contents=build_proposal_prompt(collected),
-        config=types.GenerateContentConfig(
-            system_instruction=get_proposal_system(),
-            temperature=0.2,
-        ),
+    return await get_provider().generate_text(
+        messages=[{"role": "user", "content": build_proposal_prompt(collected)}],
+        system=get_proposal_system(),
+        temperature=0.2,
     )
-    return response.text.strip()
 
 
 def _build_proposal(collected: ClaimData) -> dict:
