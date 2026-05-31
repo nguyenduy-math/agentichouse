@@ -99,6 +99,38 @@ def build_confirmation_prompt(collected: ClaimData) -> str:
     )
 
 
+def build_document_continue_prompt(
+    collected: ClaimData,
+    missing_fields: list[str],
+) -> str:
+    """Prompt used right after document fields are merged: confirm what was read,
+    then ask for the next missing field."""
+    collected_dict = collected.model_dump(exclude_none=True)
+    filled_lines = []
+    for field, value in collected_dict.items():
+        meta = FIELD_META.get(field)
+        label = meta.label_vi if meta else field
+        filled_lines.append(f"  - {label}: {value}")
+
+    missing_lines = []
+    for field in missing_fields:
+        meta = FIELD_META.get(field)
+        if meta:
+            missing_lines.append(f"  - {meta.label_vi} ({meta.hint})")
+
+    filled_text = "\n".join(filled_lines) if filled_lines else "  (không trích xuất được trường nào)"
+    missing_text = "\n".join(missing_lines) if missing_lines else "  (không còn trường nào)"
+
+    return (
+        "Người dùng vừa tải lên một tài liệu. Hệ thống đã tự động trích xuất được các thông tin sau:\n"
+        f"{filled_text}\n\n"
+        f"Thông tin còn thiếu:\n{missing_text}\n\n"
+        "Hãy xác nhận ngắn gọn với người dùng các thông tin đã đọc được từ tài liệu để họ kiểm tra, "
+        "sau đó hỏi MỘT câu để thu thập trường còn thiếu quan trọng nhất. "
+        "Tuyệt đối không hỏi lại các trường đã có ở trên."
+    )
+
+
 def build_proposal_prompt(collected: ClaimData) -> str:
     lines = []
     for field, value in collected.model_dump(exclude_none=True).items():

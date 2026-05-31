@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { newSession, sendMessage, uploadPdf } from '../api'
+import { newSession, sendMessage, uploadPdf, applyFields } from '../api'
 
 const ACCENT = '#3b82f6'
 
@@ -130,12 +130,29 @@ export default function FloatingChat({ onFieldsCollected }) {
     }
   }
 
-  function handlePdfConfirm() {
-    if (pendingPdf?.extractedFields) {
-      onFieldsCollected?.(pendingPdf.extractedFields)
-    }
+  async function handlePdfConfirm() {
+    const fields = pendingPdf?.extractedFields
     setPendingPdf(null)
-    setMessages(prev => [...prev, { role: 'model', content: 'Đã điền thông tin từ PDF vào form.' }])
+    if (!fields || !sessionId) return
+
+    // Fill the visible form immediately
+    onFieldsCollected?.(fields)
+
+    // Persist the fields into the backend session so the agent verifies them
+    // and continues asking only for the remaining fields.
+    setIsLoading(true)
+    setOptions(null)
+    try {
+      const data = await applyFields(sessionId, fields)
+      setMessages(prev => [...prev, { role: 'model', content: data.reply }])
+      setOptions(data.options ?? null)
+      if (data.collected) onFieldsCollected?.(data.collected)
+    } catch {
+      setMessages(prev => [...prev, { role: 'model', content: 'Đã điền thông tin từ tài liệu vào form. Bạn có thể tiếp tục nhập các thông tin còn lại.' }])
+    } finally {
+      setIsLoading(false)
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
   }
 
   function handlePdfDismiss() {

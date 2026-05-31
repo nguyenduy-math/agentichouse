@@ -2,7 +2,7 @@
 
 Supports two backends, switchable via VISION_PROVIDER env var:
   - "gemini"      → Google Gemini (google-generativeai SDK), model gemini-2.0-flash
-  - "siliconflow" → Siliconflow OpenAI-compatible API, model Qwen2-VL-72B-Instruct
+  - "siliconflow" → Siliconflow OpenAI-compatible API, model Qwen3-VL-32B-Instruct
 
 Usage:
     from tools.vision_provider import get_provider
@@ -133,8 +133,8 @@ class GeminiProvider(VisionProvider):
 class SiliconflowProvider(VisionProvider):
     """Uses Siliconflow's OpenAI-compatible API with Qwen2-VL-72B-Instruct."""
 
-    BASE_URL = "https://api.siliconflow.cn/v1/chat/completions"
-    MODEL = "Qwen/Qwen2-VL-72B-Instruct"
+    BASE_URL = "https://api.siliconflow.com/v1/chat/completions"
+    MODEL = "Qwen/Qwen3-VL-32B-Instruct"
 
     def __init__(self) -> None:
         self._api_key = os.environ.get("SILICONFLOW_API_KEY")
@@ -178,7 +178,10 @@ class SiliconflowProvider(VisionProvider):
 
         with httpx.Client(timeout=60.0) as client:
             resp = client.post(self.BASE_URL, json=payload, headers=headers)
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                raise RuntimeError(
+                    f"Siliconflow API {resp.status_code} for model {self.MODEL!r}: {resp.text}"
+                )
 
         text = resp.json()["choices"][0]["message"]["content"]
         return _parse_llm_response(text)

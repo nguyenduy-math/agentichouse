@@ -20,6 +20,16 @@ export async function sendMessage(sessionId, message) {
   return res.json()
 }
 
+export async function applyFields(sessionId, fields) {
+  const res = await fetch(`${BASE}/apply-fields`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, fields }),
+  })
+  if (!res.ok) throw new Error('Apply fields failed')
+  return res.json()
+}
+
 export async function uploadPdf(sessionId, file) {
   const formData = new FormData()
   formData.append('session_id', sessionId)

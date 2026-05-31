@@ -6,6 +6,7 @@ from app.claim_schema import FIELD_META, compute_progress, get_missing_fields
 from app.llm import get_provider
 from app.prompts import (
     build_confirmation_prompt,
+    build_document_continue_prompt,
     build_guide_prompt,
     build_proposal_prompt,
     get_extraction_system,
@@ -143,6 +144,46 @@ def _build_proposal(collected: ClaimData) -> dict:
         result[label] = collected_dict.get(field)
     result["_raw"] = collected_dict
     return result
+
+
+async def apply_extracted_fields(
+    session: SessionState, fields: ClaimData
+) -> tuple[str, ClaimData, dict | None, bool, SessionPhase, list[str] | None]:
+    """Merge document-extracted fields into the session, then produce the next
+    assistant turn: confirm what was read and ask only for what is still missing.
+
+    Returns the same tuple shape as process_turn.
+    """
+    merged = _merge(session.collected, ClaimDataExtraction(**fields.model_dump()))
+    session.collected = merged
+
+    pdf_ctx = getattr(session, "pdf_context", "")
+    claim_type = merged.claim_type or ClaimType.unknown
+
+    # Claim type still unknown — must resolve it before collecting other fields
+    if claim_type == ClaimType.unknown:
+        reply = await _guide(merged, [], session.history, pdf_context=pdf_ctx)
+        return reply, merged, None, False, SessionPhase.identifying, _OPTIONS_CLAIM_TYPE
+
+    missing = get_missing_fields(merged.model_dump(), claim_type)
+
+    # Everything required is present — go straight to confirmation
+    if not missing:
+        confirmation_text = build_confirmation_prompt(merged)
+        return confirmation_text, merged, None, False, SessionPhase.confirming, _OPTIONS_CONFIRM
+
+    # Acknowledge document fields for verification, then ask the next missing one
+    guide_prompt = build_document_continue_prompt(merged, missing)
+    context_turns = session.history[-6:] if len(session.history) > 6 else session.history
+    messages = [{"role": t["role"], "content": t["content"]} for t in context_turns]
+    messages.append({"role": "user", "content": guide_prompt})
+
+    system = get_guide_system()
+    if pdf_ctx:
+        system = f"{system}\n\nNGỮ CẢNH TỪ FILE PDF:\n{pdf_ctx[:3000]}"
+
+    reply = await get_provider().generate_text(messages=messages, system=system, temperature=0.3)
+    return reply, merged, None, False, SessionPhase.collecting, None
 
 
 # ---------------------------------------------------------------------------

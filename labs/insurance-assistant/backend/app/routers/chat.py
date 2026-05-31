@@ -10,6 +10,12 @@ _mcp_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 
 if _mcp_root not in sys.path:
     sys.path.insert(0, _mcp_root)
 
+# The vision tools read VISION_PROVIDER and API keys directly from os.environ,
+# so load mcp_server/.env here (the backend's pydantic-settings does not populate os.environ).
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(dotenv_path=os.path.join(_mcp_root, ".env"))
+
 from tools.pdf_tool import scan_pdf      # noqa: E402
 from tools.image_tool import scan_image  # noqa: E402
 
@@ -18,7 +24,7 @@ from app.advisor_agent import get_profile_progress
 from app.claim_schema import compute_progress
 from app.llm import get_provider
 from app.prompts import get_extraction_system
-from app.schemas import AssistantMode, ChatRequest, ChatResponse, ClaimData, ClaimDataExtraction, ClaimType, HealthProfile, PdfUploadResponse
+from app.schemas import ApplyFieldsRequest, AssistantMode, ChatRequest, ChatResponse, ClaimData, ClaimDataExtraction, ClaimType, HealthProfile, PdfUploadResponse
 
 router = APIRouter(tags=["chat"])
 
@@ -102,6 +108,43 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
             session_phase=new_phase,
             options=options,
         )
+
+
+@router.post("/apply-fields", response_model=ChatResponse)
+async def apply_fields(body: ApplyFieldsRequest, request: Request) -> ChatResponse:
+    """Merge document-extracted fields into the session and let the agent verify
+    them and continue asking for any remaining fields."""
+    store = request.app.state.session_store
+    session = await store.get(body.session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+
+    reply, updated_collected, proposal, is_complete, new_phase, options = (
+        await claim_agent.apply_extracted_fields(session, body.fields)
+    )
+    session.collected = updated_collected
+    session.history.append({"role": "user", "content": "[Đã tải lên tài liệu và xác nhận thông tin]"})
+    session.history.append({"role": "model", "content": reply})
+    session.turn_count += 1
+    session.is_complete = is_complete
+    session.phase = new_phase
+    if proposal:
+        session.cached_proposal = proposal
+    await store.save(session)
+
+    claim_type = updated_collected.claim_type or ClaimType.unknown
+    progress = compute_progress(updated_collected.model_dump(), claim_type)
+    return ChatResponse(
+        session_id=session.session_id,
+        reply=reply,
+        collected=updated_collected,
+        health_profile=HealthProfile(),
+        proposal=proposal,
+        is_complete=is_complete,
+        progress_pct=progress,
+        session_phase=new_phase,
+        options=options,
+    )
 
 
 def _is_image_file(filename: str | None, content_type: str | None) -> bool:

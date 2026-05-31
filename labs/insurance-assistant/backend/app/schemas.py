@@ -102,6 +102,12 @@ class ChatRequest(BaseModel):
     message: str
 
 
+class ApplyFieldsRequest(BaseModel):
+    """Confirm document-extracted fields into a session and continue the chat."""
+    session_id: str
+    fields: ClaimData
+
+
 class ChatResponse(BaseModel):
     session_id: str
     reply: str
