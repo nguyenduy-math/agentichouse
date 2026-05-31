@@ -1,0 +1,1 @@
+https://spring.io/blog/2025/09/16/spring-ai-mcp-intro-blog

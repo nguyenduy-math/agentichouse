@@ -41,10 +41,17 @@
             <artifactId>spring-ai-starter-mcp-client</artifactId>
         </dependency>
 
-        <!-- Chat model: Google Gemini via its OpenAI-compatible endpoint -->
+        <!-- Chat model: OpenAI-compatible endpoints (Google Gemini and SiliconFlow) -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+
+        <!-- Generates metadata for the custom app.llm.* properties (IDE hints, no runtime cost) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
