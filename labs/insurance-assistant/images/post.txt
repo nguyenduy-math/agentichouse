@@ -38,7 +38,7 @@ TechStack: FastAPI + React
 
 =========================================================================================================================================================================
 
-I just dove into handling LLM hallucinations by applying a few new tips: structured output (JSON prompt), confirmation loop, constraint logic/rules (coding), state-based flow (identifying --> collecting --> confirming --> complete), and short-focused prompts. I applied them to build an assistant that guides a user through a few steps to fill out a health-insurance claim or even recommends a few insurance packages based on what the user inputs, while keeping the conversation between the user and the assistant natural. 🙂 
+I just dove into handling LLM hallucinations by applying a few tips: structured outputs (prompts outputting JSON), confirmation loop, constraint logic/rules (coding), state-based flow (identifying --> collecting --> confirming --> complete), and short-focused prompts. I applied them to build an assistant that guides a user through a few steps to fill out a health-insurance claim or even recommends a few insurance packages based on what the user inputs, while keeping the conversation between the user and the assistant natural. 🙂 
 
 Tech Stack: FastAPI + React
 
