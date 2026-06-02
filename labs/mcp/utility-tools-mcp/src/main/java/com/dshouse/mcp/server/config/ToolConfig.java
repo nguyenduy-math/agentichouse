@@ -1,7 +1,9 @@
 package com.dshouse.mcp.server.config;
 
 import com.dshouse.mcp.server.currency.CurrencyTools;
+import com.dshouse.mcp.server.geo.AttractionsTools;
 import com.dshouse.mcp.server.geo.GeocodingTools;
+import com.dshouse.mcp.server.time.HolidaysTools;
 import com.dshouse.mcp.server.time.TimeTools;
 import com.dshouse.mcp.server.util.CryptoTools;
 import com.dshouse.mcp.server.util.DateTools;
@@ -26,8 +28,10 @@ public class ToolConfig {
     public ToolCallbackProvider utilityTools(
             WeatherTools weatherTools,
             GeocodingTools geocodingTools,
+            AttractionsTools attractionsTools,
             CurrencyTools currencyTools,
             TimeTools timeTools,
+            HolidaysTools holidaysTools,
             UnitConverterTools unitConverterTools,
             DateTools dateTools,
             CryptoTools cryptoTools) {
@@ -35,8 +39,10 @@ public class ToolConfig {
                 .toolObjects(
                         weatherTools,
                         geocodingTools,
+                        attractionsTools,
                         currencyTools,
                         timeTools,
+                        holidaysTools,
                         unitConverterTools,
                         dateTools,
                         cryptoTools)

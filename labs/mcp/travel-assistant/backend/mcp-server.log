@@ -1,0 +1,99 @@
+2026-06-02T21:58:07.565+07:00  INFO 10248 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 10248 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T21:58:07.569+07:00  INFO 10248 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T21:58:09.570+07:00  INFO 10248 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T21:58:09.833+07:00  INFO 10248 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T21:58:09.833+07:00  INFO 10248 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T21:58:09.835+07:00  INFO 10248 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T21:58:09.836+07:00  INFO 10248 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T21:58:10.080+07:00  INFO 10248 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T21:58:10.385+07:00  INFO 10248 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.8 seconds (process running for 4.503)
+2026-06-02T21:59:56.158+07:00  INFO 12536 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 12536 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T21:59:56.165+07:00  INFO 12536 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T21:59:58.308+07:00  INFO 12536 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T21:59:58.456+07:00  INFO 12536 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T21:59:58.456+07:00  INFO 12536 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T21:59:58.457+07:00  INFO 12536 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T21:59:58.459+07:00  INFO 12536 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T21:59:58.640+07:00  INFO 12536 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T21:59:58.945+07:00  INFO 12536 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 4.059 seconds (process running for 5.208)
+2026-06-02T22:01:56.044+07:00  INFO 9604 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 9604 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:01:56.047+07:00  INFO 9604 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:01:58.071+07:00  INFO 9604 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:01:58.291+07:00  INFO 9604 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:01:58.292+07:00  INFO 9604 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:01:58.292+07:00  INFO 9604 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:01:58.293+07:00  INFO 9604 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:01:58.459+07:00  INFO 9604 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:01:58.739+07:00  INFO 9604 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.677 seconds (process running for 4.476)
+2026-06-02T22:10:04.397+07:00  INFO 20824 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 20824 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:10:04.412+07:00  INFO 20824 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:10:06.433+07:00  INFO 20824 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:10:06.635+07:00  INFO 20824 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:10:06.635+07:00  INFO 20824 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:10:06.636+07:00  INFO 20824 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:10:06.638+07:00  INFO 20824 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:10:06.819+07:00  INFO 20824 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:10:07.060+07:00  INFO 20824 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.554 seconds (process running for 4.518)
+2026-06-02T22:17:43.092+07:00  INFO 10692 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 10692 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:17:43.096+07:00  INFO 10692 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:17:44.743+07:00  INFO 10692 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:17:44.881+07:00  INFO 10692 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:17:44.881+07:00  INFO 10692 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:17:44.883+07:00  INFO 10692 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:17:44.883+07:00  INFO 10692 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:17:45.049+07:00  INFO 10692 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:17:45.290+07:00  INFO 10692 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.48 seconds (process running for 4.217)
+2026-06-02T22:25:51.563+07:00  INFO 1540 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 1540 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:25:51.567+07:00  INFO 1540 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:25:53.557+07:00  INFO 1540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:25:53.718+07:00  INFO 1540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:25:53.718+07:00  INFO 1540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:25:53.719+07:00  INFO 1540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:25:53.720+07:00  INFO 1540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:25:53.859+07:00  INFO 1540 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:25:54.187+07:00  INFO 1540 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.496 seconds (process running for 4.499)
+2026-06-02T22:26:46.512+07:00  INFO 16032 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 16032 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:26:46.516+07:00  INFO 16032 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:26:48.273+07:00  INFO 16032 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:26:48.446+07:00  INFO 16032 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:26:48.446+07:00  INFO 16032 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:26:48.449+07:00  INFO 16032 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:26:48.450+07:00  INFO 16032 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:26:48.614+07:00  INFO 16032 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:26:48.854+07:00  INFO 16032 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.349 seconds (process running for 4.134)
+2026-06-02T22:30:00.735+07:00  INFO 11980 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 11980 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:30:00.738+07:00  INFO 11980 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:30:02.528+07:00  INFO 11980 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:30:02.689+07:00  INFO 11980 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:30:02.689+07:00  INFO 11980 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:30:02.690+07:00  INFO 11980 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:30:02.691+07:00  INFO 11980 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:30:02.882+07:00  INFO 11980 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:30:03.117+07:00  INFO 11980 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.435 seconds (process running for 4.379)
+2026-06-02T22:31:09.869+07:00  INFO 1804 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 1804 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:31:09.873+07:00  INFO 1804 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:31:11.822+07:00  INFO 1804 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:31:11.980+07:00  INFO 1804 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:31:11.981+07:00  INFO 1804 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:31:11.982+07:00  INFO 1804 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:31:11.983+07:00  INFO 1804 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:31:12.146+07:00  INFO 1804 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:31:12.390+07:00  INFO 1804 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.593 seconds (process running for 4.579)
+2026-06-02T22:32:59.040+07:00  INFO 4684 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 4684 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:32:59.046+07:00  INFO 4684 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:33:00.962+07:00  INFO 4684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:33:01.131+07:00  INFO 4684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:33:01.132+07:00  INFO 4684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:33:01.133+07:00  INFO 4684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:33:01.134+07:00  INFO 4684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:33:01.332+07:00  INFO 4684 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:33:01.798+07:00  INFO 4684 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.887 seconds (process running for 4.687)
+2026-06-02T22:35:49.102+07:00  INFO 22684 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 22684 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp-travel-dashboard\backend)
+2026-06-02T22:35:49.107+07:00  INFO 22684 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T22:35:51.363+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T22:35:51.515+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T22:35:51.515+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T22:35:51.516+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T22:35:51.517+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T22:35:51.656+07:00  INFO 22684 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
+2026-06-02T22:35:51.905+07:00  INFO 22684 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.87 seconds (process running for 4.651)
