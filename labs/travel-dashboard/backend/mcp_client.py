@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import subprocess
 from pathlib import Path
 
 JAR_PATH = os.environ.get(
@@ -10,8 +11,16 @@ JAR_PATH = os.environ.get(
 
 
 class MCPClient:
+    """Talks to the Java MCP server over stdio.
+
+    Uses a blocking subprocess and runs its I/O in a worker thread
+    (asyncio.to_thread). This avoids asyncio's subprocess transport, which on
+    Windows requires the ProactorEventLoop — unavailable under `uvicorn
+    --reload`, which forces the SelectorEventLoop.
+    """
+
     def __init__(self):
-        self._proc: asyncio.subprocess.Process | None = None
+        self._proc: subprocess.Popen | None = None
         self._id = 0
         self._lock = asyncio.Lock()
 
@@ -22,13 +31,19 @@ class MCPClient:
                 f"MCP jar not found at {jar}. "
                 "Run `mvn clean package` in utility-tools-mcp first."
             )
-        self._proc = await asyncio.create_subprocess_exec(
-            "java", "-jar", str(jar),
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+        self._proc = subprocess.Popen(
+            ["java", "-jar", str(jar)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         await self._initialize()
+
+    def _send_sync(self, msg: str) -> dict:
+        self._proc.stdin.write(msg.encode())
+        self._proc.stdin.flush()
+        raw = self._proc.stdout.readline()
+        return json.loads(raw)
 
     async def _send(self, method: str, params: dict) -> dict:
         async with self._lock:
@@ -39,10 +54,7 @@ class MCPClient:
                 "method": method,
                 "params": params,
             }) + "\n"
-            self._proc.stdin.write(msg.encode())
-            await self._proc.stdin.drain()
-            raw = await self._proc.stdout.readline()
-            return json.loads(raw)
+            return await asyncio.to_thread(self._send_sync, msg)
 
     async def _initialize(self):
         await self._send("initialize", {
@@ -64,7 +76,7 @@ class MCPClient:
         if self._proc:
             try:
                 self._proc.stdin.close()
-                await self._proc.wait()
+                await asyncio.to_thread(self._proc.wait)
             except Exception:
                 pass
 
