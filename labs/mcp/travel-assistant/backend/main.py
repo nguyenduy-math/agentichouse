@@ -7,17 +7,19 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from agent import run_agent
-from mcp_client import mcp
+from mcp_client import flight_mcp, utility_mcp
+from orchestrator import run_orchestrator
 
 load_dotenv()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await mcp.start()
+    await utility_mcp.start()
+    await flight_mcp.start()
     yield
-    await mcp.stop()
+    await flight_mcp.stop()
+    await utility_mcp.stop()
 
 
 app = FastAPI(title="Travel Dashboard Bridge", lifespan=lifespan)
@@ -165,7 +167,7 @@ def _detect_currency(timezone: str) -> str:
 @app.get("/api/travel")
 async def travel(city: str = Query(..., description="City name")):
     try:
-        geo_text = await mcp.call_tool("geocode", {"place": city})
+        geo_text = await utility_mcp.call_tool("geocode", {"place": city})
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"MCP error: {e}")
 
@@ -175,9 +177,9 @@ async def travel(city: str = Query(..., description="City name")):
 
     try:
         weather_text, forecast_text, time_text = await asyncio.gather(
-            mcp.call_tool("get_weather", {"latitude": geo["lat"], "longitude": geo["lon"]}),
-            mcp.call_tool("get_forecast", {"latitude": geo["lat"], "longitude": geo["lon"]}),
-            mcp.call_tool("current_time", {"timezone": geo["timezone"] or "UTC"}),
+            utility_mcp.call_tool("get_weather", {"latitude": geo["lat"], "longitude": geo["lon"]}),
+            utility_mcp.call_tool("get_forecast", {"latitude": geo["lat"], "longitude": geo["lon"]}),
+            utility_mcp.call_tool("current_time", {"timezone": geo["timezone"] or "UTC"}),
         )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"MCP error: {e}")
@@ -211,7 +213,7 @@ async def currency(
     amount: float = Query(1.0),
 ):
     try:
-        text = await mcp.call_tool("convert_currency", {
+        text = await utility_mcp.call_tool("convert_currency", {
             "amount": amount,
             "from": from_currency,
             "to": to_currency,
@@ -236,7 +238,7 @@ async def rate(
     to_currency: str = Query(..., alias="to"),
 ):
     try:
-        text = await mcp.call_tool("get_exchange_rate", {
+        text = await utility_mcp.call_tool("get_exchange_rate", {
             "from": from_currency,
             "to": to_currency,
         })
@@ -265,12 +267,13 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
-    """AI holiday-trip assistant. Runs an MCP tool-calling loop on the chosen LLM."""
+    """AI travel concierge. An orchestrator LLM delegates to the travel and
+    flight sub-agents and synthesises one reply."""
     if not req.messages:
         raise HTTPException(status_code=400, detail="messages must not be empty")
     messages = [{"role": m.role, "content": m.content} for m in req.messages]
     try:
-        return await run_agent(req.provider, messages, req.model)
+        return await run_orchestrator(req.provider, messages, req.model)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

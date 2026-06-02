@@ -1,20 +1,29 @@
-"""Provider-agnostic, MCP-native chat agent for finding holiday trips.
+"""Provider-agnostic LLM tool-calling primitives.
 
-The agent discovers its tools from the MCP server (`tools/list`), translates the
-JSON-Schema into each provider's native tool format, and runs a bounded
-tool-calling loop. Two providers are supported and selectable per request:
+This module knows how to translate MCP tool schemas into each provider's native
+format and how to run a bounded tool-calling loop. It is deliberately decoupled
+from any particular MCP server: the caller supplies the tool definitions and a
+``dispatch`` callback that actually executes a tool by name. This lets the same
+loop power both a sub-agent (tools = MCP tools, dispatch = mcp.call_tool) and the
+orchestrator (tools = sub-agents, dispatch = delegate to a sub-agent).
+
+Two providers are supported, selectable per request:
 
 - ``gemini``       — Google Gemini via the ``google-genai`` SDK
 - ``siliconflow``  — SiliconFlow's OpenAI-compatible API via the ``openai`` SDK
-
-Answers are returned in Vietnamese (repo-wide convention).
 """
 
 import asyncio
 import json
 import os
+from datetime import date
+from typing import Awaitable, Callable
 
-from mcp_client import mcp
+from dotenv import load_dotenv
+
+# Load .env before reading provider config below. Done here (not only in main.py)
+# so the values are present regardless of module import order.
+load_dotenv()
 
 # --- Configuration (from environment) ---------------------------------------
 
@@ -25,59 +34,10 @@ SILICONFLOW_API_KEY = os.getenv("SILICONFLOW_API_KEY", "")
 SILICONFLOW_MODEL = os.getenv("SILICONFLOW_MODEL", "Qwen/Qwen2.5-7B-Instruct")
 SILICONFLOW_BASE_URL = os.getenv("SILICONFLOW_BASE_URL", "https://api.siliconflow.com/v1")
 
-# Curated, travel-relevant subset of the MCP server's tools that the assistant
-# is allowed to call. Keeps the tool list focused and bounds cost.
-ALLOWED_TOOLS = {
-    "geocode",
-    "get_weather",
-    "get_forecast",
-    "current_time",
-    "convert_currency",
-    "get_exchange_rate",
-    "get_attractions",
-    "get_public_holidays",
-}
-
 MAX_ITERATIONS = 6
 
-SYSTEM_PROMPT = (
-    "Bạn là trợ lý du lịch thông minh, giúp người dùng tìm và lên kế hoạch cho "
-    "các chuyến du lịch nghỉ dưỡng. Luôn trả lời bằng tiếng Việt, thân thiện và "
-    "súc tích.\n"
-    "Bạn có các công cụ để tra cứu thông tin thực tế. Hãy dùng chúng thay vì "
-    "đoán:\n"
-    "- Luôn gọi 'geocode' để lấy toạ độ trước khi gọi 'get_weather', "
-    "'get_forecast' hoặc 'get_attractions'.\n"
-    "- Dùng 'get_public_holidays' (mã quốc gia ISO 2 chữ, ví dụ VN, JP, FR) để "
-    "gợi ý ngày đi phù hợp và cảnh báo ngày lễ.\n"
-    "- Dùng 'convert_currency'/'get_exchange_rate' khi nói về chi phí/ngân sách.\n"
-    "Khi gợi ý điểm đến, hãy nêu lý do (thời tiết, mùa, hoạt động) và ước tính "
-    "chi phí nếu có thể."
-)
-
-# Cached tool definitions discovered from the MCP server.
-_tools_cache: list[dict] | None = None
-
-
-async def _discover_tools() -> list[dict]:
-    """Fetch and cache the allowed MCP tools (name, description, inputSchema)."""
-    global _tools_cache
-    if _tools_cache is None:
-        all_tools = await mcp.list_tools()
-        _tools_cache = [t for t in all_tools if t.get("name") in ALLOWED_TOOLS]
-    return _tools_cache
-
-
-async def _run_tool_calls(calls: list[tuple[str, dict]]) -> list[str]:
-    """Execute MCP tool calls concurrently; return their text results in order."""
-    results = await asyncio.gather(
-        *(mcp.call_tool(name, args) for name, args in calls),
-        return_exceptions=True,
-    )
-    return [
-        f"Lỗi khi gọi công cụ: {r}" if isinstance(r, Exception) else r
-        for r in results
-    ]
+# A tool executor: given a tool name and its arguments, return its text result.
+Dispatch = Callable[[str, dict], Awaitable[str]]
 
 
 # --- Schema translation -----------------------------------------------------
@@ -154,19 +114,39 @@ def _gemini_tools(tools: list[dict]):
     return [types.Tool(function_declarations=declarations)]
 
 
-# --- Providers --------------------------------------------------------------
+def _safe_json(raw: str) -> dict:
+    try:
+        return json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        return {}
 
-async def _run_siliconflow(messages: list[dict], model: str) -> tuple[str, list[str]]:
+
+async def _run_tool_calls(dispatch: Dispatch, calls: list[tuple[str, dict]]) -> list[str]:
+    """Execute tool calls concurrently via ``dispatch``; return results in order."""
+    results = await asyncio.gather(
+        *(dispatch(name, args) for name, args in calls),
+        return_exceptions=True,
+    )
+    return [
+        f"Lỗi khi gọi công cụ: {r}" if isinstance(r, Exception) else r
+        for r in results
+    ]
+
+
+# --- Provider loops ---------------------------------------------------------
+
+async def _run_siliconflow(
+    model: str, system_prompt: str, tools: list[dict], dispatch: Dispatch, messages: list[dict]
+) -> tuple[str, list[str]]:
     from openai import AsyncOpenAI
 
     if not SILICONFLOW_API_KEY:
         raise RuntimeError("SILICONFLOW_API_KEY is not set.")
 
     client = AsyncOpenAI(api_key=SILICONFLOW_API_KEY, base_url=SILICONFLOW_BASE_URL)
-    tools = await _discover_tools()
     tool_defs = _openai_tools(tools)
 
-    convo = [{"role": "system", "content": SYSTEM_PROMPT}] + messages
+    convo = [{"role": "system", "content": system_prompt}] + messages
     used: list[str] = []
 
     for _ in range(MAX_ITERATIONS):
@@ -187,14 +167,16 @@ async def _run_siliconflow(messages: list[dict], model: str) -> tuple[str, list[
             for tc in msg.tool_calls
         ]
         used.extend(name for name, _ in calls)
-        results = await _run_tool_calls(calls)
+        results = await _run_tool_calls(dispatch, calls)
         for tc, result in zip(msg.tool_calls, results):
             convo.append({"role": "tool", "tool_call_id": tc.id, "content": result})
 
     return "Xin lỗi, tôi cần quá nhiều bước để trả lời. Bạn thử hỏi cụ thể hơn nhé.", used
 
 
-async def _run_gemini(messages: list[dict], model: str) -> tuple[str, list[str]]:
+async def _run_gemini(
+    model: str, system_prompt: str, tools: list[dict], dispatch: Dispatch, messages: list[dict]
+) -> tuple[str, list[str]]:
     from google import genai
     from google.genai import types
 
@@ -202,9 +184,8 @@ async def _run_gemini(messages: list[dict], model: str) -> tuple[str, list[str]]
         raise RuntimeError("GEMINI_API_KEY is not set.")
 
     client = genai.Client(api_key=GEMINI_API_KEY)
-    tools = await _discover_tools()
     config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_PROMPT,
+        system_instruction=system_prompt,
         tools=_gemini_tools(tools),
         temperature=0.3,
     )
@@ -233,7 +214,7 @@ async def _run_gemini(messages: list[dict], model: str) -> tuple[str, list[str]]
         contents.append(candidate.content)
         calls = [(fc.name, dict(fc.args or {})) for fc in fn_calls]
         used.extend(name for name, _ in calls)
-        results = await _run_tool_calls(calls)
+        results = await _run_tool_calls(dispatch, calls)
         contents.append(
             types.Content(
                 role="user",
@@ -247,14 +228,7 @@ async def _run_gemini(messages: list[dict], model: str) -> tuple[str, list[str]]
     return "Xin lỗi, tôi cần quá nhiều bước để trả lời. Bạn thử hỏi cụ thể hơn nhé.", used
 
 
-def _safe_json(raw: str) -> dict:
-    try:
-        return json.loads(raw) if raw else {}
-    except json.JSONDecodeError:
-        return {}
-
-
-# --- Public entry point -----------------------------------------------------
+# --- Public API -------------------------------------------------------------
 
 PROVIDERS = {
     "gemini": (_run_gemini, lambda: GEMINI_MODEL),
@@ -262,15 +236,31 @@ PROVIDERS = {
 }
 
 
-async def run_agent(
-    provider: str, messages: list[dict], model: str | None = None
-) -> dict:
-    """Run the agentic loop for the chosen provider.
+def default_model(provider: str) -> str:
+    """Return the configured default model for a provider (validates the name)."""
+    if provider not in PROVIDERS:
+        raise ValueError(f"Unknown provider '{provider}'. Use one of: {list(PROVIDERS)}")
+    return PROVIDERS[provider][1]()
 
-    Returns ``{"reply", "tool_calls", "provider"}``.
+
+async def run_llm_loop(
+    provider: str,
+    model: str,
+    system_prompt: str,
+    tools: list[dict],
+    dispatch: Dispatch,
+    messages: list[dict],
+) -> tuple[str, list[str]]:
+    """Run a bounded tool-calling loop for the chosen provider.
+
+    ``tools`` are MCP-style dicts ``{name, description, inputSchema}``. ``dispatch``
+    executes a tool by name and returns its text result. Returns the final reply
+    text and the ordered list of tool names that were invoked.
     """
     if provider not in PROVIDERS:
         raise ValueError(f"Unknown provider '{provider}'. Use one of: {list(PROVIDERS)}")
-    runner, default_model = PROVIDERS[provider]
-    reply, used = await runner(messages, model or default_model())
-    return {"reply": reply, "tool_calls": used, "provider": provider}
+    runner = PROVIDERS[provider][0]
+    # Ground every loop in the current date so relative dates ("ngày mai") and the
+    # flight server's date-relative sample data resolve correctly.
+    system_prompt = f"{system_prompt}\n\nHôm nay là {date.today().isoformat()}."
+    return await runner(model, system_prompt, tools, dispatch, messages)

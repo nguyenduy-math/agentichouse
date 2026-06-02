@@ -97,3 +97,114 @@
 2026-06-02T22:35:51.517+07:00  INFO 22684 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
 2026-06-02T22:35:51.656+07:00  INFO 22684 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-dashboard-bridge, version=1.0]
 2026-06-02T22:35:51.905+07:00  INFO 22684 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 3.87 seconds (process running for 4.651)
+2026-06-02T23:22:20.190+07:00  INFO 17452 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 17452 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:22:20.195+07:00  INFO 17452 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:22:23.928+07:00  INFO 17452 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:22:24.176+07:00  INFO 17452 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T23:22:24.176+07:00  INFO 17452 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:22:24.178+07:00  INFO 17452 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:22:24.179+07:00  INFO 17452 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:22:24.555+07:00  INFO 17452 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-utility-bridge, version=1.0]
+2026-06-02T23:22:24.948+07:00  INFO 17452 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 6.074 seconds (process running for 7.796)
+2026-06-02T23:22:27.969+07:00  INFO 2836 --- [main] c.d.m.f.FlightBookingMcpApplication      : Starting FlightBookingMcpApplication v0.0.1 using Java 21.0.1 with PID 2836 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\flight-booking-mcp\target\flight-booking-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:22:27.972+07:00  INFO 2836 --- [main] c.d.m.f.FlightBookingMcpApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:22:29.980+07:00  INFO 2836 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-02T23:22:30.427+07:00  INFO 2836 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 417 ms. Found 2 JPA repository interfaces.
+2026-06-02T23:22:31.672+07:00  INFO 2836 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-02T23:22:31.968+07:00  INFO 2836 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-06-02T23:22:32.183+07:00  INFO 2836 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-02T23:22:33.663+07:00  INFO 2836 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-02T23:22:33.807+07:00  INFO 2836 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-02T23:22:34.156+07:00  INFO 2836 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:flights user=SA
+2026-06-02T23:22:34.159+07:00  INFO 2836 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-02T23:22:34.295+07:00  INFO 2836 --- [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-02T23:22:36.505+07:00  INFO 2836 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-02T23:22:36.574+07:00  INFO 2836 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-02T23:22:37.755+07:00  INFO 2836 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:22:37.846+07:00  INFO 2836 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 3
+2026-06-02T23:22:37.846+07:00  INFO 2836 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:22:37.847+07:00  INFO 2836 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:22:37.848+07:00  INFO 2836 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:22:38.009+07:00  INFO 2836 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-flight-bridge, version=1.0]
+2026-06-02T23:22:38.493+07:00  INFO 2836 --- [main] c.d.m.f.FlightBookingMcpApplication      : Started FlightBookingMcpApplication in 11.808 seconds (process running for 13.643)
+2026-06-02T23:25:06.849+07:00  INFO 3468 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 3468 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:25:06.853+07:00  INFO 3468 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:25:09.403+07:00  INFO 3468 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:25:09.621+07:00  INFO 3468 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T23:25:09.621+07:00  INFO 3468 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:25:09.622+07:00  INFO 3468 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:25:09.625+07:00  INFO 3468 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:25:09.866+07:00  INFO 3468 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-utility-bridge, version=1.0]
+2026-06-02T23:25:10.221+07:00  INFO 3468 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 4.734 seconds (process running for 5.72)
+2026-06-02T23:25:12.618+07:00  INFO 15852 --- [main] c.d.m.f.FlightBookingMcpApplication      : Starting FlightBookingMcpApplication v0.0.1 using Java 21.0.1 with PID 15852 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\flight-booking-mcp\target\flight-booking-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:25:12.621+07:00  INFO 15852 --- [main] c.d.m.f.FlightBookingMcpApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:25:13.840+07:00  INFO 15852 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-02T23:25:14.260+07:00  INFO 15852 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 392 ms. Found 2 JPA repository interfaces.
+2026-06-02T23:25:15.233+07:00  INFO 15852 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-02T23:25:15.436+07:00  INFO 15852 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-06-02T23:25:15.531+07:00  INFO 15852 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-02T23:25:16.297+07:00  INFO 15852 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-02T23:25:16.382+07:00  INFO 15852 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-02T23:25:16.794+07:00  INFO 15852 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:flights user=SA
+2026-06-02T23:25:16.798+07:00  INFO 15852 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-02T23:25:16.928+07:00  INFO 15852 --- [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-02T23:25:19.044+07:00  INFO 15852 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-02T23:25:19.110+07:00  INFO 15852 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-02T23:25:20.077+07:00  INFO 15852 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:25:20.322+07:00  INFO 15852 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 3
+2026-06-02T23:25:20.322+07:00  INFO 15852 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:25:20.323+07:00  INFO 15852 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:25:20.324+07:00  INFO 15852 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:25:20.444+07:00  INFO 15852 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-flight-bridge, version=1.0]
+2026-06-02T23:25:20.665+07:00  INFO 15852 --- [main] c.d.m.f.FlightBookingMcpApplication      : Started FlightBookingMcpApplication in 9.245 seconds (process running for 10.471)
+2026-06-02T23:29:50.192+07:00  INFO 22308 --- [main] c.d.mcp.server.McpServerApplication      : Starting McpServerApplication v0.0.1 using Java 21.0.1 with PID 22308 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\utility-tools-mcp\target\utility-tools-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:29:50.196+07:00  INFO 22308 --- [main] c.d.mcp.server.McpServerApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:29:53.068+07:00  INFO 22308 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:29:53.328+07:00  INFO 22308 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 17
+2026-06-02T23:29:53.329+07:00  INFO 22308 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:29:53.330+07:00  INFO 22308 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:29:53.331+07:00  INFO 22308 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:29:53.641+07:00  INFO 22308 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-utility-bridge, version=1.0]
+2026-06-02T23:29:54.038+07:00  INFO 22308 --- [main] c.d.mcp.server.McpServerApplication      : Started McpServerApplication in 5.632 seconds (process running for 6.647)
+2026-06-02T23:29:56.801+07:00  INFO 10540 --- [main] c.d.m.f.FlightBookingMcpApplication      : Starting FlightBookingMcpApplication v0.0.1 using Java 21.0.1 with PID 10540 (C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\flight-booking-mcp\target\flight-booking-mcp-0.0.1.jar started by CuaHangVatTu in C:\Users\CuaHangVatTu\Documents\dshouse\agentichouse\labs\mcp\travel-assistant\backend)
+2026-06-02T23:29:56.805+07:00  INFO 10540 --- [main] c.d.m.f.FlightBookingMcpApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-02T23:29:58.040+07:00  INFO 10540 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-02T23:29:58.451+07:00  INFO 10540 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 383 ms. Found 2 JPA repository interfaces.
+2026-06-02T23:29:59.575+07:00  INFO 10540 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-02T23:29:59.812+07:00  INFO 10540 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.13.Final
+2026-06-02T23:29:59.897+07:00  INFO 10540 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-02T23:30:00.657+07:00  INFO 10540 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-02T23:30:00.716+07:00  INFO 10540 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-02T23:30:01.127+07:00  INFO 10540 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:flights user=SA
+2026-06-02T23:30:01.130+07:00  INFO 10540 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-02T23:30:01.242+07:00  INFO 10540 --- [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-02T23:30:03.322+07:00  INFO 10540 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-02T23:30:03.394+07:00  INFO 10540 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-02T23:30:04.509+07:00  INFO 10540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable tools capabilities, notification: true
+2026-06-02T23:30:04.627+07:00  INFO 10540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Registered tools: 3
+2026-06-02T23:30:04.627+07:00  INFO 10540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable resources capabilities, notification: true
+2026-06-02T23:30:04.628+07:00  INFO 10540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable prompts capabilities, notification: true
+2026-06-02T23:30:04.629+07:00  INFO 10540 --- [main] o.s.a.m.s.a.McpServerAutoConfiguration   : Enable completions capabilities
+2026-06-02T23:30:04.739+07:00  INFO 10540 --- [pool-2-thread-1] i.m.server.McpAsyncServer                : Client initialize request - Protocol: 2024-11-05, Capabilities: ClientCapabilities[experimental=null, roots=null, sampling=null], Info: Implementation[name=travel-flight-bridge, version=1.0]
+2026-06-02T23:30:04.934+07:00  INFO 10540 --- [main] c.d.m.f.FlightBookingMcpApplication      : Started FlightBookingMcpApplication in 9.369 seconds (process running for 10.845)

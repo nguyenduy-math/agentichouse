@@ -1,24 +1,26 @@
 # Travel Dashboard (MCP)
 
-A small full-stack lab that turns the Java [`utility-tools-mcp`](../utility-tools-mcp) server
-into a friendly travel dashboard. Type a city and get its **current weather**, a **multi-day
-forecast**, the **local time**, and a **currency converter** — plus an **AI assistant** that plans
-holiday trips for you. Everything is powered by tool calls to the MCP server over stdio.
+A small full-stack lab that turns two Java MCP servers — [`utility-tools-mcp`](../utility-tools-mcp)
+and [`flight-booking-mcp`](../flight-booking-mcp) — into a friendly travel dashboard. Type a city and
+get its **current weather**, a **multi-day forecast**, the **local time**, and a **currency
+converter** — plus an **AI concierge** that plans holiday trips *and books flights* for you.
+Everything is powered by tool calls to the MCP servers over stdio.
 
 ```
                                   ┌─ GET /api/travel|currency|rate ─► parsed JSON for the cards
 Browser (React/Vite) ──/api──►    │
-        FastAPI backend           ├─ POST /api/chat ─► agent loop ─► Gemini / SiliconFlow (LLM)
-        (MCP client)              │
-                                  └──────── stdio JSON-RPC ────────► utility-tools-mcp (Java)
-                                                                        │
-                                              Open-Meteo · ExchangeRate-API · Wikipedia · Nager.Date · JDK
+        FastAPI backend           │                    ┌─ ask_travel_agent ─► utility-tools-mcp (Java)
+        (2 MCP clients)           └─ POST /api/chat ─► orchestrator LLM ─┤
+                                       (Gemini /                         └─ ask_flight_agent ─► flight-booking-mcp (Java)
+                                        SiliconFlow)
+                                                                          (each over stdio JSON-RPC)
 ```
 
-The FastAPI backend is an **MCP client**: it spawns the Java jar as a subprocess and speaks the
-JSON-RPC MCP protocol to it. The dashboard endpoints parse the tool output into clean JSON for the
-UI; the `/api/chat` endpoint hands the MCP tools to an LLM that calls them itself to reason toward
-trip suggestions.
+The FastAPI backend hosts **two MCP clients** (one per Java jar). The dashboard endpoints parse the
+utility server's tool output into clean JSON for the UI. The `/api/chat` endpoint runs an
+**orchestrator LLM** that delegates to two specialist sub-agents — a **travel agent** (utility tools)
+and a **flight agent** (flight-booking tools) — each of which calls its own MCP tools to reason toward
+an answer; the orchestrator then synthesises one reply.
 
 ---
 
@@ -30,25 +32,32 @@ trip suggestions.
 - 🕐 **Local time** at the destination, derived from its timezone
 - 💱 **Currency converter** with live exchange rates; the destination's local currency is guessed
   from its timezone
-- 🤖 **AI holiday-trip assistant** — a chat agent that calls the MCP tools itself (geocode, weather,
-  forecast, attractions, holidays, currency) to suggest and plan trips. Pick the LLM provider per
-  message: **Gemini** or **SiliconFlow**.
+- 🤖 **AI travel concierge** — an orchestrator that delegates to two specialist sub-agents: a
+  **travel agent** (geocode, weather, forecast, attractions, holidays, currency) and a **flight
+  agent** (search/book flights, look up bookings). It can use both in one message, and the chat
+  shows a 🤝 **route badge** of which agent(s) handled each reply. Pick the LLM provider per message:
+  **Gemini** or **SiliconFlow**.
+- ✈️ **Flight booking** — search sample flights, book seats (get a `BK-` reference), and look up a
+  booking, all in natural language via the flight agent.
 - 🇻🇳 Vietnamese-language UI, dark theme, zero CSS framework (inline styles only)
 
 All **travel data** comes from free, no-API-key public endpoints (Open-Meteo, ExchangeRate-API,
-Wikipedia, Nager.Date), so the dashboard runs out of the box. Only the **AI assistant** needs an
-LLM API key (Gemini and/or SiliconFlow) — see [Configuration](#configuration).
+Wikipedia, Nager.Date) and the flight server ships with its own in-memory sample data, so the
+dashboard runs out of the box. Only the **AI concierge** needs an LLM API key (Gemini and/or
+SiliconFlow) — see [Configuration](#configuration).
 
 ---
 
 ## Project layout
 
 ```
-utility-tools-mcp-travel-dashboard/
+travel-assistant/
 ├── backend/
 │   ├── main.py            # FastAPI app: /api/travel, /api/currency, /api/rate, /api/chat, /health
-│   ├── mcp_client.py      # stdio MCP client (spawns the Java jar; call_tool + list_tools)
-│   ├── agent.py           # provider-agnostic chat agent (Gemini + SiliconFlow tool-calling loop)
+│   ├── mcp_client.py      # stdio MCP client; two instances (utility_mcp, flight_mcp)
+│   ├── llm.py             # provider primitives: schema translation + generic tool-calling loop
+│   ├── agents.py          # SubAgent class + travel_agent & flight_agent (one MCP server each)
+│   ├── orchestrator.py    # orchestrator LLM that delegates to the two sub-agents
 │   ├── requirements.txt
 │   └── .env.example
 └── frontend/
@@ -64,7 +73,7 @@ utility-tools-mcp-travel-dashboard/
 
 ## Prerequisites
 
-- **Java 21+** and **Maven** — to build the MCP server jar
+- **Java 21+** and **Maven** — to build the two MCP server jars
 - **Python 3.10+** — for the FastAPI bridge (uses `subprocess.Popen | None` syntax)
 - **Node 18+** — for the Vite frontend
 - **An LLM API key** (optional) — only for the AI assistant:
@@ -75,13 +84,17 @@ utility-tools-mcp-travel-dashboard/
 
 ## Setup
 
-### 1. Build the MCP server (required first)
+### 1. Build the MCP servers (required first)
 
-The bridge launches the Java jar as a subprocess, so it must exist before you start the backend.
+The bridge launches each Java jar as a subprocess, so **both** must exist before you start the
+backend.
 
 ```bash
 cd ../utility-tools-mcp
 mvn clean package          # produces target/utility-tools-mcp-0.0.1.jar
+
+cd ../flight-booking-mcp
+mvn clean package          # produces target/flight-booking-mcp-0.0.1.jar
 ```
 
 ### 2. Start the backend (MCP client + REST bridge)
@@ -123,7 +136,8 @@ dropdown and ask it to plan a trip (e.g. *"Gợi ý 3 điểm du lịch biển �
 
 | Variable | Default | Notes |
 |---|---|---|
-| `MCP_JAR_PATH` | `../../utility-tools-mcp/target/utility-tools-mcp-0.0.1.jar` | Path to the built jar |
+| `MCP_JAR_PATH` | `../../utility-tools-mcp/target/utility-tools-mcp-0.0.1.jar` | Path to the utility-tools jar |
+| `FLIGHT_MCP_JAR_PATH` | `../../flight-booking-mcp/target/flight-booking-mcp-0.0.1.jar` | Path to the flight-booking jar |
 | `BACKEND_HOST` | `0.0.0.0` | |
 | `BACKEND_PORT` | `8000` | Must match the Vite proxy target |
 | `GEMINI_API_KEY` | — | Required for the Gemini provider in `/api/chat` |
@@ -147,7 +161,7 @@ The backend exposes a thin REST layer. The frontend talks to it through the Vite
 | `GET /api/travel` | `city` | Geocode + weather + forecast + local time + guessed local currency |
 | `GET /api/currency` | `from`, `to`, `amount` | Converted amount and rate |
 | `GET /api/rate` | `from`, `to` | Latest exchange rate |
-| `POST /api/chat` | body: `provider`, `messages[]`, `model?` | AI assistant reply + tools used |
+| `POST /api/chat` | body: `provider`, `messages[]`, `model?` | Concierge reply + agents + tools used |
 | `GET /health` | — | `{"status": "ok"}` |
 
 ### `POST /api/chat`
@@ -155,18 +169,20 @@ The backend exposes a thin REST layer. The frontend talks to it through the Vite
 ```jsonc
 // request
 { "provider": "gemini",          // or "siliconflow"
-  "messages": [{ "role": "user", "content": "Gợi ý 3 điểm du lịch biển ấm tháng 12" }],
+  "messages": [{ "role": "user", "content": "Tìm chuyến bay từ TP.HCM đi Hà Nội ngày mai" }],
   "model": null }                // optional override; falls back to the env default
 
 // response
 { "reply": "…câu trả lời tiếng Việt…",
-  "tool_calls": ["geocode", "get_weather", "get_attractions"],
+  "agents": ["flights"],          // which sub-agent(s) the orchestrator consulted
+  "tool_calls": ["search_flights"],
   "provider": "gemini" }
 ```
 
-The backend runs a bounded tool-calling loop: tool schemas are **discovered from the MCP server**
-via `tools/list` (no schemas are duplicated in Python), translated into each provider's native tool
-format, and executed against the MCP server as the model requests them.
+The orchestrator runs a bounded tool-calling loop whose "tools" are the two sub-agents
+(`ask_travel_agent`, `ask_flight_agent`). Each sub-agent in turn runs its own loop: tool schemas are
+**discovered from its MCP server** via `tools/list` (no schemas are duplicated in Python), translated
+into the provider's native tool format, and executed against that server as the model requests them.
 
 `/api/travel` fans out to four MCP tools — `geocode` runs first, then `get_weather`,
 `get_forecast`, and `current_time` run concurrently via `asyncio.gather`. Each response includes
@@ -174,20 +190,23 @@ a `raw` field with the original tool text for debugging.
 
 ### MCP tools used
 
-The dashboard and the AI assistant call these tools the server provides:
+The dashboard and the two sub-agents call these tools across the two servers:
 
-| MCP tool | Used for |
-|---|---|
-| `geocode` | City name → lat/lon + timezone |
-| `get_weather` | Current conditions |
-| `get_forecast` | Daily forecast |
-| `current_time` | Local time at the destination |
-| `convert_currency` / `get_exchange_rate` | Currency card |
-| `get_attractions` | Nearby points of interest (assistant) — Wikipedia GeoSearch, keyless |
-| `get_public_holidays` | Public holidays by country/year (assistant) — Nager.Date, keyless |
+| MCP tool | Server | Used for |
+|---|---|---|
+| `geocode` | utility | City name → lat/lon + timezone |
+| `get_weather` | utility | Current conditions |
+| `get_forecast` | utility | Daily forecast |
+| `current_time` | utility | Local time at the destination |
+| `convert_currency` / `get_exchange_rate` | utility | Currency card |
+| `get_attractions` | utility | Nearby points of interest (travel agent) — Wikipedia GeoSearch, keyless |
+| `get_public_holidays` | utility | Public holidays by country/year (travel agent) — Nager.Date, keyless |
+| `search_flights` | flight | Find flights by route/date (flight agent) — in-memory sample data |
+| `book_flight` | flight | Book seats, returns a `BK-` reference (flight agent) |
+| `get_booking` | flight | Look up a booking by reference (flight agent) |
 
 > `get_attractions` and `get_public_holidays` were added to `utility-tools-mcp` for this lab — rebuild
-> the jar (`mvn clean package`) after pulling so the assistant can use them.
+> the jar (`mvn clean package`) after pulling so the travel agent can use them.
 
 ---
 
@@ -210,23 +229,31 @@ fields the UI needs.
 
 ---
 
-## How the AI assistant works
+## How the AI concierge works
 
-`agent.py` is a small, provider-agnostic agent loop:
+The concierge is organised as an **orchestrator + two specialist sub-agents**, all sharing one
+provider-agnostic tool-calling loop (`llm.py`).
 
-- **Tool discovery, not duplication.** On first use it calls the MCP server's `tools/list`, filters
-  to a curated travel-relevant allowlist (`geocode`, `get_weather`, `get_forecast`, `current_time`,
-  `convert_currency`, `get_exchange_rate`, `get_attractions`, `get_public_holidays`), and caches
-  the result. Tool schemas live in the Java server only.
-- **Schema translation.** Each MCP JSON-Schema is translated into the provider's native tool format
-  — OpenAI-style function specs for SiliconFlow, `types.FunctionDeclaration` for Gemini. A sanitizer
-  strips keys Gemini rejects (`$schema`, `additionalProperties`).
-- **Bounded tool-calling loop.** The model is asked the user's question with the tools attached;
-  when it requests tool calls, the agent executes them against the MCP server (concurrently via
-  `asyncio.gather`), feeds the results back, and repeats — capped at 6 iterations to bound cost and
-  latency. The final text answer is returned (in Vietnamese), along with the list of tools used.
+- **Orchestrator (`orchestrator.py`).** An LLM whose two "tools" are the sub-agents —
+  `ask_travel_agent` and `ask_flight_agent` (each takes a single `query` string). It reads the full
+  conversation, delegates to the right specialist(s) — **calling both in one turn** for cross-domain
+  requests — then synthesises one Vietnamese reply. The response reports which `agents` were consulted
+  (used for the 🤝 route badge) and the underlying MCP `tool_calls`.
+- **Sub-agents (`agents.py`).** Each `SubAgent` owns one MCP client. The **travel agent** uses a
+  curated allowlist of the utility tools (`geocode`, `get_weather`, `get_forecast`, `current_time`,
+  `convert_currency`, `get_exchange_rate`, `get_attractions`, `get_public_holidays`); the **flight
+  agent** uses the flight server's tools (`search_flights`, `book_flight`, `get_booking`). Each
+  discovers its tools from its own server via `tools/list` and runs the shared loop over the query the
+  orchestrator handed it.
+- **Tool discovery, not duplication.** Tool schemas live in the Java servers only and are translated
+  into each provider's native format — OpenAI-style function specs for SiliconFlow,
+  `types.FunctionDeclaration` for Gemini. A sanitizer strips keys Gemini rejects (`$schema`,
+  `additionalProperties`).
+- **Bounded loops.** Every loop (orchestrator and each sub-agent) is capped at 6 iterations to bound
+  cost and latency; tool calls within a turn run concurrently via `asyncio.gather`.
 - **Providers are selectable per request.** `provider: "gemini" | "siliconflow"`; each defaults to
-  the model in `.env` but can be overridden with the `model` field.
+  the model in `.env` but can be overridden with the `model` field. The orchestrator and sub-agents
+  all use the same selected provider.
 
 ---
 

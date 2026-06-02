@@ -4,32 +4,41 @@ import os
 import subprocess
 from pathlib import Path
 
-JAR_PATH = os.environ.get(
+UTILITY_JAR_PATH = os.environ.get(
     "MCP_JAR_PATH",
     "../../utility-tools-mcp/target/utility-tools-mcp-0.0.1.jar",
+)
+FLIGHT_JAR_PATH = os.environ.get(
+    "FLIGHT_MCP_JAR_PATH",
+    "../../flight-booking-mcp/target/flight-booking-mcp-0.0.1.jar",
 )
 
 
 class MCPClient:
-    """Talks to the Java MCP server over stdio.
+    """Talks to a Java MCP server over stdio.
 
     Uses a blocking subprocess and runs its I/O in a worker thread
     (asyncio.to_thread). This avoids asyncio's subprocess transport, which on
     Windows requires the ProactorEventLoop — unavailable under `uvicorn
     --reload`, which forces the SelectorEventLoop.
+
+    One instance wraps one MCP server jar, so the app can run several side by
+    side (e.g. utility tools and flight booking) with isolated I/O channels.
     """
 
-    def __init__(self):
+    def __init__(self, jar_path: str, name: str = "mcp-bridge"):
+        self._jar_path = jar_path
+        self._name = name
         self._proc: subprocess.Popen | None = None
         self._id = 0
         self._lock = asyncio.Lock()
 
     async def start(self):
-        jar = Path(JAR_PATH).resolve()
+        jar = Path(self._jar_path).resolve()
         if not jar.exists():
             raise FileNotFoundError(
                 f"MCP jar not found at {jar}. "
-                "Run `mvn clean package` in utility-tools-mcp first."
+                "Run `mvn clean package` in the corresponding MCP server project first."
             )
         self._proc = subprocess.Popen(
             ["java", "-jar", str(jar)],
@@ -80,7 +89,7 @@ class MCPClient:
         await self._send("initialize", {
             "protocolVersion": "2024-11-05",
             "capabilities": {},
-            "clientInfo": {"name": "travel-dashboard-bridge", "version": "1.0"},
+            "clientInfo": {"name": self._name, "version": "1.0"},
         })
         # MCP handshake: the server will not service tools/call until it
         # receives this notification confirming initialization is complete.
@@ -124,4 +133,7 @@ class MCPClient:
                 pass
 
 
-mcp = MCPClient()
+# One client per MCP server. The travel agent uses the utility tools; the
+# flight agent uses the flight-booking server.
+utility_mcp = MCPClient(UTILITY_JAR_PATH, "travel-utility-bridge")
+flight_mcp = MCPClient(FLIGHT_JAR_PATH, "travel-flight-bridge")

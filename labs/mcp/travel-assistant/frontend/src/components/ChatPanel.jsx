@@ -9,8 +9,14 @@ const PROVIDERS = [
 const SUGGESTIONS = [
   'Gợi ý 3 điểm du lịch biển ấm áp tháng 12, ngân sách vừa phải',
   'Tôi muốn đi Nhật mùa thu, có lễ gì cần tránh không?',
-  'Cuối tuần này đi đâu gần Hà Nội cho mát mẻ?',
+  'Tìm chuyến bay từ TP.HCM đi Hà Nội ngày mai',
 ]
+
+// Maps orchestrator agent keys to friendly Vietnamese labels for the route badge.
+const AGENT_LABELS = {
+  travel: 'Du lịch',
+  flights: 'Đặt vé',
+}
 
 export default function ChatPanel({ city }) {
   const [messages, setMessages] = useState([])
@@ -40,7 +46,12 @@ export default function ChatPanel({ city }) {
     setLoading(true)
     try {
       const data = await chatSend(next, provider)
-      setMessages([...next, { role: 'assistant', content: data.reply, tools: data.tool_calls }])
+      setMessages([...next, {
+        role: 'assistant',
+        content: data.reply,
+        tools: data.tool_calls,
+        agents: data.agents,
+      }])
     } catch (e) {
       setError(e.message)
     } finally {
@@ -87,6 +98,11 @@ export default function ChatPanel({ city }) {
               style={{ ...styles.bubble, ...(m.role === 'user' ? styles.userBubble : styles.botBubble) }}
             >
               <div style={styles.bubbleText}>{m.content}</div>
+              {m.agents && m.agents.length > 0 && (
+                <div style={styles.agents}>
+                  🤝 {[...new Set(m.agents)].map(a => AGENT_LABELS[a] || a).join(' + ')}
+                </div>
+              )}
               {m.tools && m.tools.length > 0 && (
                 <div style={styles.tools}>🛠️ {[...new Set(m.tools)].join(', ')}</div>
               )}
@@ -195,8 +211,14 @@ const styles = {
   bubbleText: {
     whiteSpace: 'pre-wrap',
   },
-  tools: {
+  agents: {
     marginTop: '0.4rem',
+    fontSize: '0.75rem',
+    color: '#4f8ef7',
+    fontWeight: 600,
+  },
+  tools: {
+    marginTop: '0.25rem',
     fontSize: '0.75rem',
     color: '#7a7f9a',
   },
