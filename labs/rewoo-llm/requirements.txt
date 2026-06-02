@@ -1,0 +1,5 @@
+anthropic
+httpx
+python-dotenv
+pymupdf
+duckduckgo-search
