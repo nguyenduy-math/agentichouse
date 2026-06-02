@@ -39,22 +39,42 @@ class MCPClient:
         )
         await self._initialize()
 
-    def _send_sync(self, msg: str) -> dict:
-        self._proc.stdin.write(msg.encode())
+    def _write(self, payload: dict):
+        self._proc.stdin.write((json.dumps(payload) + "\n").encode())
         self._proc.stdin.flush()
-        raw = self._proc.stdout.readline()
-        return json.loads(raw)
+
+    def _send_sync(self, payload: dict) -> dict:
+        self._write(payload)
+        # Skip blank lines; the server occasionally emits them between messages.
+        while True:
+            raw = self._proc.stdout.readline()
+            if raw == b"":
+                raise RuntimeError(
+                    "MCP server closed the connection without responding. "
+                    "Check that the jar started correctly (see mcp-server.log)."
+                )
+            line = raw.strip()
+            if line:
+                return json.loads(line)
 
     async def _send(self, method: str, params: dict) -> dict:
         async with self._lock:
             self._id += 1
-            msg = json.dumps({
+            payload = {
                 "jsonrpc": "2.0",
                 "id": self._id,
                 "method": method,
                 "params": params,
-            }) + "\n"
-            return await asyncio.to_thread(self._send_sync, msg)
+            }
+            return await asyncio.to_thread(self._send_sync, payload)
+
+    async def _notify(self, method: str, params: dict | None = None):
+        """Send a JSON-RPC notification (no id, no response expected)."""
+        async with self._lock:
+            payload = {"jsonrpc": "2.0", "method": method}
+            if params is not None:
+                payload["params"] = params
+            await asyncio.to_thread(self._write, payload)
 
     async def _initialize(self):
         await self._send("initialize", {
@@ -62,6 +82,9 @@ class MCPClient:
             "capabilities": {},
             "clientInfo": {"name": "travel-dashboard-bridge", "version": "1.0"},
         })
+        # MCP handshake: the server will not service tools/call until it
+        # receives this notification confirming initialization is complete.
+        await self._notify("notifications/initialized")
 
     async def call_tool(self, name: str, arguments: dict) -> str:
         response = await self._send("tools/call", {
@@ -70,7 +93,15 @@ class MCPClient:
         })
         if "error" in response:
             raise RuntimeError(f"MCP tool error: {response['error']}")
-        return response["result"]["content"][0]["text"]
+        text = response["result"]["content"][0]["text"]
+        # Spring AI serializes a String tool result as a JSON string, so the
+        # text arrives double-encoded (e.g. '"Hanoi...\\r\\n..."'). Unwrap it.
+        if isinstance(text, str) and text.startswith('"') and text.endswith('"'):
+            try:
+                text = json.loads(text)
+            except json.JSONDecodeError:
+                pass
+        return text
 
     async def stop(self):
         if self._proc:

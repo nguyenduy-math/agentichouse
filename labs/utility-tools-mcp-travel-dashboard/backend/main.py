@@ -30,9 +30,9 @@ app.add_middleware(
 def _parse_geocode(text: str) -> dict:
     """Parse lat, lon, timezone from geocode result text."""
     lat = lon = timezone = None
-    lat_m = re.search(r"lat[=:\s]+(-?[\d.]+)", text, re.I)
-    lon_m = re.search(r"lon[=:\s]+(-?[\d.]+)", text, re.I)
-    tz_m = re.search(r"timezone[=:\s]+([A-Za-z/_]+)", text, re.I)
+    lat_m = re.search(r"latitude[\s:=]+(-?[\d.]+)", text, re.I)
+    lon_m = re.search(r"longitude[\s:=]+(-?[\d.]+)", text, re.I)
+    tz_m = re.search(r"timezone[\s:=]+([A-Za-z/_]+)", text, re.I)
     if lat_m:
         lat = float(lat_m.group(1))
     if lon_m:
@@ -78,39 +78,28 @@ def _parse_weather(text: str) -> dict:
 
 
 def _parse_forecast(text: str) -> list:
-    """Parse up to 5 forecast days from text."""
+    """Parse up to 5 forecast days from text.
+
+    Server format per line:
+        - 2026-06-02: Thunderstorm, 27.9°C – 34.8°C, precip 0.3 mm
+    (condition, then temp_min, then temp_max; separator is an en-dash or hyphen)
+    """
     days = []
-    # Match lines like: 2026-06-02: Sunny, max 25°C, min 18°C
     pattern = re.compile(
-        r"(\d{4}-\d{2}-\d{2})[^\n]*?(Clear|Sunny|Cloudy|Rainy|Overcast|Drizzle|Thunder|Snow|Fog|Partly|Mainly|Light)[^\n]*?"
-        r"max[^:]*:\s*([-\d.]+)[^\n]*?min[^:]*:\s*([-\d.]+)",
+        r"(\d{4}-\d{2}-\d{2}):\s*([^,]+),\s*([-\d.]+)\s*°?C\s*[–\-]\s*([-\d.]+)\s*°?C"
+        r"(?:[^\n]*?precip\s*([\d.]+))?",
         re.I,
     )
     for m in pattern.finditer(text):
         days.append({
             "date": m.group(1),
-            "condition": m.group(2),
-            "temp_max": float(m.group(3)),
-            "temp_min": float(m.group(4)),
+            "condition": m.group(2).strip(),
+            "temp_min": float(m.group(3)),
+            "temp_max": float(m.group(4)),
+            "precipitation": float(m.group(5)) if m.group(5) else None,
         })
         if len(days) == 5:
             break
-
-    # Fallback: try simpler line-by-line parsing
-    if not days:
-        for line in text.splitlines():
-            date_m = re.search(r"(\d{4}-\d{2}-\d{2})", line)
-            max_m = re.search(r"max[^:]*:\s*([-\d.]+)", line, re.I)
-            min_m = re.search(r"min[^:]*:\s*([-\d.]+)", line, re.I)
-            if date_m and max_m and min_m:
-                days.append({
-                    "date": date_m.group(1),
-                    "condition": "Clear",
-                    "temp_max": float(max_m.group(1)),
-                    "temp_min": float(min_m.group(1)),
-                })
-                if len(days) == 5:
-                    break
 
     return days
 
@@ -137,13 +126,17 @@ def _parse_time(text: str) -> dict:
 
 def _parse_currency(text: str) -> dict:
     result = {"converted": None, "rate": None}
-    # Match "100 USD = 2,540,000 VND" or "converted: 2540000"
-    conv_m = re.search(r"=\s*([\d,. ]+)\s*[A-Z]{3}", text)
+    # convert_currency: "100.00 USD = 2,617,897.98 VND (rate 26178.979791, ...)"
+    # get_exchange_rate: "1 USD = 26178.979791 VND (as of ...)"
+    conv_m = re.search(r"=\s*([\d,. ]+?)\s*[A-Z]{3}", text)
     if conv_m:
         result["converted"] = float(conv_m.group(1).replace(",", "").replace(" ", ""))
-    rate_m = re.search(r"rate[^:]*:\s*([\d.]+)", text, re.I)
+    rate_m = re.search(r"rate[\s:=]+([\d,.]+)", text, re.I)
     if rate_m:
-        result["rate"] = float(rate_m.group(1))
+        result["rate"] = float(rate_m.group(1).replace(",", ""))
+    elif re.match(r"\s*1\s+[A-Za-z]{3}\s*=", text):
+        # The exchange-rate form has no "rate" keyword; the converted value is it.
+        result["rate"] = result["converted"]
     return result
 
 
@@ -170,7 +163,7 @@ def _detect_currency(timezone: str) -> str:
 @app.get("/api/travel")
 async def travel(city: str = Query(..., description="City name")):
     try:
-        geo_text = await mcp.call_tool("geocode", {"location": city})
+        geo_text = await mcp.call_tool("geocode", {"place": city})
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"MCP error: {e}")
 
@@ -218,8 +211,8 @@ async def currency(
     try:
         text = await mcp.call_tool("convert_currency", {
             "amount": amount,
-            "from_currency": from_currency,
-            "to_currency": to_currency,
+            "from": from_currency,
+            "to": to_currency,
         })
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"MCP error: {e}")
@@ -242,8 +235,8 @@ async def rate(
 ):
     try:
         text = await mcp.call_tool("get_exchange_rate", {
-            "from_currency": from_currency,
-            "to_currency": to_currency,
+            "from": from_currency,
+            "to": to_currency,
         })
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"MCP error: {e}")
