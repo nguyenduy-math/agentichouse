@@ -38,7 +38,7 @@ from graphrag_eval import (
 
 CONVERSATIONS_FILE = (
     Path(__file__).parent.parent
-    / "rag-projects/graphrag-assistant/eval-sets/eval_conversation_sets.json"
+    / "graphrag-assistant/eval-sets/eval_conversation_sets.json"
 )
 
 SKIP_COLS = {"user_input", "response", "retrieved_contexts", "reference"}
