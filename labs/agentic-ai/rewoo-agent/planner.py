@@ -1,7 +1,6 @@
-import os
 import re
-import anthropic
 
+import llm_client
 from models import Step, Plan
 
 PLANNER_SYSTEM = """You are a planning agent. Given a task, output a step-by-step plan
@@ -53,12 +52,9 @@ def build_dependency_graph(plan: Plan) -> dict[str, set[str]]:
 
 def generate_plan(query: str) -> Plan:
     """Call the LLM to generate a ReWOO plan for the given query."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=512,
+    plan_text = llm_client.chat_completion(
         system=PLANNER_SYSTEM,
-        messages=[{"role": "user", "content": PLANNER_USER.format(query=query)}],
+        user=PLANNER_USER.format(query=query),
+        max_tokens=512,
     )
-    plan_text = message.content[0].text
     return parse_plan(plan_text)

@@ -1,3 +1,4 @@
 anthropic
-httpx
+google-genai
+openai
 python-dotenv

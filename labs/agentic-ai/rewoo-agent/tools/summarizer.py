@@ -1,5 +1,6 @@
-import os
-import anthropic
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import llm_client
 
 _SYSTEM = (
     "You are a tech journalist. Given news search results, identify the "
@@ -10,12 +11,5 @@ _SYSTEM = (
 
 def summarize_top3(results1: str, results2: str) -> str:
     """Identify the 3 most significant AI stories from combined search results."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     combined = f"=== Source 1 ===\n{results1}\n\n=== Source 2 ===\n{results2}"
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=512,
-        system=_SYSTEM,
-        messages=[{"role": "user", "content": combined}],
-    )
-    return message.content[0].text
+    return llm_client.chat_completion(system=_SYSTEM, user=combined, max_tokens=512)

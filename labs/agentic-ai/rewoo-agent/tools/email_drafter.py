@@ -1,5 +1,6 @@
-import os
-import anthropic
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import llm_client
 
 _SYSTEM_TEMPLATE = (
     "You are a professional assistant. Draft a team briefing email in "
@@ -11,11 +12,8 @@ _SYSTEM_TEMPLATE = (
 
 def draft_email(briefing: str, language: str = "Vietnamese") -> str:
     """Draft a professional team email in the specified language."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
+    return llm_client.chat_completion(
         system=_SYSTEM_TEMPLATE.format(language=language),
-        messages=[{"role": "user", "content": briefing}],
+        user=briefing,
+        max_tokens=1024,
     )
-    return message.content[0].text

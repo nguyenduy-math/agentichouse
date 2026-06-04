@@ -1,4 +1,6 @@
 anthropic
+google-genai
+openai
 httpx
 python-dotenv
 pymupdf
