@@ -1,26 +1,15 @@
+import sys
 import os
-import anthropic
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from llm_client import call_llm
 from prompts import SCORER_PROMPT
 
 
 def score_branch(branch_description: str) -> float:
-    """Score a partial travel plan using Claude Haiku. Returns float in [0.0, 1.0]."""
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise EnvironmentError(
-            "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key."
-        )
-
-    client = anthropic.Anthropic(api_key=api_key)
+    """Score a partial travel plan via the configured LLM. Returns float in [0.0, 1.0]."""
     prompt = SCORER_PROMPT.format(branch_description=branch_description)
-
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=16,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    raw = message.content[0].text.strip()
+    raw = call_llm(prompt, mode="score", max_tokens=16)
     try:
         score = float(raw)
         return max(0.0, min(1.0, score))

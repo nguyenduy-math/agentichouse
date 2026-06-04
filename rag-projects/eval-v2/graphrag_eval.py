@@ -52,7 +52,7 @@ CHAT_ENDPOINT = f"{GRAPHRAG_API_URL}/api/v1/chat"
 
 QUESTIONS_FILE = (
     Path(__file__).parent.parent
-    / "rag-projects/graphrag-assistant/eval-sets/eval_questions.json"
+    / "graphrag-assistant/eval-sets/eval_questions.json"
 )
 RESULTS_DIR = Path(__file__).parent / "results"
 

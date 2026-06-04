@@ -1,8 +1,7 @@
 import json
-import os
 import re
-import anthropic
 
+from llm_client import call_llm
 from node import ThoughtNode, MAX_DEPTH
 from prompts import (
     TRANSPORT_EXPANDER_PROMPT,
@@ -16,19 +15,8 @@ BUDGET = 300.0
 DIVIDER = "─" * 42
 
 
-def _llm_call(prompt: str, model: str = "claude-sonnet-4-6", max_tokens: int = 1024) -> str:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise EnvironmentError(
-            "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key."
-        )
-    client = anthropic.Anthropic(api_key=api_key)
-    msg = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return msg.content[0].text.strip()
+def _llm_call(prompt: str, max_tokens: int = 1024) -> str:
+    return call_llm(prompt, mode="expand", max_tokens=max_tokens)
 
 
 def _parse_json(text: str) -> list[dict]:

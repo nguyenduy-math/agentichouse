@@ -1,17 +1,16 @@
-import os
-import anthropic
+import llm_client
 
-SOLVER_SYSTEM = """You are a helpful assistant. Given a task and the evidence
-collected by previous tool calls, produce the final answer.
-For email drafts: present the email clearly with a separator line.
-Do not add commentary beyond what was requested."""
+SOLVER_SYSTEM = """Bạn là một trợ lý hữu ích. Dựa trên nhiệm vụ và các bằng chứng
+thu thập từ các lệnh gọi công cụ trước đó, hãy đưa ra câu trả lời cuối cùng.
+Với bản nháp email: trình bày email rõ ràng với một dòng phân cách.
+Không thêm bình luận ngoài những gì được yêu cầu."""
 
-SOLVER_USER = """Task: {query}
+SOLVER_USER = """Nhiệm vụ: {query}
 
-Evidence:
+Bằng chứng:
 {evidence_block}
 
-Final answer:"""
+Câu trả lời cuối cùng:"""
 
 
 def format_evidence(evidence: dict[str, str]) -> str:
@@ -31,15 +30,9 @@ def solve(query: str, evidence: dict[str, str]) -> str:
     last_var = list(evidence.keys())[-1]
     last_value = evidence[last_var]
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     evidence_block = format_evidence(evidence)
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
+    return llm_client.chat_completion(
         system=SOLVER_SYSTEM,
-        messages=[{
-            "role": "user",
-            "content": SOLVER_USER.format(query=query, evidence_block=evidence_block),
-        }],
+        user=SOLVER_USER.format(query=query, evidence_block=evidence_block),
+        max_tokens=1024,
     )
-    return message.content[0].text
