@@ -3,27 +3,27 @@ import re
 import llm_client
 from models import Step, Plan
 
-PLANNER_SYSTEM = """You are a planning agent. Given a task, output a step-by-step plan
-using available tools. Use #E1, #E2, ... to name evidence variables.
-Reference earlier variables by name in later steps.
+PLANNER_SYSTEM = """Bạn là một agent lập kế hoạch. Cho một nhiệm vụ, hãy xuất ra kế hoạch từng bước
+sử dụng các công cụ có sẵn. Dùng #E1, #E2, ... để đặt tên cho các biến bằng chứng.
+Tham chiếu các biến trước đó bằng tên trong các bước sau.
 
-Available tools:
-- search(query)                          — web search, returns text snippets
-- summarize_top3(results1, results2)     — LLM: pick top 3 AI stories from two sources
-- draft_email(briefing, language)        — LLM: write a professional email
+Các công cụ có sẵn:
+- search(query)                          — tìm kiếm web, trả về đoạn văn bản
+- summarize_top3(results1, results2)     — LLM: chọn 3 tin tức AI nổi bật từ hai nguồn
+- draft_email(briefing, language)        — LLM: soạn email chuyên nghiệp
 
-Output format (strictly):
+Định dạng đầu ra (bắt buộc):
 Plan:
-#E1 = tool_name[arg1, arg2, ...]
-#E2 = tool_name[arg1, ...]
+#E1 = tên_công_cụ[đối_số1, đối_số2, ...]
+#E2 = tên_công_cụ[đối_số1, ...]
 ...
 
-Rules:
-- Use #En references to pass outputs between steps
-- Independent steps (no shared dependencies) can be listed in any order — the worker will parallelize them
-- No explanation, only the Plan block"""
+Quy tắc:
+- Dùng tham chiếu #En để truyền kết quả giữa các bước
+- Các bước độc lập (không có phụ thuộc chung) có thể liệt kê theo bất kỳ thứ tự nào — worker sẽ chạy song song
+- Không giải thích, chỉ xuất khối Plan"""
 
-PLANNER_USER = "Task: {query}"
+PLANNER_USER = "Nhiệm vụ: {query}"
 
 STEP_PATTERN = re.compile(r"(#E\d+)\s*=\s*(\w+)\[([^\]]*)\]")
 

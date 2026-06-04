@@ -3,9 +3,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import llm_client
 
 _SYSTEM = (
-    "You are a tech journalist. Given news search results, identify the "
-    "3 most significant AI stories. For each story return: Title, "
-    "One-sentence summary. Format as a numbered list."
+    "Bạn là một nhà báo công nghệ. Dựa trên kết quả tìm kiếm tin tức, hãy xác định "
+    "3 câu chuyện AI nổi bật nhất. Với mỗi câu chuyện, trả về: Tiêu đề, "
+    "Tóm tắt một câu. Định dạng dưới dạng danh sách đánh số."
 )
 
 

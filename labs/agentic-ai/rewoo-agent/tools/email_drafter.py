@@ -3,10 +3,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import llm_client
 
 _SYSTEM_TEMPLATE = (
-    "You are a professional assistant. Draft a team briefing email in "
-    "{language} based on these AI news stories. Include: Subject line, "
-    "Greeting, 3 bullet points (one per story), Professional closing. "
-    "Be concise and engaging."
+    "Bạn là một trợ lý chuyên nghiệp. Soạn một email tóm tắt tin tức cho nhóm bằng "
+    "tiếng {language} dựa trên các câu chuyện AI này. Bao gồm: Dòng tiêu đề, "
+    "Lời chào, 3 gạch đầu dòng (mỗi câu chuyện một gạch), Lời kết chuyên nghiệp. "
+    "Ngắn gọn và cuốn hút."
 )
 
 
