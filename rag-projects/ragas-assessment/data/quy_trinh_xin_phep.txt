@@ -1,0 +1,86 @@
+QUY TRÌNH XIN PHÉP VÀ PHÊ DUYỆT – CÔNG TY AGENTICHOUSE
+Phiên bản: 2.0 | Ban hành: 01/01/2024 | Phòng Nhân sự
+
+=== PHẦN 1: QUY TRÌNH XIN NGHỈ PHÉP NĂM ===
+
+Bước 1: Kiểm tra số ngày phép còn lại
+Nhân viên đăng nhập hệ thống HRM tại hrm.agentichouse.vn hoặc ứng dụng Agentic House HRM trên điện thoại. Vào mục "Nghỉ phép" → "Số ngày phép còn lại" để kiểm tra.
+
+Bước 2: Tạo đơn xin nghỉ phép
+- Vào HRM → "Nghỉ phép" → "Tạo đơn mới".
+- Chọn loại phép: Phép năm / Phép ốm / Phép đặc biệt.
+- Nhập ngày bắt đầu, ngày kết thúc, lý do nghỉ.
+- Nhập tên người bàn giao công việc trong thời gian nghỉ (bắt buộc đối với nghỉ từ 2 ngày trở lên).
+- Đính kèm giấy tờ nếu cần (giấy khám bệnh cho phép ốm, giấy chứng nhận kết hôn cho phép đặc biệt, v.v.).
+
+Bước 3: Nộp đơn và chờ phê duyệt
+- Đơn được gửi tự động đến Trưởng nhóm/Trưởng phòng trực tiếp để phê duyệt cấp 1.
+- Sau khi Trưởng phòng duyệt, đơn tự động chuyển đến Phòng Nhân sự để xác nhận số ngày phép.
+- Thời gian phê duyệt thông thường: 1–2 ngày làm việc.
+- Nhân viên nhận thông báo qua email và Teams khi đơn được phê duyệt hoặc từ chối.
+
+Bước 4: Bàn giao công việc
+Trước ngày nghỉ, nhân viên phải:
+- Hoàn thành hoặc bàn giao các đầu việc đang dở dang.
+- Cập nhật trạng thái công việc trên Jira/Asana.
+- Thông báo cho team và người bàn giao qua Teams.
+- Cài đặt trả lời tự động email (Out of Office) với thông tin liên hệ người phụ trách thay.
+
+=== PHẦN 2: QUY TRÌNH XIN NGHỈ ĐỘT XUẤT ===
+
+Bước 1: Thông báo khẩn cấp
+Khi không thể đến làm đúng giờ hoặc phải nghỉ đột xuất, nhân viên phải:
+- Gọi điện hoặc nhắn tin trực tiếp cho Trưởng phòng/Trưởng nhóm TRƯỚC 08:00 (hoặc ngay khi có thể trong trường hợp bất khả kháng).
+- Gửi tin nhắn trên kênh Teams của nhóm để team biết tình trạng.
+- KHÔNG chỉ gửi email vì email không được kiểm tra thường xuyên vào sáng sớm.
+
+Bước 2: Nộp đơn điện tử
+Trong ngày nghỉ hoặc ngay ngày đầu tiên đi làm lại, nhân viên nộp đơn xin phép trên HRM như quy trình thông thường, ghi rõ lý do nghỉ đột xuất và đính kèm giấy tờ liên quan (nếu có).
+
+Bước 3: Bù công việc (nếu có)
+Nếu nghỉ đột xuất ảnh hưởng đến tiến độ dự án, nhân viên và Trưởng phòng thỏa thuận phương án bù (làm bù ngoài giờ, làm cuối tuần) và ghi nhận trên Jira/Asana.
+
+=== PHẦN 3: QUY TRÌNH XIN LÀM THÊM GIỜ (OVERTIME) ===
+
+Bước 1: Đề xuất làm thêm giờ
+Trưởng phòng hoặc nhân viên (sau khi trao đổi với Trưởng phòng) tạo "Phiếu đề xuất OT" trên HRM:
+- Lý do làm thêm giờ (tên dự án, task cụ thể).
+- Số giờ dự kiến và thời điểm làm (ngày thường/cuối tuần/ngày lễ).
+- Danh sách nhân viên tham gia.
+
+Bước 2: Phê duyệt
+- Trưởng phòng phê duyệt cấp 1.
+- Phòng Nhân sự hoặc Kế toán phê duyệt cấp 2 (đối với OT trên 8 giờ/tháng hoặc OT ngày lễ).
+- Ban Giám đốc phê duyệt cấp 3 (đối với OT ngày lễ Quốc khánh, Tết).
+
+Bước 3: Thực hiện và chấm công OT
+- Nhân viên chấm công OT trên HRM (chọn loại "Làm thêm giờ").
+- Hệ thống tự động tính phụ cấp OT theo quy định: Ngày thường 150%, cuối tuần 200%, ngày lễ 300% so với lương giờ cơ bản.
+- Thay vì nhận tiền OT, nhân viên có thể đề nghị nghỉ bù (comp-off day) theo thỏa thuận với Trưởng phòng.
+
+=== PHẦN 4: QUY TRÌNH XIN NGHỈ THAI SẢN ===
+
+Bước 1: Thông báo sớm
+Nhân viên nữ thông báo cho Phòng Nhân sự về thai kỳ ít nhất 2 tháng trước ngày dự kiến nghỉ. Nộp giấy xác nhận thai kỳ của bệnh viện.
+
+Bước 2: Lập kế hoạch bàn giao
+Cùng Trưởng phòng và HR lập kế hoạch bàn giao công việc trước ngày nghỉ ít nhất 30 ngày. Xác định người thay thế hoặc phân công lại công việc.
+
+Bước 3: Nộp hồ sơ hưởng BHXH thai sản
+Trước khi nghỉ, nhân viên nộp cho Phòng Nhân sự: Giấy chứng nhận nghỉ việc hưởng BHXH (do bệnh viện cấp), giấy khai sinh hoặc giấy chứng sinh sau khi sinh con.
+Phòng Nhân sự thay nhân viên nộp hồ sơ lên cơ quan BHXH để nhận trợ cấp.
+
+Bước 4: Thông báo ngày đi làm lại
+Trước khi kết thúc thời gian nghỉ thai sản ít nhất 2 tuần, nhân viên thông báo cho HR ngày dự kiến đi làm lại. HR sắp xếp vị trí làm việc và cập nhật hệ thống.
+
+=== PHẦN 5: QUY TRÌNH BÁO CÁO SỰ CỐ VẮNG MẶT KHÔNG PHÉP ===
+
+Định nghĩa: Vắng mặt không phép là trường hợp nhân viên không có mặt tại nơi làm việc mà không có đơn xin phép được phê duyệt và không có thông báo cho quản lý.
+
+Quy trình xử lý:
+- Nếu nhân viên vắng mặt không rõ lý do từ 09:00 mà chưa liên hệ team, Trưởng phòng gọi điện xác nhận tình trạng.
+- Nếu không liên lạc được, Trưởng phòng báo cho HR để kiểm tra và liên hệ người thân khẩn cấp (emergency contact) đã đăng ký.
+- Nếu xác định là vắng mặt không phép không lý do: Trừ lương ngày đó và lập biên bản nhắc nhở.
+- Tái diễn 3 lần trở lên trong 12 tháng: Xem xét kỷ luật theo Nội quy Lao động (cảnh cáo, sa thải tùy mức độ).
+
+Liên hệ hỗ trợ: hr@agentichouse.vn | Hotline HR: 024.xxxx.xxxx (trong giờ hành chính)

@@ -1,0 +1,99 @@
+SỔ TAY NHÂN VIÊN – CÔNG TY AGENTIC HOUSE
+Phiên bản: 4.0 | Ban hành: 01/01/2024 | Phòng Nhân sự
+
+=== PHẦN 1: GIỚI THIỆU CÔNG TY ===
+
+1.1. Về Agentic House
+Công ty Cổ phần Công nghệ Agentic House (Agentic House JSC) được thành lập năm 2015, chuyên cung cấp các giải pháp phần mềm doanh nghiệp, dịch vụ điện toán đám mây và tư vấn chuyển đổi số cho khách hàng trong nước và khu vực Đông Nam Á. Trụ sở chính tại Hà Nội, với văn phòng chi nhánh tại TP. Hồ Chí Minh và Đà Nẵng.
+
+1.2. Tầm nhìn và Sứ mệnh
+Tầm nhìn: Trở thành công ty công nghệ hàng đầu Việt Nam về chuyển đổi số doanh nghiệp vào năm 2030.
+Sứ mệnh: Cung cấp các giải pháp công nghệ sáng tạo, giúp doanh nghiệp Việt Nam tăng năng suất, giảm chi phí và mở rộng thị trường.
+
+1.3. Giá trị cốt lõi (PACE)
+- Professional (Chuyên nghiệp): Làm việc có trách nhiệm, chất lượng cao, đúng hạn.
+- Agile (Linh hoạt): Thích ứng nhanh với thay đổi, học hỏi liên tục.
+- Collaborative (Hợp tác): Làm việc nhóm hiệu quả, chia sẻ kiến thức, hỗ trợ nhau.
+- Ethical (Đạo đức): Trung thực, minh bạch trong mọi hoạt động kinh doanh và nội bộ.
+
+=== PHẦN 2: CƠ CẤU TỔ CHỨC ===
+
+2.1. Ban Giám đốc
+- Tổng Giám đốc (CEO): Phụ trách định hướng chiến lược toàn công ty.
+- Phó Tổng Giám đốc Kỹ thuật (CTO): Phụ trách tất cả các hoạt động kỹ thuật và sản phẩm.
+- Phó Tổng Giám đốc Kinh doanh (CCO): Phụ trách kinh doanh, marketing và quan hệ khách hàng.
+- Giám đốc Tài chính (CFO): Phụ trách tài chính, kế toán và kiểm soát nội bộ.
+
+2.2. Các phòng ban chính
+NHÓM KỸ THUẬT:
+- Phòng Kỹ thuật & Công nghệ thông tin (Engineering): Phát triển sản phẩm phần mềm, hạ tầng cloud, QA/QC.
+- Phòng Nghiên cứu & Phát triển (R&D): Nghiên cứu công nghệ mới, AI/ML, bảo mật.
+
+NHÓM KINH DOANH:
+- Phòng Kinh doanh (Sales): Khai thác khách hàng mới, ký hợp đồng.
+- Phòng Chăm sóc khách hàng (Customer Success): Duy trì và phát triển quan hệ khách hàng hiện có.
+- Phòng Marketing & Truyền thông: Branding, digital marketing, PR.
+
+NHÓM HỖ TRỢ:
+- Phòng Hành chính – Nhân sự (HR & Admin): Tuyển dụng, đào tạo, chính sách lao động, hành chính văn phòng.
+- Phòng Kế toán & Tài chính (Finance): Kế toán, thuế, thanh toán, kiểm soát ngân sách.
+- Phòng Pháp lý (Legal): Hợp đồng, tuân thủ pháp luật, sở hữu trí tuệ.
+
+2.3. Phân cấp vai trò nhân viên
+- Cấp Intern (Thực tập sinh): Sinh viên hoặc mới tốt nghiệp, hợp đồng thực tập 2–6 tháng.
+- Cấp Junior (Nhân viên Junior): 0–2 năm kinh nghiệm, hợp đồng chính thức.
+- Cấp Mid-level (Nhân viên): 2–5 năm kinh nghiệm.
+- Cấp Senior (Nhân viên cao cấp): 5+ năm kinh nghiệm, có thể dẫn dắt Junior.
+- Cấp Lead/Tech Lead: Dẫn dắt nhóm kỹ thuật 3–7 người.
+- Cấp Manager (Trưởng nhóm/Phó phòng): Quản lý nhóm, báo cáo Trưởng phòng.
+- Cấp Senior Manager/Trưởng phòng: Quản lý toàn phòng ban.
+- Cấp Director/Giám đốc bộ phận: Báo cáo trực tiếp Ban Giám đốc.
+
+=== PHẦN 3: QUY ĐỊNH LÀM VIỆC ===
+
+3.1. Giờ làm việc
+- Giờ làm việc chính thức: 08:00 – 17:30, thứ Hai đến thứ Sáu (nghỉ trưa 12:00 – 13:30).
+- Phòng Kỹ thuật được phép làm việc theo lịch linh hoạt: Bắt đầu trong khung 08:00 – 10:00, đảm bảo đủ 8 tiếng và có mặt trong core hours (10:00 – 17:00).
+- Làm thêm giờ (overtime) được tính phụ cấp theo quy định của Bộ luật Lao động, phải có phê duyệt của Trưởng phòng trước.
+
+3.2. Chính sách chấm công
+- Nhân viên chấm công vào/ra bằng thẻ từ hoặc ứng dụng HRM trên điện thoại.
+- Đi muộn quá 15 phút không có lý do hợp lệ: Bị ghi nhận vào báo cáo chấm công.
+- Đi muộn 3 lần trở lên trong tháng: Bị nhắc nhở bằng văn bản, ảnh hưởng đến đánh giá tháng.
+- Nghỉ không phép: Bị trừ lương ngày tương ứng.
+
+3.3. Họp và giao tiếp nội bộ
+- Công cụ giao tiếp chính: Microsoft Teams (chat, họp video, chia sẻ file).
+- Quản lý công việc: Jira (phòng kỹ thuật), Asana (các phòng ban khác).
+- Email công ty: @agentichouse.vn – kiểm tra và phản hồi email trong vòng 4 giờ làm việc.
+- Họp team hàng tuần (Stand-up): Thứ Hai 09:00, tối đa 15 phút.
+- Họp toàn công ty (All-hands): Mỗi quý một lần, thường vào tháng đầu quý, Trưởng phòng và Ban Giám đốc báo cáo kết quả và kế hoạch.
+
+=== PHẦN 4: QUY TẮC ỨNG XỬ ===
+
+4.1. Quan hệ đồng nghiệp
+- Tôn trọng sự khác biệt về giới tính, tuổi tác, tôn giáo, dân tộc và quan điểm cá nhân.
+- Không chấp nhận bất kỳ hành vi quấy rối (kể cả quấy rối qua mạng), phân biệt đối xử hoặc bạo lực nơi làm việc.
+- Giải quyết mâu thuẫn trực tiếp và tôn trọng; nếu không giải quyết được, liên hệ HR làm trung gian.
+
+4.2. Bảo mật thông tin
+- Không chia sẻ thông tin khách hàng, dữ liệu nội bộ, mã nguồn với bên ngoài khi không được phép.
+- Không sử dụng phần mềm bản quyền vi phạm trên thiết bị công ty.
+- Ký cam kết bảo mật thông tin (NDA) ngay khi onboarding và khi tham gia dự án mới có yêu cầu.
+
+4.3. Sử dụng tài sản công ty
+- Thiết bị công ty (laptop, điện thoại, màn hình) chỉ dùng cho mục đích công việc. Sử dụng cá nhân ở mức hợp lý được chấp nhận (không tải phần mềm crack, không truy cập nội dung vi phạm pháp luật).
+- Báo mất/hỏng thiết bị ngay lập tức cho Phòng CNTT và Phòng Hành chính.
+- Khi nghỉ việc, hoàn trả toàn bộ tài sản công ty trong ngày làm việc cuối cùng.
+
+=== PHẦN 5: ONBOARDING VÀ OFFBOARDING ===
+
+5.1. Quy trình onboarding
+Tuần 1: Nhận thiết bị, cấp tài khoản, đọc sổ tay nhân viên, ký hợp đồng lao động và các cam kết.
+Tuần 2–4: Buddy program – được phân công một đồng nghiệp cùng phòng làm người hướng dẫn.
+Tháng 2–3: Thực hiện các nhiệm vụ thực tế đầu tiên dưới sự giám sát của quản lý trực tiếp.
+Cuối tháng thứ 2: Đánh giá giữa kỳ thử việc; cuối tháng thứ 2 (hoặc tháng thứ 3 tùy vị trí) đánh giá kết thúc thử việc.
+
+5.2. Quy trình offboarding
+Nhân viên nghỉ việc phải thông báo ít nhất 30 ngày (nhân viên) hoặc 45 ngày (quản lý cấp trưởng phòng trở lên) trước ngày nghỉ dự kiến.
+Checklist offboarding bao gồm: Bàn giao công việc, hoàn trả thiết bị, xóa tài khoản nội bộ, nhận chứng nhận kinh nghiệm làm việc, thanh toán lương và phép còn lại.
