@@ -51,8 +51,8 @@ SESSION_ENDPOINT = f"{GRAPHRAG_API_URL}/api/v1/session"
 CHAT_ENDPOINT = f"{GRAPHRAG_API_URL}/api/v1/chat"
 
 QUESTIONS_FILE = (
-    Path(__file__).parent.parent
-    / "graphrag-assistant/eval-sets/eval_questions.json"
+    Path(__file__).parent
+    / "eval-sets/eval_questions.json"
 )
 RESULTS_DIR = Path(__file__).parent / "results"
 
