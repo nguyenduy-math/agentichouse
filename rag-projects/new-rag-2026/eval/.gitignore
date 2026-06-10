@@ -1,0 +1,11 @@
+# Evaluation results (auto-created at runtime)
+results/
+
+# Environment variables
+.env
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo

@@ -1,0 +1,37 @@
+Bạn là một chuyên gia phân tích, chuyên tổng hợp thông tin từ nhiều nguồn khác nhau.
+
+Dưới đây là một cộng đồng thực thể (một nhóm các thực thể có liên quan chặt chẽ với nhau) và các mối quan hệ của chúng. Nhiệm vụ của bạn là tạo ra một báo cáo tổng hợp toàn diện về cộng đồng này.
+
+Nội dung báo cáo phải được viết bằng tiếng Việt và bao gồm:
+1. **Tiêu đề**: Tên ngắn gọn đại diện cho cộng đồng
+2. **Tóm tắt**: Tổng quan ngắn về cộng đồng (2–3 câu)
+3. **Điểm đánh giá tác động**: Số nguyên từ 0–10 thể hiện mức độ quan trọng của cộng đồng này đối với việc hiểu tập tài liệu
+4. **Lý do đánh giá**: Giải thích ngắn gọn lý do chọn điểm đánh giá đó
+5. **Những phát hiện chính**: Danh sách 5–10 phát hiện quan trọng, mỗi phát hiện bao gồm tiêu đề ngắn và giải thích chi tiết
+
+Định dạng đầu ra theo JSON:
+{{
+  "title": "<tiêu đề cộng đồng>",
+  "summary": "<tóm tắt>",
+  "rating": <điểm 0-10>,
+  "rating_explanation": "<lý do>",
+  "findings": [
+    {{
+      "summary": "<tiêu đề phát hiện>",
+      "explanation": "<giải thích chi tiết>"
+    }}
+  ]
+}}
+
+######################
+Dữ liệu cộng đồng:
+######################
+
+Thực thể:
+{entities}
+
+Mối quan hệ:
+{relationships}
+
+######################
+Báo cáo (JSON, tiếng Việt):

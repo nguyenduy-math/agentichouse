@@ -1,0 +1,159 @@
+{
+  "conversation_sets": [
+    {
+      "set_id": "CS-001",
+      "title": "Nghỉ phép và bồi thường ngày phép",
+      "domain": "hr",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Nhân viên chính thức được hưởng bao nhiêu ngày phép năm mỗi năm?",
+          "expected_answer_summary": "Nhân viên chính thức được hưởng số ngày phép năm theo quy định công ty, thường là 12 ngày/năm, tăng theo thâm niên.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 2,
+          "question": "Nếu tôi không sử dụng hết số ngày phép đó thì có được thanh toán bằng tiền không?",
+          "expected_answer_summary": "Phép năm không dùng hết thường được thanh toán bằng tiền khi nghỉ việc hoặc theo chính sách chuyển phép của công ty; một số công ty cho phép chuyển tối đa một số ngày sang năm sau.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 3,
+          "question": "Phép ốm và phép năm khác nhau như thế nào về điều kiện và số ngày?",
+          "expected_answer_summary": "Phép ốm yêu cầu giấy xác nhận của bác sĩ, thường được trả lương từ bảo hiểm xã hội. Phép năm là quyền lợi cố định, không cần lý do cụ thể và hưởng 100% lương.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 4,
+          "question": "Tôi muốn xin nghỉ phép 3 ngày liên tục vào tuần tới. Tôi cần làm những bước gì?",
+          "expected_answer_summary": "Cần đăng ký trên hệ thống quản lý nhân sự hoặc nộp đơn xin phép, thông báo quản lý trực tiếp ít nhất 3-5 ngày trước, bàn giao công việc cho đồng nghiệp, chờ phê duyệt và nhận xác nhận.",
+          "context_dependency": "turns_1_2_3"
+        }
+      ]
+    },
+    {
+      "set_id": "CS-002",
+      "title": "Bảo hiểm và quyền lợi sức khỏe",
+      "domain": "benefits",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Công ty tham gia đóng những loại bảo hiểm nào cho nhân viên?",
+          "expected_answer_summary": "Công ty đóng bảo hiểm xã hội, bảo hiểm y tế, bảo hiểm thất nghiệp bắt buộc theo luật. Ngoài ra có thể có bảo hiểm sức khỏe tự nguyện và bảo hiểm tai nạn lao động.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 2,
+          "question": "Bảo hiểm sức khỏe tự nguyện đó có chi trả cho gia đình nhân viên không?",
+          "expected_answer_summary": "Một số gói bảo hiểm sức khỏe bổ sung cho phép nhân viên đăng ký thêm thành viên gia đình (vợ/chồng, con) với phí đóng thêm, tùy theo chính sách cụ thể của công ty.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 3,
+          "question": "Nếu tôi phải nằm viện, quy trình thanh toán bảo hiểm y tế như thế nào?",
+          "expected_answer_summary": "Có thể thanh toán trực tiếp tại bệnh viện có ký hợp đồng với bảo hiểm y tế bằng thẻ BHYT. Với bệnh viện không liên kết, thanh toán trước rồi nộp hồ sơ hoàn trả qua bảo hiểm xã hội.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 4,
+          "question": "Tôi đang mang thai, công ty có chế độ gì đặc biệt để hỗ trợ ngoài chính sách thai sản thông thường không?",
+          "expected_answer_summary": "Ngoài 6 tháng nghỉ thai sản theo luật, công ty có thể có phụ cấp sinh con, lịch làm việc linh hoạt trong thời kỳ mang thai, và quyền quay lại vị trí cũ sau khi hết thời gian nghỉ.",
+          "context_dependency": "turns_1_2_3"
+        }
+      ]
+    },
+    {
+      "set_id": "CS-003",
+      "title": "Bảo mật thông tin và sự cố IT",
+      "domain": "it",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Nhân viên có được phép cài đặt phần mềm cá nhân trên máy tính công ty không?",
+          "expected_answer_summary": "Nhân viên thường không được tự ý cài đặt phần mềm chưa được IT phê duyệt trên thiết bị công ty. Cần gửi yêu cầu qua helpdesk IT để được xem xét và cài đặt theo quy trình.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 2,
+          "question": "Vậy nếu tôi cần cài một công cụ đặc thù cho công việc, tôi phải làm thế nào?",
+          "expected_answer_summary": "Cần gửi yêu cầu cài phần mềm qua hệ thống helpdesk IT, giải thích mục đích sử dụng và lý do cần thiết. Bộ phận IT đánh giá bảo mật và phê duyệt trước khi cài đặt.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 3,
+          "question": "Tôi nhận được email nghi ngờ là lừa đảo (phishing). Tôi nên xử lý như thế nào?",
+          "expected_answer_summary": "Không click link hay mở file đính kèm. Chuyển tiếp email cho bộ phận IT/bảo mật để phân tích, xóa email khỏi hộp thư, báo cáo sự cố qua kênh quy định.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 4,
+          "question": "Nếu tôi lỡ click vào link trong email phishing đó, tôi cần làm gì ngay lập tức?",
+          "expected_answer_summary": "Ngắt kết nối mạng ngay lập tức, báo cáo khẩn cho bộ phận IT bảo mật, không tiếp tục sử dụng thiết bị đó cho đến khi được IT kiểm tra và xác nhận an toàn. IT sẽ quét virus và kiểm tra dữ liệu bị lộ.",
+          "context_dependency": "turn_3"
+        }
+      ]
+    },
+    {
+      "set_id": "CS-004",
+      "title": "Chi phí công tác và hoàn tiền",
+      "domain": "finance",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Khi đi công tác, nhân viên được thanh toán tiền ăn tối đa bao nhiêu mỗi ngày?",
+          "expected_answer_summary": "Mức phụ cấp tiền ăn công tác được quy định cụ thể theo chức vụ và địa điểm công tác (trong nước hay nước ngoài), nhân viên cần lưu giữ hóa đơn để hoàn trả.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 2,
+          "question": "Chi phí khách sạn có được thanh toán không và có giới hạn mức giá không?",
+          "expected_answer_summary": "Chi phí khách sạn được thanh toán theo mức trần quy định theo từng hạng nhân viên và địa điểm công tác. Vượt mức trần cần được quản lý phê duyệt trước.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 3,
+          "question": "Nếu tôi đặt vé máy bay sớm và giá rẻ hơn mức quy định, phần chênh lệch có được trả cho tôi không?",
+          "expected_answer_summary": "Thông thường công ty chỉ thanh toán chi phí thực tế. Tuy nhiên một số chính sách có thể thưởng tiết kiệm cho nhân viên đặt vé sớm. Cần kiểm tra cụ thể trong quy định.",
+          "context_dependency": "turns_1_2"
+        },
+        {
+          "turn": 4,
+          "question": "Sau khi về từ chuyến công tác, tôi cần nộp hồ sơ hoàn chi phí trong thời hạn bao lâu?",
+          "expected_answer_summary": "Hồ sơ hoàn chi phí công tác thường phải nộp trong vòng 5-7 ngày làm việc sau khi kết thúc chuyến đi, kèm đầy đủ hóa đơn và báo cáo kết quả công tác.",
+          "context_dependency": "turns_1_2_3"
+        }
+      ]
+    },
+    {
+      "set_id": "CS-005",
+      "title": "Tuân thủ và quy trình báo cáo vi phạm",
+      "domain": "compliance+procedures",
+      "turns": [
+        {
+          "turn": 1,
+          "question": "Nhân viên cần khai báo những loại xung đột lợi ích nào theo quy định công ty?",
+          "expected_answer_summary": "Cần khai báo: sở hữu cổ phần ở công ty đối thủ hoặc nhà cung cấp, người thân làm việc tại đối tác, nhận quà tặng vượt giá trị quy định, hoạt động kinh doanh riêng có thể xung đột với công việc.",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 2,
+          "question": "Tôi có một người thân làm ở công ty đang tham gia đấu thầu với công ty mình. Tôi có phải khai báo không?",
+          "expected_answer_summary": "Có, đây là xung đột lợi ích tiềm ẩn và phải khai báo ngay cho quản lý và bộ phận tuân thủ. Nhân viên cần rút khỏi mọi quyết định liên quan đến quá trình đấu thầu đó.",
+          "context_dependency": "turn_1"
+        },
+        {
+          "turn": 3,
+          "question": "Nếu tôi phát hiện đồng nghiệp có dấu hiệu gian lận tài chính, tôi có thể báo cáo ẩn danh không?",
+          "expected_answer_summary": "Có, công ty thường có đường dây nóng hoặc hệ thống báo cáo vi phạm cho phép phản ánh ẩn danh. Người báo cáo được bảo vệ theo chính sách chống trả thù (anti-retaliation).",
+          "context_dependency": "none"
+        },
+        {
+          "turn": 4,
+          "question": "Sau khi tôi báo cáo vi phạm, quy trình điều tra và phản hồi của công ty diễn ra như thế nào?",
+          "expected_answer_summary": "Bộ phận tuân thủ hoặc kiểm toán nội bộ tiếp nhận báo cáo, thành lập nhóm điều tra độc lập, thu thập bằng chứng, đưa ra kết luận và áp dụng biện pháp xử lý. Người báo cáo có thể nhận phản hồi về kết quả điều tra trong thời hạn quy định.",
+          "context_dependency": "turns_1_2_3"
+        }
+      ]
+    }
+  ]
+}

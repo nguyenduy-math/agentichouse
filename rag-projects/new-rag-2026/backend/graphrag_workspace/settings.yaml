@@ -1,0 +1,115 @@
+# graphrag_workspace/settings.yaml
+# Option B: Parquet output + custom Vietnamese prompts (safe hybrid default)
+# For Option A (native Neo4j storage), swap the storage/output/vector_store blocks.
+
+# ─── LLM (indexing: entity extraction, community summarization) ───────────────
+llm:
+  api_key: ${GEMINI_API_KEY}
+  type: openai_chat
+  model: gemini-2.0-flash
+  api_base: https://generativelanguage.googleapis.com/v1beta/openai/
+  max_tokens: 4000
+  temperature: 0
+  request_timeout: 180.0
+  max_retries: 10
+  max_retry_wait: 10.0
+  sleep_on_rate_limit_recommendation: true
+  concurrent_requests: 4
+
+# ─── Embeddings ───────────────────────────────────────────────────────────────
+embeddings:
+  llm:
+    api_key: ${GEMINI_API_KEY}
+    type: openai_embedding
+    model: text-embedding-004
+    api_base: https://generativelanguage.googleapis.com/v1beta/openai/
+    max_retries: 10
+    request_timeout: 60.0
+    concurrent_requests: 8
+  vector_store:
+    # Option B: LanceDB (temporary — import_to_neo4j.py migrates embeddings to Neo4j)
+    type: lancedb
+    db_uri: output/lancedb
+    container_name: default
+    # Option A (uncomment when ready):
+    # type: neo4j
+    # url: ${NEO4J_URI}
+    # username: ${NEO4J_USER}
+    # password: ${NEO4J_PASSWORD}
+
+# ─── Input ────────────────────────────────────────────────────────────────────
+input:
+  type: file
+  file_type: text
+  base_dir: input
+  file_pattern: ".*\\.txt$"
+  encoding: utf-8
+
+# ─── Output ───────────────────────────────────────────────────────────────────
+output:
+  # Option B: file (Parquet)
+  type: file
+  base_dir: output
+  # Option A (uncomment when ready):
+  # type: neo4j
+  # url: ${NEO4J_URI}
+  # username: ${NEO4J_USER}
+  # password: ${NEO4J_PASSWORD}
+
+# ─── Chunking ─────────────────────────────────────────────────────────────────
+# 1200 tokens ≈ 4800 chars. Pre-splitting ensures each file is one article (≤2800 chars),
+# so GraphRAG rarely needs to split further. Overlap is low because pre-splitting reduces need.
+chunks:
+  size: 1200
+  overlap: 100
+  group_by_columns: [id]
+
+# ─── Entity extraction — Vietnamese prompt template ───────────────────────────
+entity_extraction:
+  prompt: prompts/entity_extraction.txt
+  entity_types:
+    - tổ chức        # organization
+    - người          # person
+    - địa điểm       # location
+    - sự kiện        # event
+    - khái niệm      # concept
+    - quy trình      # process
+    - chính sách     # policy
+  max_gleanings: 1
+
+# ─── Community reports — Vietnamese prompt template ───────────────────────────
+community_reports:
+  prompt: prompts/community_report.txt
+  max_length: 2000
+  max_input_length: 8000
+
+# ─── Summarize descriptions — Vietnamese prompt template ──────────────────────
+summarize_descriptions:
+  prompt: prompts/summarize_descriptions.txt
+  max_length: 500
+
+# ─── Claim extraction (disabled — expensive; enable for compliance domain) ────
+claim_extraction:
+  enabled: false
+
+# ─── Local search context ─────────────────────────────────────────────────────
+local_search:
+  text_unit_prop: 0.5
+  community_prop: 0.1
+  conversation_history_max_turns: 5
+  top_k_mapped_entities: 10
+  top_k_relationships: 10
+  max_tokens: 12000
+
+# ─── Global search context ────────────────────────────────────────────────────
+global_search:
+  max_tokens: 12000
+  data_max_tokens: 12000
+  map_max_tokens: 1000
+  reduce_max_tokens: 2000
+  concurrency: 32
+
+# ─── Reporting ────────────────────────────────────────────────────────────────
+reporting:
+  type: file
+  base_dir: logs

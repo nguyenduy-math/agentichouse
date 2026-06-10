@@ -1,0 +1,16 @@
+Bạn là một trợ lý AI chuyên tổng hợp thông tin.
+
+Dưới đây là một thực thể cùng với danh sách các mô tả về thực thể đó, được thu thập từ nhiều tài liệu khác nhau. Hãy tổng hợp tất cả các thông tin này thành một mô tả duy nhất, toàn diện, và mạch lạc bằng tiếng Việt.
+
+Yêu cầu:
+- Mô tả phải bao gồm tất cả các thông tin quan trọng từ các mô tả gốc
+- Giải quyết các thông tin mâu thuẫn bằng cách đề cập đến sự khác biệt
+- Viết theo văn phong khách quan, trang trọng
+- Độ dài tối đa: {max_length} từ
+
+Thực thể: {entity_name}
+
+Danh sách mô tả:
+{description_list}
+
+Mô tả tổng hợp (tiếng Việt):

@@ -1,0 +1,49 @@
+-Mục tiêu-
+Cho một đoạn văn bản và danh sách các loại thực thể, hãy xác định tất cả các thực thể thuộc các loại đó trong văn bản và tất cả các mối quan hệ giữa các thực thể đã xác định.
+
+-Các bước thực hiện-
+1. Xác định tất cả các thực thể. Với mỗi thực thể được xác định, hãy trích xuất thông tin sau:
+   - entity_name: Tên của thực thể, viết hoa chữ cái đầu
+   - entity_type: Một trong các loại sau: [{entity_types}]
+   - entity_description: Mô tả toàn diện về các thuộc tính và hoạt động của thực thể
+   Định dạng mỗi thực thể như sau:
+   ("entity"{tuple_delimiter}<entity_name>{tuple_delimiter}<entity_type>{tuple_delimiter}<entity_description>)
+
+2. Từ các thực thể đã xác định ở bước 1, xác định tất cả các cặp thực thể (source_entity, target_entity) có mối quan hệ *rõ ràng* với nhau.
+   Với mỗi cặp thực thể liên quan, trích xuất thông tin sau:
+   - source_entity: Tên của thực thể nguồn, như đã xác định ở bước 1
+   - target_entity: Tên của thực thể đích, như đã xác định ở bước 1
+   - relationship_description: Giải thích tại sao bạn cho rằng thực thể nguồn và thực thể đích có mối quan hệ với nhau
+   - relationship_strength: Điểm số nguyên từ 1 đến 10 thể hiện mức độ mạnh của mối quan hệ
+   Định dạng mỗi mối quan hệ như sau:
+   ("relationship"{tuple_delimiter}<source_entity>{tuple_delimiter}<target_entity>{tuple_delimiter}<relationship_description>{tuple_delimiter}<relationship_strength>)
+
+3. Trả về kết quả đầu ra bằng tiếng Việt dưới dạng danh sách tất cả các thực thể và mối quan hệ đã xác định. Sử dụng **{record_delimiter}** làm dấu phân cách danh sách.
+
+4. Khi hoàn thành, hãy xuất ra {completion_delimiter}
+
+######################
+-Ví dụ-
+######################
+
+Ví dụ 1:
+Loại thực thể: [tổ chức, người, địa điểm, chính sách]
+Văn bản:
+Công ty TNHH Kỹ thuật Số Việt ban hành Chính sách An toàn Thông tin số 2024-IT-001 vào tháng 3 năm 2024. Chính sách này được Giám đốc Điều hành Nguyễn Văn An phê duyệt và áp dụng cho tất cả nhân viên tại trụ sở Hà Nội.
+
+Kết quả:
+("entity"{tuple_delimiter}CÔNG TY TNHH KỸ THUẬT SỐ VIỆT{tuple_delimiter}tổ chức{tuple_delimiter}Công ty công nghệ thông tin ban hành các chính sách nội bộ về an toàn thông tin){record_delimiter}
+("entity"{tuple_delimiter}CHÍNH SÁCH AN TOÀN THÔNG TIN 2024-IT-001{tuple_delimiter}chính sách{tuple_delimiter}Chính sách an toàn thông tin số 2024-IT-001, ban hành tháng 3 năm 2024, áp dụng cho toàn bộ nhân viên){record_delimiter}
+("entity"{tuple_delimiter}NGUYỄN VĂN AN{tuple_delimiter}người{tuple_delimiter}Giám đốc Điều hành, người phê duyệt Chính sách An toàn Thông tin 2024-IT-001){record_delimiter}
+("entity"{tuple_delimiter}HÀ NỘI{tuple_delimiter}địa điểm{tuple_delimiter}Trụ sở của Công ty TNHH Kỹ thuật Số Việt){record_delimiter}
+("relationship"{tuple_delimiter}CÔNG TY TNHH KỸ THUẬT SỐ VIỆT{tuple_delimiter}CHÍNH SÁCH AN TOÀN THÔNG TIN 2024-IT-001{tuple_delimiter}Công ty ban hành chính sách này{tuple_delimiter}9){record_delimiter}
+("relationship"{tuple_delimiter}NGUYỄN VĂN AN{tuple_delimiter}CHÍNH SÁCH AN TOÀN THÔNG TIN 2024-IT-001{tuple_delimiter}Giám đốc phê duyệt chính sách{tuple_delimiter}8){record_delimiter}
+{completion_delimiter}
+
+######################
+-Dữ liệu thực tế-
+######################
+
+Loại thực thể: [{entity_types}]
+Văn bản: {input_text}
+Kết quả:

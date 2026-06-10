@@ -1,0 +1,164 @@
+{
+  "questions": [
+    {
+      "id": "HR-001",
+      "domain": "hr",
+      "question": "Nhân viên mới sau thời gian thử việc được hưởng bao nhiêu ngày phép năm?",
+      "expected_answer_summary": "Nhân viên chính thức sau thử việc được hưởng số ngày phép năm theo quy định của công ty, thường là 12 ngày/năm hoặc theo hợp đồng lao động.",
+      "difficulty": "easy",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "HR-002",
+      "domain": "hr",
+      "question": "Quy trình xử lý kỷ luật nhân viên vi phạm nội quy lần đầu như thế nào?",
+      "expected_answer_summary": "Quy trình kỷ luật lần đầu thường gồm: cảnh báo bằng miệng hoặc văn bản, lập biên bản vi phạm, họp hội đồng kỷ luật nếu cần, lưu hồ sơ nhân sự.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "HR-003",
+      "domain": "hr",
+      "question": "Nhân viên có thể làm việc từ xa (remote) bao nhiêu ngày trong một tuần theo chính sách công ty?",
+      "expected_answer_summary": "Chính sách làm việc từ xa của công ty quy định số ngày remote tối đa mỗi tuần, yêu cầu phê duyệt từ quản lý trực tiếp và đảm bảo năng suất làm việc.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "HR-004",
+      "domain": "hr",
+      "question": "Quy trình đánh giá hiệu suất nhân viên cuối năm bao gồm những bước nào và ai tham gia?",
+      "expected_answer_summary": "Quy trình đánh giá cuối năm gồm tự đánh giá của nhân viên, đánh giá từ quản lý trực tiếp, họp phản hồi, và phê duyệt cấp trên. Kết quả ảnh hưởng đến tăng lương và thưởng.",
+      "difficulty": "hard",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "BEN-001",
+      "domain": "benefits",
+      "question": "Công ty đóng bao nhiêu phần trăm bảo hiểm y tế cho nhân viên chính thức?",
+      "expected_answer_summary": "Công ty đóng phần bảo hiểm y tế theo quy định pháp luật và có thể đóng thêm bảo hiểm sức khỏe tự nguyện cho nhân viên và gia đình.",
+      "difficulty": "easy",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "BEN-002",
+      "domain": "benefits",
+      "question": "Chính sách nghỉ thai sản của công ty có gì khác so với quy định của nhà nước?",
+      "expected_answer_summary": "Ngoài 6 tháng nghỉ thai sản theo luật, công ty có thể hỗ trợ thêm phụ cấp sinh con, cho phép nghỉ thêm không lương hoặc làm bán thời gian sau khi hết thời gian nghỉ hưởng lương.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "IT-001",
+      "domain": "it",
+      "question": "Chính sách quản lý mật khẩu của công ty yêu cầu độ dài tối thiểu và tần suất thay đổi như thế nào?",
+      "expected_answer_summary": "Mật khẩu phải đủ độ dài tối thiểu (thường 8-12 ký tự), kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt. Phải thay đổi định kỳ (thường 90 ngày) và không được tái sử dụng mật khẩu cũ.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "IT-002",
+      "domain": "it",
+      "question": "Nhân viên cần làm gì khi phát hiện thiết bị công ty bị mất hoặc bị đánh cắp?",
+      "expected_answer_summary": "Khi phát hiện thiết bị bị mất/đánh cắp, nhân viên cần báo cáo ngay cho bộ phận IT và quản lý trực tiếp, nộp báo cáo bằng văn bản, IT sẽ xóa dữ liệu từ xa và điều tra sự cố.",
+      "difficulty": "easy",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "FIN-001",
+      "domain": "finance",
+      "question": "Hạn mức chi tiêu công tác không cần phê duyệt cấp trên thêm là bao nhiêu?",
+      "expected_answer_summary": "Có hạn mức chi tiêu công tác cụ thể (ví dụ theo ngày hoặc theo chuyến đi) mà nhân viên có thể tự quyết định không cần phê duyệt thêm, vượt ngưỡng này cần xin phê duyệt trước.",
+      "difficulty": "easy",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "FIN-002",
+      "domain": "finance",
+      "question": "Quy trình hoàn chi phí công tác từ lúc nộp hồ sơ đến khi nhận tiền mất bao lâu?",
+      "expected_answer_summary": "Quy trình hoàn chi phí gồm: nộp phiếu chi và hóa đơn chứng từ, quản lý phê duyệt, bộ phận tài chính xử lý, thanh toán qua chuyển khoản. Thường mất 5-10 ngày làm việc.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "COMP-001",
+      "domain": "compliance",
+      "question": "Nhân viên cần báo cáo xung đột lợi ích cho ai và trong thời hạn bao lâu?",
+      "expected_answer_summary": "Nhân viên phải khai báo xung đột lợi ích với quản lý trực tiếp và bộ phận tuân thủ/pháp chế ngay khi phát sinh hoặc trong vòng thời gian quy định (thường 5-7 ngày làm việc).",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "COMP-002",
+      "domain": "compliance",
+      "question": "Các hành vi nào bị coi là tham nhũng và cần báo cáo theo quy định nội bộ?",
+      "expected_answer_summary": "Các hành vi bị coi là tham nhũng gồm: nhận/đưa hối lộ, lạm dụng quyền hạn, gian lận tài chính, tiết lộ thông tin nội bộ có lợi cho bên ngoài. Cần báo cáo qua đường dây nóng hoặc email tuân thủ.",
+      "difficulty": "hard",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "PROC-001",
+      "domain": "procedures",
+      "question": "Quy trình xin nghỉ phép hàng năm gồm những bước nào và cần thông báo trước bao nhiêu ngày?",
+      "expected_answer_summary": "Quy trình xin phép gồm: đăng ký trên hệ thống hoặc nộp đơn, thông báo quản lý trực tiếp ít nhất 3-5 ngày trước (hoặc sớm hơn với phép dài), chờ phê duyệt và nhận xác nhận.",
+      "difficulty": "easy",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "PROC-002",
+      "domain": "procedures",
+      "question": "Quy trình mua sắm thiết bị văn phòng với giá trị trên 5 triệu đồng gồm những bước gì?",
+      "expected_answer_summary": "Mua sắm trên ngưỡng quy định cần: lập yêu cầu mua sắm, xin 3 báo giá từ nhà cung cấp, trình phê duyệt quản lý và tài chính, phát hành đơn đặt hàng, kiểm nhận hàng hóa.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "GEN-001",
+      "domain": "general",
+      "question": "Tổng hợp các quyền lợi chính mà nhân viên được hưởng từ khi gia nhập công ty.",
+      "expected_answer_summary": "Nhân viên được hưởng các quyền lợi gồm: lương, thưởng KPI và thưởng tết, bảo hiểm xã hội và y tế, phép năm, đào tạo phát triển, phụ cấp ăn trưa và đi lại, bảo hiểm sức khỏe bổ sung.",
+      "difficulty": "hard",
+      "query_type": "GLOBAL"
+    },
+    {
+      "id": "CROSS-001",
+      "domain": "hr+benefits",
+      "question": "Chính sách nghỉ thai sản và các quyền lợi bảo hiểm liên quan đến sinh con như thế nào?",
+      "expected_answer_summary": "Nghỉ thai sản theo luật 6 tháng được hưởng trợ cấp từ bảo hiểm xã hội, công ty có thể bù thêm để đủ lương. Sau khi đi làm lại, nhân viên được bảo lưu vị trí và hưởng đầy đủ quyền lợi. Con được hưởng bảo hiểm y tế gia đình nếu có.",
+      "difficulty": "hard",
+      "query_type": "GLOBAL"
+    },
+    {
+      "id": "CROSS-002",
+      "domain": "it+compliance",
+      "question": "Nhân viên cần tuân thủ những quy định nào về bảo mật dữ liệu khách hàng theo cả chính sách IT và pháp lý?",
+      "expected_answer_summary": "Về IT: mã hóa dữ liệu, kiểm soát truy cập, không lưu dữ liệu khách hàng trên thiết bị cá nhân. Về pháp lý: tuân thủ Luật An ninh mạng và Nghị định bảo vệ dữ liệu cá nhân, báo cáo vi phạm trong 72 giờ.",
+      "difficulty": "hard",
+      "query_type": "GLOBAL"
+    },
+    {
+      "id": "CROSS-003",
+      "domain": "finance+procedures",
+      "question": "Quy trình thanh toán và phê duyệt hợp đồng với nhà cung cấp mới gồm những bước nào?",
+      "expected_answer_summary": "Quy trình gồm: thẩm định nhà cung cấp (tuân thủ), đàm phán hợp đồng (pháp chế), phê duyệt giám đốc, ký hợp đồng, thanh toán theo điều khoản hợp đồng với chứng từ đầy đủ.",
+      "difficulty": "hard",
+      "query_type": "GLOBAL"
+    },
+    {
+      "id": "FALL-001",
+      "domain": "general",
+      "question": "Công ty có chính sách hỗ trợ chi phí học tiến sĩ ở nước ngoài không?",
+      "expected_answer_summary": "Thông tin về chương trình hỗ trợ học tiến sĩ nước ngoài không có trong tài liệu nội bộ hiện tại. Nhân viên nên liên hệ bộ phận nhân sự để biết thêm chi tiết về các chương trình học bổng và đào tạo.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    },
+    {
+      "id": "FALL-002",
+      "domain": "general",
+      "question": "Chính sách của công ty về việc nhân viên sử dụng AI tạo sinh (ChatGPT, Gemini) trong công việc là gì?",
+      "expected_answer_summary": "Chính sách sử dụng công cụ AI tạo sinh trong công việc có thể chưa được cập nhật trong tài liệu nội bộ. Nhân viên nên tham khảo hướng dẫn IT bảo mật mới nhất và xác nhận với quản lý về việc sử dụng công cụ AI.",
+      "difficulty": "medium",
+      "query_type": "LOCAL"
+    }
+  ]
+}
