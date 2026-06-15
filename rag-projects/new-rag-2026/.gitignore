@@ -10,7 +10,6 @@ build/
 
 # Environment
 .env
-.env.*
 
 # Data / database (sensitive — never commit)
 backend/data/history.db
