@@ -138,7 +138,7 @@ new-rag-2026/
 
 | Requirement | Version | Notes |
 |---|---|---|
-| Python | 3.11 – 3.13 | **Do not use 3.14** — `pydantic-core` Rust wheels not yet available |
+| Python | **3.10 – 3.12** | `graphrag 2.x` requires Python `<3.13`; use `python3.12` (available on most systems) |
 | Node.js | 20+ | For frontend dev server |
 | npm | 9+ | |
 | Docker + Docker Compose | v2+ | For recommended deployment |
@@ -182,13 +182,13 @@ The backend waits for Neo4j's health check before starting. First boot takes ~60
 ```bash
 cd backend
 
-# Create and activate virtualenv
-python -m venv .venv
+# Create and activate virtualenv — must use Python 3.12 (graphrag 2.x requires <3.13)
+python3.12 -m venv .venv
 source .venv/bin/activate          # macOS/Linux
 # .venv\Scripts\activate           # Windows PowerShell
 
-pip install --upgrade pip
-pip install -r requirements.txt
+pip install --upgrade pip setuptools wheel
+pip install --prefer-binary -r requirements.txt
 
 cp .env.example .env
 # Edit .env — fill in API keys and NEO4J_PASSWORD
@@ -395,10 +395,11 @@ The `eval/` directory has an independent Python environment and its own `.env`.
 ```bash
 cd eval
 
-# Setup (use Python 3.11–3.13; do NOT use 3.14)
-python -m venv .venv
+# Setup — use Python 3.10–3.12; do NOT use 3.13+ (graphrag 2.x incompatible)
+python3.12 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install --upgrade pip setuptools wheel
+pip install --prefer-binary -r requirements.txt
 
 cp .env.example .env
 # Set OPENAI_API_KEY (always required — used for embeddings)
@@ -589,7 +590,20 @@ The backend service depends on `neo4j` via health check — it will not start un
 
 **Neo4j connection refused** — if running locally (not Docker), start Neo4j separately (`docker compose up neo4j -d`) and set `NEO4J_URI=bolt://localhost:7687` in `.env`.
 
-**Python version error with ragas** — use Python 3.11–3.13. The `pydantic-core` Rust wheels are not yet available for 3.14. This applies to both `backend/` and `eval/`.
+**`Could not find a version that satisfies the requirement graphrag<3.0.0,>=2.0.0`** — you are running Python 3.13+. `graphrag 2.x` declares `python_requires=">=3.10,<3.13"`, so pip correctly rejects all 2.x wheels. Fix: recreate the venv with Python 3.12:
+```bash
+rm -rf .venv
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Python version compatibility** — use Python **3.10 – 3.12** for both `backend/` and `eval/`. Python 3.13+ is blocked by `graphrag 2.x`.
+
+**`Building wheel for llvmlite (pyproject.toml) ... error`** — pip is trying to compile `llvmlite` from source, which requires LLVM to be installed. Use `--prefer-binary` to force pip to download a pre-built wheel instead:
+```bash
+pip install --prefer-binary -r requirements.txt
+```
 
 **Embedding dimension mismatch** — if you see Neo4j vector index errors, verify that `EMBEDDING_DIM` in `.env` matches the model: `768` for `text-embedding-004`, `1536` for `text-embedding-3-small`, `1024` for `BAAI/bge-large-zh-v1.5`. Re-import after changing models.
 
