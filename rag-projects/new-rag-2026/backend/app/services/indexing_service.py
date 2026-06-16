@@ -84,6 +84,7 @@ class IndexingService:
 
         articles = split_by_article(all_text, max_chunk_size=2800)
 
+        self._input_dir.mkdir(parents=True, exist_ok=True)
         output_paths: list[Path] = []
         stem = file_path.stem
         for i, article_text in enumerate(articles):
