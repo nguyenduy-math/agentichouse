@@ -2,30 +2,31 @@
 # Option B: Parquet output + custom Vietnamese prompts (safe hybrid default)
 # For Option A (native Neo4j storage), swap the storage/output/vector_store blocks.
 
-# ─── LLM (indexing: entity extraction, community summarization) ───────────────
-llm:
-  api_key: ${GEMINI_API_KEY}
-  type: openai_chat
-  model: gemini-2.0-flash
-  api_base: https://generativelanguage.googleapis.com/v1beta/openai/
-  max_tokens: 4000
-  temperature: 0
-  request_timeout: 180.0
-  max_retries: 10
-  max_retry_wait: 10.0
-  sleep_on_rate_limit_recommendation: true
-  concurrent_requests: 4
-
-# ─── Embeddings ───────────────────────────────────────────────────────────────
-embeddings:
-  llm:
+# ─── Models (GraphRAG 2.x schema) ────────────────────────────────────────────
+models:
+  default_chat_model:
     api_key: ${GEMINI_API_KEY}
-    type: openai_embedding
-    model: text-embedding-004
-    api_base: https://generativelanguage.googleapis.com/v1beta/openai/
+    type: chat
+    model_provider: gemini
+    model: gemini-2.5-flash
+    max_tokens: 4000
+    temperature: 0
+    request_timeout: 180.0
+    max_retries: 10
+    max_retry_wait: 10.0
+    sleep_on_rate_limit_recommendation: true
+    concurrent_requests: 4
+  default_embedding_model:
+    api_key: ${GEMINI_API_KEY}
+    type: embedding
+    model_provider: gemini
+    model: gemini-embedding-001
     max_retries: 10
     request_timeout: 60.0
     concurrent_requests: 8
+
+# ─── Embeddings ───────────────────────────────────────────────────────────────
+embeddings:
   vector_store:
     # Option B: LanceDB (temporary — import_to_neo4j.py migrates embeddings to Neo4j)
     type: lancedb
@@ -42,7 +43,7 @@ input:
   type: file
   file_type: text
   base_dir: input
-  file_pattern: ".*\\.txt$"
+  file_pattern: ".*\\.txt$$"
   encoding: utf-8
 
 # ─── Output ───────────────────────────────────────────────────────────────────

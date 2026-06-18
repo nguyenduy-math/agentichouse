@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n '\\\\$' /Users/nguyenduy/Documents/nguyenduy-math/agentichouse/agentichouse/rag-projects/new-rag-2026/backend/graphrag_workspace/prompts/entity_extraction.txt)",
+      "Bash(grep -n '\\\\$' /Users/nguyenduy/Documents/nguyenduy-math/agentichouse/agentichouse/rag-projects/new-rag-2026/backend/graphrag_workspace/prompts/community_report.txt)",
+      "Bash(grep -n '\\\\$' /Users/nguyenduy/Documents/nguyenduy-math/agentichouse/agentichouse/rag-projects/new-rag-2026/backend/graphrag_workspace/prompts/summarize_descriptions.txt)",
+      "Bash(grep \"\\\\.py$\")"
+    ]
+  }
+}

@@ -96,8 +96,8 @@ async def lifespan(app: FastAPI):
     )
     app.state.graphrag_service = graphrag_svc
 
-    artifacts_dir = Path(settings.GRAPHRAG_ROOT) / "output" / "artifacts"
-    if (artifacts_dir / "create_final_entities.parquet").exists():
+    output_dir = Path(settings.GRAPHRAG_ROOT) / "output"
+    if (output_dir / "entities.parquet").exists():
         logger.info("Found existing artifacts -- loading GraphRAG search engines...")
         await graphrag_svc.reload()
     else:

@@ -15,11 +15,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import subprocess
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class IndexingService:
     ) -> None:
         self._root = Path(graphrag_root)
         self._input_dir = self._root / "input"
-        self._artifacts_dir = self._root / "output" / "artifacts"
+        self._artifacts_dir = self._root / "output"
         self._neo4j_uri = neo4j_uri
         self._neo4j_user = neo4j_user
         self._neo4j_password = neo4j_password
@@ -53,7 +53,6 @@ class IndexingService:
         self._last_completed_at: str | None = None
         self._lock = asyncio.Lock()
 
-    # Import Any here to avoid circular at module level
     def set_graphrag_service(self, svc: Any) -> None:
         self._graphrag_service = svc
 
@@ -138,14 +137,66 @@ class IndexingService:
             self._message = f"Pipeline error: {exc}"
             logger.error("Indexing pipeline failed: %s", exc, exc_info=True)
 
+    def _graphrag_bin(self) -> str:
+        """
+        Resolve the graphrag CLI binary, trying candidates in order:
+          1. Next to sys.executable — correct when venv is activated or inside Docker.
+          2. shutil.which("graphrag") — correct when graphrag is on PATH.
+          3. Project .venv/bin/graphrag — correct for local dev without activating the venv.
+        """
+        import shutil
+
+        candidates = [
+            Path(sys.executable).parent / "graphrag",
+            Path(__file__).parent.parent.parent / ".venv" / "bin" / "graphrag",
+        ]
+        for path in candidates:
+            if path.exists():
+                return str(path)
+
+        on_path = shutil.which("graphrag")
+        if on_path:
+            return on_path
+
+        raise RuntimeError(
+            "graphrag binary not found. "
+            "Run: pip install 'graphrag>=2.0.0,<3.0.0'"
+        )
+
+    def _subprocess_env(self) -> dict:
+        """
+        Build the environment for graphrag/import subprocesses.
+
+        pydantic-settings loads .env into the Settings object but does NOT write
+        to os.environ, so subprocesses would inherit an empty GEMINI_API_KEY.
+        We merge os.environ with the values from Settings to cover both cases:
+          - user exported vars in the shell (already in os.environ)
+          - user relies on .env only (only in settings, not os.environ)
+        """
+        from app.config import settings
+        env = dict(os.environ)
+        overrides = {
+            "GEMINI_API_KEY":      settings.GEMINI_API_KEY,
+            "OPENAI_API_KEY":      settings.OPENAI_API_KEY,
+            "NEO4J_URI":           settings.NEO4J_URI,
+            "NEO4J_USER":          settings.NEO4J_USER,
+            "NEO4J_PASSWORD":      settings.NEO4J_PASSWORD,
+            "GRAPHRAG_QUERY_MODEL": settings.GRAPHRAG_QUERY_MODEL,
+            "EMBEDDING_MODEL":     settings.EMBEDDING_MODEL,
+        }
+        env.update({k: v for k, v in overrides.items() if v})
+        return env
+
     async def _run_graphrag_index(self) -> None:
         """Run `graphrag index` as a subprocess."""
         cmd = [
-            sys.executable, "-m", "graphrag.index",
+            self._graphrag_bin(),
+            "index",
             "--root", str(self._root),
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
+            env=self._subprocess_env(),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -158,8 +209,11 @@ class IndexingService:
     async def _run_neo4j_import(self) -> None:
         """Run import_to_neo4j.py as a subprocess."""
         script = Path(__file__).parent.parent.parent / "scripts" / "import_to_neo4j.py"
+        # Resolve the Python interpreter the same way as the graphrag binary so
+        # we pick up the venv even when the server is started with a system Python.
+        python_bin = str(Path(self._graphrag_bin()).parent / "python")
         cmd = [
-            sys.executable, str(script),
+            python_bin, str(script),
             "--artifacts", str(self._artifacts_dir),
             "--uri", self._neo4j_uri,
             "--user", self._neo4j_user,
@@ -167,6 +221,7 @@ class IndexingService:
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
+            env=self._subprocess_env(),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
@@ -175,7 +230,3 @@ class IndexingService:
             output = stdout.decode(errors="replace") if stdout else ""
             raise RuntimeError(f"import_to_neo4j.py failed (exit {proc.returncode}):\n{output[-2000:]}")
         logger.info("Neo4j import completed successfully.")
-
-
-# Forward reference for type hints
-from typing import Any  # noqa: E402

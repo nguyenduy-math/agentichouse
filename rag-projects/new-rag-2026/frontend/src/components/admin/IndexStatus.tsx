@@ -2,10 +2,9 @@ import { useIndexStatus } from '../../hooks/useIndexStatus'
 
 const STAGE_LABELS: Record<string, string> = {
   idle: 'Chờ bắt đầu',
-  ingesting: 'Đang nạp tài liệu...',
   indexing: 'Đang lập chỉ mục GraphRAG...',
   importing: 'Đang nhập vào Neo4j...',
-  done: 'Hoàn thành',
+  ready: 'Hoàn thành',
   error: 'Lỗi',
 }
 
@@ -18,21 +17,16 @@ export default function IndexStatus({ polling }: Props) {
 
   if (!status) return null
 
-  const pct =
-    status.total > 0
-      ? Math.round((status.done / status.total) * 100)
-      : status.status === 'done'
-      ? 100
-      : 0
-
-  const isDone = status.status === 'done'
+  const isDone = status.status === 'ready'
   const isError = status.status === 'error'
+  const isRunning = status.status === 'indexing' || status.status === 'importing'
+  const pct = isDone ? 100 : isRunning ? 50 : 0
 
   return (
     <div className="mt-4 p-4 bg-slate-800 border border-slate-700 rounded-lg space-y-3">
       <div className="flex items-center justify-between text-sm">
         <span className="text-slate-300 font-medium">
-          {STAGE_LABELS[status.stage] ?? status.stage}
+          {STAGE_LABELS[status.status] ?? status.status}
         </span>
         <span
           className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -43,7 +37,7 @@ export default function IndexStatus({ polling }: Props) {
               : 'bg-blue-900/60 text-blue-300'
           }`}
         >
-          {isDone ? 'Xong' : isError ? 'Lỗi' : 'Đang chạy'}
+          {isDone ? 'Xong' : isError ? 'Lỗi' : status.status === 'idle' ? 'Chờ' : 'Đang chạy'}
         </span>
       </div>
 
@@ -57,15 +51,9 @@ export default function IndexStatus({ polling }: Props) {
         />
       </div>
 
-      {status.total > 0 && (
-        <p className="text-xs text-slate-500">
-          {status.done} / {status.total} tài liệu
-        </p>
-      )}
-
-      {isError && status.last_error && (
-        <p className="text-xs text-red-400 bg-red-900/20 p-2 rounded">
-          {status.last_error}
+      {status.message && (
+        <p className={`text-xs p-2 rounded ${isError ? 'text-red-400 bg-red-900/20' : 'text-slate-400'}`}>
+          {status.message}
         </p>
       )}
 

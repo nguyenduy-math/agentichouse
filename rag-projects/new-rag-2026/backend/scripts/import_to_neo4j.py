@@ -4,22 +4,29 @@ Run after `graphrag index` completes.
 
 Usage:
     python scripts/import_to_neo4j.py \\
-        --artifacts ./graphrag_workspace/output/artifacts \\
+        --artifacts ./graphrag_workspace/output \\
         --uri bolt://localhost:7687 \\
         --user neo4j \\
         --password <password>
 
-    # With non-default embedding dimensions (Siliconflow BAAI/bge-large-zh-v1.5 = 1024):
-    python scripts/import_to_neo4j.py \\
-        --artifacts ./graphrag_workspace/output/artifacts \\
-        --uri bolt://localhost:7687 \\
-        --user neo4j \\
-        --password <password> \\
-        --embedding-dim 1024
+Document-level refresh strategy
+---------------------------------
+graphrag rebuilds *all* Parquet files on every index run with new UUIDs for
+Community and TextUnit nodes, but entity names stay stable.  To avoid stale
+data accumulating across re-indexes we use two-phase cleanup:
+
+  Phase 1 — transient nodes (Community, TextUnit): always wiped and recreated.
+  Phase 2 — entity diff: Entity nodes whose stable-ID is not in the new Parquet
+             are deleted (they belong to a removed/replaced document section).
+             Entity nodes still present are updated in place via MERGE.
+
+Entity stable-IDs are SHA-256 hashes of the normalised entity title so the
+same real-world entity survives a re-index of any document that mentions it.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -27,19 +34,41 @@ import pandas as pd
 from neo4j import GraphDatabase
 
 
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Import GraphRAG Parquet artifacts into Neo4j")
-    p.add_argument("--artifacts", required=True, help="Path to GraphRAG output/artifacts directory")
+    p.add_argument("--artifacts", required=True, help="Path to GraphRAG output directory")
     p.add_argument("--uri", default="bolt://localhost:7687", help="Neo4j Bolt URI")
     p.add_argument("--user", default="neo4j", help="Neo4j username")
     p.add_argument("--password", required=True, help="Neo4j password")
     p.add_argument(
         "--embedding-dim",
         type=int,
-        default=768,
-        help="Embedding dimensions for vector indexes (768 for Gemini, 1024 for Siliconflow, 1536 for OpenAI)",
+        default=3072,
+        help="Embedding dimensions for vector indexes (3072 for gemini-embedding-001, "
+             "768 for text-embedding-004, 1024 for Siliconflow, 1536 for OpenAI)",
     )
     return p.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+BATCH_SIZE = 500
+
+
+def stable_entity_id(name: str) -> str:
+    """Return a deterministic 32-char hex ID for an entity name.
+
+    graphrag uppercases entity titles (e.g. "THE COMPANY"), so we normalise
+    to uppercase before hashing to ensure the same real-world entity always
+    maps to the same Neo4j node across index runs.
+    """
+    return hashlib.sha256(name.upper().strip().encode()).hexdigest()[:32]
 
 
 def _embedding_list(val) -> list[float] | None:
@@ -58,16 +87,69 @@ def _embedding_list(val) -> list[float] | None:
         return None
 
 
-BATCH_SIZE = 500
+def _array_to_list(val) -> list:
+    """Safely convert a column value that may be a numpy array, list, str, or None."""
+    if val is None:
+        return []
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except Exception:
+            return []
+    try:
+        return list(val)
+    except TypeError:
+        return []
 
+
+# ---------------------------------------------------------------------------
+# Cleanup helpers
+# ---------------------------------------------------------------------------
+
+def delete_transient_nodes(driver) -> None:
+    """Wipe Community and TextUnit nodes — they get new UUIDs on every graphrag run."""
+    with driver.session() as session:
+        for label in ("Community", "TextUnit"):
+            deleted = 1
+            while deleted > 0:
+                result = session.run(
+                    f"MATCH (n:{label}) WITH n LIMIT 1000 DETACH DELETE n RETURN count(n) AS d"
+                )
+                deleted = result.single()["d"]
+    print("Cleared transient nodes (Community, TextUnit).")
+
+
+def delete_stale_entities(driver, entity_df: pd.DataFrame) -> None:
+    """Remove Entity nodes whose stable-ID is no longer present in the new Parquet.
+
+    These are entities that existed in a previous document version but are
+    absent from the freshly rebuilt graph — i.e. the document-level cleanup.
+    Entity nodes shared across multiple documents are preserved because their
+    stable-ID appears in the new Parquet (contributed by the other documents).
+    """
+    current_ids = [stable_entity_id(str(row["title"])) for _, row in entity_df.iterrows()]
+    with driver.session() as session:
+        result = session.run(
+            "MATCH (e:Entity) WHERE NOT e.id IN $ids DETACH DELETE e RETURN count(e) AS d",
+            ids=current_ids,
+        )
+        deleted = result.single()["d"]
+    if deleted:
+        print(f"Removed {deleted} stale entity node(s).")
+
+
+# ---------------------------------------------------------------------------
+# Import functions
+# ---------------------------------------------------------------------------
 
 def import_entities(tx, df: pd.DataFrame) -> None:
-    """Import Entity nodes with embeddings."""
+    """MERGE Entity nodes using stable name-derived IDs."""
     records = []
     for _, row in df.iterrows():
+        name = str(row.get("title", "") or "")
         records.append({
-            "id": str(row["id"]),
-            "name": str(row.get("name", "") or ""),
+            "id": stable_entity_id(name),
+            "name": name,
             "type": str(row.get("type", "") or ""),
             "description": str(row.get("description", "") or ""),
             "embedding": _embedding_list(row.get("description_embedding")),
@@ -86,20 +168,24 @@ def import_entities(tx, df: pd.DataFrame) -> None:
 
 
 def import_relationships(tx, df: pd.DataFrame) -> None:
-    """Import RELATED_TO relationships between Entity nodes."""
+    """MERGE RELATED_TO relationships using stable entity IDs.
+
+    relationships.parquet stores entity names (not UUIDs) in source/target,
+    so we can compute stable IDs directly without a lookup table.
+    """
     records = []
     for _, row in df.iterrows():
         records.append({
-            "source": str(row["source"]),
-            "target": str(row["target"]),
+            "source_id": stable_entity_id(str(row["source"])),
+            "target_id": stable_entity_id(str(row["target"])),
             "description": str(row.get("description", "") or ""),
             "weight": float(row.get("weight", 1.0) or 1.0),
         })
     tx.run(
         """
         UNWIND $records AS r
-        MATCH (src:Entity {id: r.source})
-        MATCH (tgt:Entity {id: r.target})
+        MATCH (src:Entity {id: r.source_id})
+        MATCH (tgt:Entity {id: r.target_id})
         MERGE (src)-[rel:RELATED_TO]->(tgt)
         SET rel.description = r.description,
             rel.weight = r.weight
@@ -108,19 +194,14 @@ def import_relationships(tx, df: pd.DataFrame) -> None:
     )
 
 
-def import_communities(
-    tx, df: pd.DataFrame, report_df: pd.DataFrame
-) -> None:
-    """Import Community nodes with summary text and embeddings from community reports."""
-    # Normalize report_df ID column
-    report_col_map = {}
-    if "community" in report_df.columns:
-        report_col_map["community"] = "id"
-    report_df = report_df.rename(columns=report_col_map)
+def import_communities(tx, df: pd.DataFrame, report_df: pd.DataFrame) -> None:
+    """MERGE Community nodes joined with community report summaries.
 
-    # Merge community data with report data
-    report_cols = [c for c in ["id", "title", "summary", "full_content", "embedding"] if c in report_df.columns]
-    merged = df.merge(report_df[report_cols], on="id", how="left")
+    Join on the 'community' integer (shared key) — NOT on 'id' because both
+    DataFrames have an 'id' column with different UUID values.
+    """
+    report_cols = [c for c in ["community", "title", "summary", "full_content"] if c in report_df.columns]
+    merged = df.merge(report_df[report_cols], on="community", how="left")
 
     records = []
     for _, row in merged.iterrows():
@@ -144,51 +225,49 @@ def import_communities(
     )
 
 
-def import_community_membership(tx, entity_df: pd.DataFrame) -> None:
-    """Link Entity nodes to their Community via IN_COMMUNITY."""
+def import_community_membership(
+    tx, community_df: pd.DataFrame, uuid_to_stable: dict[str, str]
+) -> None:
+    """Create IN_COMMUNITY edges from Entity → Community.
+
+    community_df.entity_ids contains graphrag UUIDs; we translate them to
+    stable entity IDs via the pre-built uuid_to_stable mapping.
+    """
     records = []
-    for _, row in entity_df.iterrows():
-        community = row.get("community")
-        if community is not None and str(community) not in ("nan", "None", ""):
-            records.append({
-                "entity_id": str(row["id"]),
-                "community_id": str(int(float(community))),
-            })
+    for _, row in community_df.iterrows():
+        community_id = str(row["id"])
+        for eid_uuid in _array_to_list(row.get("entity_ids")):
+            stable_id = uuid_to_stable.get(str(eid_uuid))
+            if stable_id:
+                records.append({"entity_id": stable_id, "community_id": community_id})
     if not records:
         return
-    tx.run(
-        """
-        UNWIND $records AS r
-        MATCH (e:Entity {id: r.entity_id})
-        MATCH (c:Community {id: r.community_id})
-        MERGE (e)-[:IN_COMMUNITY]->(c)
-        """,
-        records=records,
-    )
+    for i in range(0, len(records), BATCH_SIZE):
+        tx.run(
+            """
+            UNWIND $records AS r
+            MATCH (e:Entity {id: r.entity_id})
+            MATCH (c:Community {id: r.community_id})
+            MERGE (e)-[:IN_COMMUNITY]->(c)
+            """,
+            records=records[i : i + BATCH_SIZE],
+        )
 
 
 def import_text_units(tx, df: pd.DataFrame) -> None:
-    """Import TextUnit nodes."""
+    """CREATE TextUnit nodes (always fresh — UUIDs change every graphrag run)."""
     records = []
     for _, row in df.iterrows():
-        # document_ids may be a list or a string
-        doc_ids = row.get("document_ids", [])
-        if isinstance(doc_ids, str):
-            try:
-                doc_ids = json.loads(doc_ids)
-            except Exception:
-                doc_ids = []
-        doc_id = str(doc_ids[0]) if doc_ids else ""
-
+        doc_ids = _array_to_list(row.get("document_ids"))
         records.append({
             "id": str(row["id"]),
             "text": str(row.get("text", "") or ""),
-            "document_id": doc_id,
+            "document_id": str(doc_ids[0]) if doc_ids else "",
         })
     tx.run(
         """
         UNWIND $records AS r
-        MERGE (t:TextUnit {id: r.id})
+        CREATE (t:TextUnit {id: r.id})
         SET t.text = r.text,
             t.document_id = r.document_id
         """,
@@ -196,24 +275,17 @@ def import_text_units(tx, df: pd.DataFrame) -> None:
     )
 
 
-def import_text_unit_entity_links(tx, entity_df: pd.DataFrame) -> None:
-    """Link TextUnit nodes to Entity nodes via MENTIONS."""
+def import_text_unit_entity_links(
+    tx, entity_df: pd.DataFrame
+) -> None:
+    """Create MENTIONS edges from TextUnit → Entity using stable entity IDs."""
     records = []
     for _, row in entity_df.iterrows():
-        text_unit_ids = row.get("text_unit_ids") or []
-        if isinstance(text_unit_ids, str):
-            try:
-                text_unit_ids = json.loads(text_unit_ids)
-            except Exception:
-                text_unit_ids = []
-        for tu_id in text_unit_ids:
-            records.append({
-                "tu_id": str(tu_id),
-                "entity_id": str(row["id"]),
-            })
+        stable_id = stable_entity_id(str(row.get("title", "") or ""))
+        for tu_id in _array_to_list(row.get("text_unit_ids")):
+            records.append({"tu_id": str(tu_id), "entity_id": stable_id})
     if not records:
         return
-    # Process in batches to avoid huge UNWIND
     for i in range(0, len(records), BATCH_SIZE):
         tx.run(
             """
@@ -226,62 +298,52 @@ def import_text_unit_entity_links(tx, entity_df: pd.DataFrame) -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# Schema
+# ---------------------------------------------------------------------------
+
 def create_schema_constraints(driver) -> None:
-    """Create uniqueness constraints and property indexes."""
     with driver.session() as session:
-        constraints = [
+        stmts = [
             "CREATE CONSTRAINT entity_id IF NOT EXISTS FOR (e:Entity) REQUIRE e.id IS UNIQUE",
             "CREATE CONSTRAINT community_id IF NOT EXISTS FOR (c:Community) REQUIRE c.id IS UNIQUE",
             "CREATE CONSTRAINT text_unit_id IF NOT EXISTS FOR (t:TextUnit) REQUIRE t.id IS UNIQUE",
-            "CREATE CONSTRAINT document_id IF NOT EXISTS FOR (d:Document) REQUIRE d.id IS UNIQUE",
-        ]
-        indexes = [
             "CREATE INDEX entity_name IF NOT EXISTS FOR (e:Entity) ON (e.name)",
             "CREATE INDEX entity_type IF NOT EXISTS FOR (e:Entity) ON (e.type)",
             "CREATE INDEX community_level IF NOT EXISTS FOR (c:Community) ON (c.level)",
             "CREATE INDEX text_unit_document IF NOT EXISTS FOR (t:TextUnit) ON (t.document_id)",
         ]
-        for stmt in constraints + indexes:
+        for stmt in stmts:
             try:
                 session.run(stmt)
             except Exception as exc:
                 print(f"Warning: {exc}")
-    print("Schema constraints and indexes created.")
+    print("Schema constraints and indexes ensured.")
 
 
-def create_vector_indexes(driver, dim: int = 768) -> None:
-    """Create Neo4j vector indexes for entity and community embeddings."""
+def create_vector_indexes(driver, dim: int = 3072) -> None:
     with driver.session() as session:
-        try:
-            session.run(
-                f"""
-                CREATE VECTOR INDEX entity_embedding IF NOT EXISTS
-                FOR (e:Entity) ON (e.embedding)
-                OPTIONS {{indexConfig: {{
-                    `vector.dimensions`: {dim},
-                    `vector.similarity_function`: 'cosine'
-                }}}}
-                """
-            )
-        except Exception as exc:
-            print(f"Warning (entity vector index): {exc}")
+        for label, prop in (("Entity", "e.embedding"), ("Community", "c.embedding")):
+            var = label[0].lower()
+            try:
+                session.run(
+                    f"""
+                    CREATE VECTOR INDEX {label.lower()}_embedding IF NOT EXISTS
+                    FOR ({var}:{label}) ON ({prop})
+                    OPTIONS {{indexConfig: {{
+                        `vector.dimensions`: {dim},
+                        `vector.similarity_function`: 'cosine'
+                    }}}}
+                    """
+                )
+            except Exception as exc:
+                print(f"Warning ({label} vector index): {exc}")
+    print(f"Vector indexes ensured (dim={dim}).")
 
-        try:
-            session.run(
-                f"""
-                CREATE VECTOR INDEX community_embedding IF NOT EXISTS
-                FOR (c:Community) ON (c.embedding)
-                OPTIONS {{indexConfig: {{
-                    `vector.dimensions`: {dim},
-                    `vector.similarity_function`: 'cosine'
-                }}}}
-                """
-            )
-        except Exception as exc:
-            print(f"Warning (community vector index): {exc}")
 
-    print(f"Vector indexes created (dim={dim}).")
-
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 def main() -> None:
     args = parse_args()
@@ -293,17 +355,15 @@ def main() -> None:
     print(f"Connecting to Neo4j at {args.uri}...")
     driver = GraphDatabase.driver(args.uri, auth=(args.user, args.password))
 
-    # Create schema first
     create_schema_constraints(driver)
 
     print("Reading Parquet artifacts...")
-    entity_df = pd.read_parquet(artifacts / "create_final_entities.parquet")
-    rel_df = pd.read_parquet(artifacts / "create_final_relationships.parquet")
-    text_unit_df = pd.read_parquet(artifacts / "create_final_text_units.parquet")
+    entity_df = pd.read_parquet(artifacts / "entities.parquet")
+    rel_df = pd.read_parquet(artifacts / "relationships.parquet")
+    text_unit_df = pd.read_parquet(artifacts / "text_units.parquet")
 
-    # Community files
-    community_file = artifacts / "create_final_communities.parquet"
-    report_file = artifacts / "create_final_community_reports.parquet"
+    community_file = artifacts / "communities.parquet"
+    report_file = artifacts / "community_reports.parquet"
     has_communities = community_file.exists() and report_file.exists()
     if has_communities:
         community_df = pd.read_parquet(community_file)
@@ -311,31 +371,44 @@ def main() -> None:
     else:
         print("Warning: Community Parquet files not found — skipping community import.")
 
-    print(f"  Entities:     {len(entity_df)}")
-    print(f"  Relationships:{len(rel_df)}")
-    print(f"  Text units:   {len(text_unit_df)}")
+    print(f"  Entities:      {len(entity_df)}")
+    print(f"  Relationships: {len(rel_df)}")
+    print(f"  Text units:    {len(text_unit_df)}")
     if has_communities:
-        print(f"  Communities:  {len(community_df)}")
+        print(f"  Communities:   {len(community_df)}")
+
+    # Phase 1: wipe transient nodes (new UUIDs every run) — fast
+    delete_transient_nodes(driver)
+
+    # Phase 2: remove entity nodes no longer present in the rebuilt graph —
+    # these belong to document sections that were deleted or replaced
+    delete_stale_entities(driver, entity_df)
+
+    # Build graphrag UUID → stable entity ID mapping (needed for community links)
+    uuid_to_stable = {
+        str(row["id"]): stable_entity_id(str(row.get("title", "") or ""))
+        for _, row in entity_df.iterrows()
+    }
 
     with driver.session() as session:
-        # Entities (batched)
+        # Entities — MERGE preserves cross-document nodes, updates properties
         for i in range(0, len(entity_df), BATCH_SIZE):
             session.execute_write(import_entities, entity_df.iloc[i : i + BATCH_SIZE])
-        print("Entities imported.")
+        print("Entities synced.")
 
-        # Relationships (batched)
+        # Relationships
         for i in range(0, len(rel_df), BATCH_SIZE):
             session.execute_write(import_relationships, rel_df.iloc[i : i + BATCH_SIZE])
-        print("Relationships imported.")
+        print("Relationships synced.")
 
-        # Communities + reports
+        # Communities + membership (always fresh)
         if has_communities:
             session.execute_write(import_communities, community_df, report_df)
             print("Communities imported.")
-            session.execute_write(import_community_membership, entity_df)
+            session.execute_write(import_community_membership, community_df, uuid_to_stable)
             print("Community membership links created.")
 
-        # Text units (batched)
+        # TextUnit nodes (always fresh — CREATE not MERGE)
         for i in range(0, len(text_unit_df), BATCH_SIZE):
             session.execute_write(import_text_units, text_unit_df.iloc[i : i + BATCH_SIZE])
         print("Text units imported.")

@@ -9,6 +9,12 @@ from app.schemas import HealthResponse
 router = APIRouter()
 
 
+@router.get("/api/v1/config")
+async def config() -> dict:
+    """Return runtime configuration visible to the frontend."""
+    return {"llm_provider": settings.LLM_PROVIDER}
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health(request: Request) -> HealthResponse:
     """Liveness check — also reports Neo4j connectivity and GraphRAG readiness."""

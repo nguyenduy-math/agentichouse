@@ -17,7 +17,7 @@ export function useIndexStatus(enabled: boolean) {
         const s = await getIndexStatus()
         setStatus(s)
         // Stop polling when indexing is complete or errored
-        if (s.status === 'done' || s.status === 'error') {
+        if (s.status === 'ready' || s.status === 'error') {
           if (timerRef.current) clearInterval(timerRef.current)
         }
       } catch {

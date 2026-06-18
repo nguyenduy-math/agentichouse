@@ -1,11 +1,11 @@
 """
-GraphRAG query service wrapping Microsoft GraphRAG LocalSearch and GlobalSearch.
+GraphRAG query service wrapping Microsoft GraphRAG 2.x LocalSearch and GlobalSearch.
 
-Uses Neo4j for vector similarity search (entity and community embeddings).
-Reads graph structure from Parquet artifacts (Option B — safe hybrid default).
+Uses graphrag.api high-level functions with Parquet artifacts loaded from the
+configured output directory (graphrag_workspace/output/).
 
-Option A (native Neo4j storage) is available when graphrag 2.x stabilizes
-the storage.type: neo4j backend — swap the storage block in settings.yaml.
+Option A (native Neo4j storage) is available when ready — swap the output block
+in settings.yaml. For now we use the file-based Parquet output (Option B).
 """
 from __future__ import annotations
 
@@ -26,243 +26,184 @@ class SearchMode(str, Enum):
 
 class GraphRAGService:
     """
-    Wraps Microsoft GraphRAG LocalSearch and GlobalSearch.
+    Wraps Microsoft GraphRAG 2.x LocalSearch and GlobalSearch via graphrag.api.
 
-    Uses Neo4j for vector similarity search via _Neo4jEntityVectorStoreAdapter.
-    Reads graph structure from Parquet artifacts at startup (Option B).
+    DataFrames are loaded from Parquet at reload() time and cached in memory.
+    Each search call passes the cached DataFrames to graphrag.api, which handles
+    model instantiation internally (models are cached by ModelManager).
 
-    Thread safety: asyncio.Lock() guards the search engine reload path.
+    Thread safety: asyncio.Lock() guards the reload path.
     """
 
     def __init__(self, workspace_root: str, neo4j_store: Any) -> None:
         self._root = Path(workspace_root)
-        self._artifacts = self._root / "output" / "artifacts"
-        self._neo4j = neo4j_store
-        self._local_search: Any | None = None
-        self._global_search: Any | None = None
         self._lock = asyncio.Lock()
+        self._config: Any = None
+        self._dfs: dict[str, Any] = {}
+        self._ready = False
 
     @property
     def is_ready(self) -> bool:
-        return self._local_search is not None and self._global_search is not None
+        return self._ready
 
     async def search(self, question: str, mode: SearchMode) -> dict[str, Any]:
-        """
-        Execute a GraphRAG search query.
-
-        Args:
-            question: The user's question (Vietnamese)
-            mode: LOCAL for single-domain, GLOBAL for cross-domain
-
-        Returns:
-            dict with keys: reply (str), sources (list[dict])
-        """
-        engine = self._local_search if mode == SearchMode.LOCAL else self._global_search
-
-        if engine is None:
-            logger.warning("GraphRAG not ready — no artifacts found or not loaded.")
+        if not self._ready:
+            logger.warning("GraphRAG not ready — no artifacts loaded.")
             return {"reply": "", "sources": []}
 
         try:
-            result = await engine.asearch(question)
+            import graphrag.api as api  # already on path after reload()
+
+            if mode == SearchMode.LOCAL:
+                result, context = await api.local_search(
+                    config=self._config,
+                    entities=self._dfs["entities"],
+                    communities=self._dfs["communities"],
+                    community_reports=self._dfs["community_reports"],
+                    text_units=self._dfs["text_units"],
+                    relationships=self._dfs["relationships"],
+                    covariates=self._dfs.get("covariates"),
+                    community_level=2,
+                    response_type="multiple paragraphs",
+                    query=question,
+                )
+            else:
+                result, context = await api.global_search(
+                    config=self._config,
+                    entities=self._dfs["entities"],
+                    communities=self._dfs["communities"],
+                    community_reports=self._dfs["community_reports"],
+                    community_level=None,
+                    dynamic_community_selection=False,
+                    response_type="multiple paragraphs",
+                    query=question,
+                )
+
+            reply = result if isinstance(result, str) else str(result)
             return {
-                "reply": result.response,
-                "sources": self._extract_sources(result.context_data),
+                "reply": reply,
+                "sources": self._extract_sources(context),
             }
+
         except Exception as exc:
             logger.error("GraphRAG search error: %s", exc)
             return {"reply": "", "sources": []}
 
     async def reload(self) -> None:
         """
-        (Re)load search engines from Parquet artifacts.
+        (Re)load DataFrames from Parquet artifacts and config from settings.yaml.
         Called after indexing + Neo4j import completes.
         Thread-safe via asyncio.Lock().
         """
         async with self._lock:
             try:
-                self._local_search = await asyncio.to_thread(self._build_local_search)
-                self._global_search = await asyncio.to_thread(self._build_global_search)
+                config, dfs = await asyncio.to_thread(self._load_artifacts)
+                self._config = config
+                self._dfs = dfs
+                self._ready = True
                 logger.info("GraphRAG search engines loaded successfully.")
             except Exception as exc:
                 logger.error("Failed to load GraphRAG search engines: %s", exc)
-                self._local_search = None
-                self._global_search = None
+                self._config = None
+                self._dfs = {}
+                self._ready = False
 
-    def _get_llm(self) -> Any:
+    def _load_artifacts(self) -> tuple[Any, dict[str, Any]]:
         """
-        GraphRAG's own LLM client for query-time summarization.
-        Uses Gemini via OpenAI-compatible endpoint.
-        Separate from the agent-layer LLM.
+        Load GraphRagConfig from settings.yaml and DataFrames from Parquet.
+        graphrag 2.x writes output files directly to output/ (no artifacts/ subdir),
+        with simple names: entities.parquet, communities.parquet, etc.
+
+        Must run in a thread (CPU-bound Parquet I/O).
         """
-        from graphrag.query.llm.oai.chat_openai import ChatOpenAI
-        from graphrag.query.llm.oai.typing import OpenaiApiType
+        import sys
+        import glob
 
-        return ChatOpenAI(
-            api_key=os.environ.get("GEMINI_API_KEY", ""),
-            model=os.environ.get("GRAPHRAG_QUERY_MODEL", "gemini-2.0-flash"),
-            api_base="https://generativelanguage.googleapis.com/v1beta/openai/",
-            api_type=OpenaiApiType.OpenAI,
-            max_retries=10,
-        )
+        # When the server runs with a system Python (not the project venv), graphrag
+        # won't be on sys.path because all imports here are deferred. Self-heal by
+        # adding the project venv's site-packages directory.
+        try:
+            import graphrag  # noqa: F401
+        except ImportError:
+            venv_root = Path(__file__).parent.parent.parent / ".venv" / "lib"
+            for sp in sorted(glob.glob(str(venv_root / "python*" / "site-packages"))):
+                if sp not in sys.path:
+                    sys.path.insert(0, sp)
 
-    def _get_embedder(self) -> Any:
-        """GraphRAG embedding client for query-time entity matching."""
-        from graphrag.query.llm.oai.embedding import OpenAIEmbedding
-        from graphrag.query.llm.oai.typing import OpenaiApiType
-
-        return OpenAIEmbedding(
-            api_key=os.environ.get("GEMINI_API_KEY", ""),
-            model=os.environ.get("EMBEDDING_MODEL", "text-embedding-004"),
-            api_base="https://generativelanguage.googleapis.com/v1beta/openai/",
-            api_type=OpenaiApiType.OpenAI,
-            max_retries=10,
-        )
-
-    def _build_local_search(self) -> Any:
-        """
-        Build GraphRAG LocalSearch from Parquet artifacts + Neo4j vector store.
-        Runs in a thread (CPU-bound Parquet reads).
-        """
         import pandas as pd
-        from graphrag.query.context_builder.entity_extraction import EntityVectorStoreKey
-        from graphrag.query.indexer_adapters import (
-            read_indexer_communities,
-            read_indexer_entities,
-            read_indexer_relationships,
-            read_indexer_reports,
-            read_indexer_text_units,
-        )
-        from graphrag.query.structured_search.local_search.mixed_context import (
-            LocalSearchMixedContext,
-        )
-        from graphrag.query.structured_search.local_search.search import LocalSearch
+        from graphrag.config.load_config import load_config
 
-        a = self._artifacts
-        entity_df = pd.read_parquet(a / "create_final_entities.parquet")
-        rel_df = pd.read_parquet(a / "create_final_relationships.parquet")
-        report_df = pd.read_parquet(a / "create_final_community_reports.parquet")
-        text_unit_df = pd.read_parquet(a / "create_final_text_units.parquet")
-        node_df = pd.read_parquet(a / "create_final_nodes.parquet")
+        from app.config import settings
 
-        entities = read_indexer_entities(entity_df, node_df, community_level=2)
-        relationships = read_indexer_relationships(rel_df)
-        reports = read_indexer_reports(report_df, node_df, community_level=2)
-        text_units = read_indexer_text_units(text_unit_df)
+        # graphrag resolves ${GEMINI_API_KEY} from os.environ at load_config time.
+        # pydantic-settings does NOT write to os.environ, so inject it here.
+        os.environ.setdefault("GEMINI_API_KEY", settings.GEMINI_API_KEY)
 
-        # Neo4j vector store adapter instead of LanceDB
-        entity_store = self._neo4j.as_entity_vector_store()
+        config = load_config(root_dir=self._root)
 
-        context_builder = LocalSearchMixedContext(
-            community_reports=reports,
-            text_units=text_units,
-            entities=entities,
-            relationships=relationships,
-            entity_text_embeddings=entity_store,
-            embedding_vectorstore_key=EntityVectorStoreKey.ID,
-            text_embedder=self._get_embedder(),
-        )
+        # load_config resolves base_dir to an absolute path already.
+        try:
+            output_dir = Path(config.output.base_dir)
+        except AttributeError:
+            output_dir = self._root / "output"
 
-        return LocalSearch(
-            llm=self._get_llm(),
-            context_builder=context_builder,
-            token_encoder=None,
-            llm_params={"max_tokens": 2000, "temperature": 0},
-            context_builder_params={
-                "text_unit_prop": 0.5,
-                "community_prop": 0.1,
-                "conversation_history_max_turns": 5,
-                "top_k_mapped_entities": 10,
-                "top_k_relationships": 10,
-                "max_tokens": 12000,
-            },
-        )
+        required = [
+            "entities",
+            "communities",
+            "community_reports",
+            "text_units",
+            "relationships",
+        ]
+        for name in required:
+            path = output_dir / f"{name}.parquet"
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"Artifact not found: {path}. "
+                    "Run the indexing pipeline first."
+                )
 
-    def _build_global_search(self) -> Any:
-        """
-        Build GraphRAG GlobalSearch from Parquet artifacts.
-        Runs in a thread (CPU-bound Parquet reads).
-        """
-        import pandas as pd
-        from graphrag.query.indexer_adapters import (
-            read_indexer_entities,
-            read_indexer_reports,
-        )
-        from graphrag.query.structured_search.global_search.community_context import (
-            GlobalCommunityContext,
-        )
-        from graphrag.query.structured_search.global_search.search import GlobalSearch
+        dfs = {name: pd.read_parquet(output_dir / f"{name}.parquet") for name in required}
 
-        a = self._artifacts
-        report_df = pd.read_parquet(a / "create_final_community_reports.parquet")
-        node_df = pd.read_parquet(a / "create_final_nodes.parquet")
-        entity_df = pd.read_parquet(a / "create_final_entities.parquet")
+        cov_path = output_dir / "covariates.parquet"
+        dfs["covariates"] = pd.read_parquet(cov_path) if cov_path.exists() else None
 
-        reports = read_indexer_reports(report_df, node_df, community_level=2)
-        entities = read_indexer_entities(entity_df, node_df, community_level=2)
+        return config, dfs
 
-        context_builder = GlobalCommunityContext(
-            community_reports=reports,
-            entities=entities,
-            token_encoder=None,
-        )
-
-        return GlobalSearch(
-            llm=self._get_llm(),
-            context_builder=context_builder,
-            token_encoder=None,
-            max_data_tokens=12000,
-            map_llm_params={"max_tokens": 1000, "temperature": 0},
-            reduce_llm_params={"max_tokens": 2000, "temperature": 0},
-            concurrent_coroutines=32,
-            response_type="multiple paragraphs",
-        )
-
-    def _extract_sources(self, context_data: Any) -> list[dict]:
-        """Extract source references from GraphRAG context_data."""
+    def _extract_sources(self, context: Any) -> list[dict]:
+        """Extract source references from GraphRAG context_data (dict of DataFrames)."""
         sources: list[dict] = []
 
-        if not context_data:
+        if not context:
             return sources
 
-        # Handle both dict and object-style context_data
-        if isinstance(context_data, dict):
-            text_units = context_data.get("text_units", [])
-            reports = context_data.get("reports", [])
-        else:
-            text_units = getattr(context_data, "text_units", []) or []
-            reports = getattr(context_data, "reports", []) or []
+        try:
+            # graphrag 2.x returns context as dict[str, pd.DataFrame | list[pd.DataFrame]]
+            import pandas as pd
 
-        for unit in text_units:
-            if isinstance(unit, dict):
-                sources.append({
-                    "type": "text_unit",
-                    "id": unit.get("id"),
-                    "text": (unit.get("text", "") or "")[:400],
-                    "document": unit.get("document_id"),
-                })
-            else:
-                sources.append({
-                    "type": "text_unit",
-                    "id": getattr(unit, "id", None),
-                    "text": (getattr(unit, "text", "") or "")[:400],
-                    "document": getattr(unit, "document_id", None),
-                })
+            if isinstance(context, dict):
+                # Local search: context has "text_units", "reports", "entities" keys
+                for key in ("text_units", "sources"):
+                    df = context.get(key)
+                    if df is not None and isinstance(df, pd.DataFrame) and not df.empty:
+                        for _, row in df.head(8).iterrows():
+                            sources.append({
+                                "type": "text_unit",
+                                "id": str(row.get("id", "")),
+                                "text": str(row.get("text", ""))[:400],
+                                "document": str(row.get("document_id", "")),
+                            })
+                        break
 
-        for report in reports:
-            if isinstance(report, dict):
-                sources.append({
-                    "type": "community_report",
-                    "id": report.get("id"),
-                    "title": report.get("title"),
-                    "summary": (report.get("summary", "") or "")[:400],
-                })
-            else:
-                sources.append({
-                    "type": "community_report",
-                    "id": getattr(report, "id", None),
-                    "title": getattr(report, "title", None),
-                    "summary": (getattr(report, "summary", "") or "")[:400],
-                })
+                reports_df = context.get("reports")
+                if reports_df is not None and isinstance(reports_df, pd.DataFrame) and not reports_df.empty:
+                    for _, row in reports_df.head(4).iterrows():
+                        sources.append({
+                            "type": "community_report",
+                            "id": str(row.get("id", "")),
+                            "title": str(row.get("title", "")),
+                            "summary": str(row.get("summary", ""))[:400],
+                        })
+        except Exception as exc:
+            logger.debug("Could not extract sources from context: %s", exc)
 
         return sources

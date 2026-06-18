@@ -10,11 +10,9 @@ export interface IndexResponse {
 }
 
 export interface IndexStatus {
-  stage: string
-  done: number
-  total: number
   status: string
-  last_error: string | null
+  message: string | null
+  last_completed_at: string | null
 }
 
 export const ingestDocument = async (file: File): Promise<IngestResponse> => {
@@ -26,8 +24,8 @@ export const ingestDocument = async (file: File): Promise<IngestResponse> => {
   return data
 }
 
-export const triggerIndex = async (): Promise<IndexResponse> => {
-  const { data } = await client.post<IndexResponse>('/admin/index')
+export const triggerIndex = async (reimport = false): Promise<IndexResponse> => {
+  const { data } = await client.post<IndexResponse>('/admin/index', { reimport })
   return data
 }
 

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # ── Gemini ────────────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
     GEMINI_CHAT_MODEL: str = "gemini-2.0-flash"
-    GEMINI_EMBED_MODEL: str = "text-embedding-004"
+    GEMINI_EMBED_MODEL: str = "gemini-embedding-001"
 
     # ── OpenAI ────────────────────────────────────────────────────────────────
     OPENAI_API_KEY: str = ""
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # ── GraphRAG ──────────────────────────────────────────────────────────────
     GRAPHRAG_ROOT: str = "./graphrag_workspace"
     GRAPHRAG_QUERY_MODEL: str = "gemini-2.0-flash"
-    EMBEDDING_MODEL: str = "text-embedding-004"
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
 
     # ── Neo4j ─────────────────────────────────────────────────────────────────
     NEO4J_URI: str = "bolt://localhost:7687"
@@ -37,9 +37,9 @@ class Settings(BaseSettings):
     NEO4J_PASSWORD: str = ""
 
     # ── Embedding ─────────────────────────────────────────────────────────────
-    # 768 for text-embedding-004, 3072 for gemini-embedding-exp-03-07,
+    # 3072 for gemini-embedding-001, 768 for text-embedding-004,
     # 1536 for text-embedding-3-small, 1024 for BAAI/bge-large-zh-v1.5
-    EMBEDDING_DIM: int = 768
+    EMBEDDING_DIM: int = 3072
 
     # ── Retrieval quality ─────────────────────────────────────────────────────
     RERANK_CANDIDATE_POOL: int = 25   # overfetch size for reranking
