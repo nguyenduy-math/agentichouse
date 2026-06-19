@@ -1,0 +1,84 @@
+CHÍNH SÁCH LÀM VIỆC TỪ XA (REMOTE WORK) – CÔNG TY AGENTICHOUSE
+Phiên bản: 1.2 | Ban hành: 01/03/2024 | Phòng Nhân sự & Phòng CNTT
+
+=== CHƯƠNG 1: ĐIỀU KIỆN ĐỦ TIÊU CHUẨN ===
+
+Điều 1. Đối tượng được phép làm việc từ xa
+Chính sách này áp dụng cho nhân viên chính thức đã hoàn thành thời gian thử việc (ít nhất 2 tháng) và thuộc các phòng ban sau:
+- Phòng Kỹ thuật & Công nghệ thông tin: Tối đa 3 ngày/tuần làm việc từ xa.
+- Phòng Marketing & Truyền thông: Tối đa 2 ngày/tuần.
+- Phòng Kế toán & Tài chính: Tối đa 2 ngày/tuần (không áp dụng vào các ngày chốt sổ cuối tháng).
+- Phòng Hành chính – Nhân sự: Tối đa 1 ngày/tuần.
+- Phòng Kinh doanh & Chăm sóc khách hàng: Không áp dụng làm việc từ xa thường xuyên; chỉ được phép trong trường hợp đặc biệt có phê duyệt của Giám đốc.
+
+Điều 2. Điều kiện tiên quyết
+Để đăng ký làm việc từ xa, nhân viên phải đáp ứng đồng thời các điều kiện:
+a) Đã qua thời gian thử việc và có đánh giá hiệu suất xếp loại "Đạt" trở lên trong kỳ gần nhất.
+b) Không đang trong giai đoạn kỷ luật hoặc cảnh cáo.
+c) Không có vị trí yêu cầu hiện diện vật lý bắt buộc (quản lý trực tiếp xác nhận).
+d) Có đầy đủ thiết bị và kết nối internet đạt yêu cầu (xem Điều 7).
+
+=== CHƯƠNG 2: QUY ĐỊNH VỀ GIỜ LÀM VIỆC ===
+
+Điều 3. Giờ làm việc cốt lõi (Core Hours)
+Nhân viên làm việc từ xa phải có mặt trực tuyến trong giờ làm việc cốt lõi: 09:00 – 12:00 và 14:00 – 17:00 (theo múi giờ Hà Nội, GMT+7). Trong khung giờ này, nhân viên phải:
+- Phản hồi tin nhắn/email trong vòng 15 phút.
+- Tham dự đầy đủ các cuộc họp được lịch sẵn (không được vắng mặt không báo trước).
+- Cập nhật trạng thái trên hệ thống Teams/Slack thành "Đang làm việc".
+
+Điều 4. Giờ linh hoạt
+Ngoài giờ cốt lõi, nhân viên có thể tự sắp xếp 2–3 tiếng còn lại trong ngày (tổng 8 tiếng) theo giờ linh hoạt, phù hợp với công việc và múi giờ của dự án.
+
+Điều 5. Ngày bắt buộc đến văn phòng
+Bất kể chính sách làm việc từ xa, nhân viên BẮT BUỘC có mặt tại văn phòng trong các trường hợp sau:
+- Họp toàn công ty (All-hands meeting) hàng quý.
+- Ngày onboarding thành viên mới trong team.
+- Demo sản phẩm, thuyết trình với khách hàng tại văn phòng.
+- Yêu cầu đặc biệt từ Trưởng phòng hoặc Ban Giám đốc (thông báo ít nhất 24 giờ trước).
+- Ngày đầu tiên bắt đầu dự án mới.
+
+=== CHƯƠNG 3: ĐĂNG KÝ VÀ PHÊ DUYỆT ===
+
+Điều 6. Quy trình đăng ký
+- Đăng ký lịch làm việc từ xa theo tuần: Nộp trên hệ thống HRM trước 17:00 thứ Sáu của tuần trước.
+- Đăng ký đột xuất (1 ngày): Thông báo cho Trưởng phòng qua Teams/email trước 08:00 ngày đó.
+- Trưởng phòng có quyền từ chối yêu cầu làm việc từ xa nếu có lý do công việc chính đáng (nhu cầu họp, sự cố khẩn cấp, v.v.).
+
+=== CHƯƠNG 4: THIẾT BỊ VÀ BẢO MẬT ===
+
+Điều 7. Yêu cầu thiết bị và kết nối
+Nhân viên làm việc từ xa chịu trách nhiệm đảm bảo:
+- Laptop công ty hoặc thiết bị được Phòng CNTT phê duyệt (cài đủ phần mềm bảo mật, VPN công ty).
+- Kết nối internet tốc độ tối thiểu 10 Mbps download / 5 Mbps upload.
+- Tai nghe, webcam hoạt động tốt cho các cuộc họp video.
+- Không được sử dụng thiết bị cá nhân chưa được Phòng CNTT phê duyệt để truy cập dữ liệu công ty.
+
+Điều 8. Quy định bảo mật thông tin
+- Bắt buộc kết nối VPN công ty khi truy cập hệ thống nội bộ (GitLab, ERP, HRM, v.v.).
+- Không được làm việc tại nơi công cộng (quán cà phê, sân bay) với dữ liệu mật trừ khi dùng VPN và màn hình chắn riêng tư.
+- Không chia sẻ màn hình chứa thông tin mật với người ngoài trong các cuộc họp.
+- Khóa máy tính khi rời chỗ ngồi, dù chỉ vài phút.
+
+=== CHƯƠNG 5: ĐÁNH GIÁ VÀ THU HỒI QUYỀN LÀM VIỆC TỪ XA ===
+
+Điều 9. Đánh giá định kỳ
+Phòng Nhân sự phối hợp với Trưởng phòng xem xét hiệu quả làm việc từ xa của từng nhân viên mỗi 6 tháng. Tiêu chí đánh giá bao gồm: hoàn thành KPI, chất lượng công việc, thái độ phản hồi trong giờ cốt lõi, và phản hồi từ đồng nghiệp.
+
+Điều 10. Thu hồi quyền làm việc từ xa
+Quyền làm việc từ xa có thể bị tạm đình chỉ hoặc thu hồi nếu:
+- Nhân viên không đạt KPI 2 kỳ liên tiếp.
+- Vi phạm quy định bảo mật thông tin.
+- Không phản hồi trong giờ cốt lõi nhiều lần mà không có lý do hợp lệ.
+- Bị xếp loại kỷ luật theo Nội quy Lao động.
+Thu hồi quyền có thời hạn tối thiểu 3 tháng trước khi được xem xét lại.
+
+=== CHƯƠNG 6: HỖ TRỢ CỦA CÔNG TY ===
+
+Điều 11. Hỗ trợ thiết bị
+Công ty hỗ trợ cho nhân viên làm việc từ xa thường xuyên (từ 2 ngày/tuần trở lên):
+- Màn hình phụ 24 inch: hỗ trợ 1 chiếc/người (mượn dài hạn, hoàn trả khi nghỉ việc).
+- Bàn phím và chuột không dây: hỗ trợ 1 bộ/người.
+- Tai nghe chống ồn: Phòng CNTT cấp theo yêu cầu, ưu tiên nhân viên họp online nhiều.
+
+Điều 12. Hỗ trợ chi phí internet
+Nhân viên thuộc Phòng Kỹ thuật làm việc từ xa từ 3 ngày/tuần trở lên được hỗ trợ 200.000 VNĐ/tháng phụ cấp internet, thanh toán cùng lương tháng. Cần nộp hóa đơn internet cho HR mỗi tháng.

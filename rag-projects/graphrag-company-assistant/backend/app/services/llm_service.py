@@ -1,0 +1,378 @@
+from __future__ import annotations
+
+import json
+from abc import ABC, abstractmethod
+
+import structlog
+from google import genai
+from google.genai import types
+from openai import AsyncOpenAI
+
+from app.config import settings
+from app.models.chat import VerificationResult
+from app.prompts.extraction_prompts import (
+    ENTITY_EXTRACTION_PROMPT,
+    COMMUNITY_SUMMARY_PROMPT,
+    QUERY_CLASSIFICATION_PROMPT,
+)
+from app.prompts.rag_prompts import ANSWER_GENERATION_PROMPT
+from app.prompts.verification_prompts import ANSWER_VERIFICATION_PROMPT
+from app.services.token_log_service import TokenLogService
+
+logger = structlog.get_logger()
+
+
+class LLMService(ABC):
+    @abstractmethod
+    async def generate(
+        self,
+        system_prompt: str,
+        history: list[dict],
+        user_message: str,
+        temperature: float = 0.3,
+    ) -> str: ...
+
+    @abstractmethod
+    async def generate_answer(self, question: str, context: str) -> str: ...
+
+    @abstractmethod
+    async def extract_entities_and_relations(self, chunk_text: str) -> dict: ...
+
+    @abstractmethod
+    async def generate_community_summary(
+        self,
+        nodes_data: list[dict],
+        edges_data: list[tuple],
+    ) -> str: ...
+
+    @abstractmethod
+    async def classify_query(self, question: str) -> str: ...
+
+    @abstractmethod
+    async def rewrite_query(self, history: list[dict], message: str) -> str: ...
+
+    @abstractmethod
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult: ...
+
+
+_GEMINI_JSON_CONFIG = types.GenerateContentConfig(
+    response_mime_type="application/json",
+    temperature=0.0,
+)
+
+_QUERY_REWRITE_PROMPT = """\
+Dựa vào lịch sử hội thoại bên dưới và câu hỏi mới nhất của người dùng, hãy viết lại câu hỏi \
+thành một câu hỏi độc lập, đầy đủ ngữ cảnh để tìm kiếm trong cơ sở tri thức nội quy công ty.
+Chỉ trả về câu hỏi đã viết lại, không thêm bất kỳ giải thích nào.
+
+Lịch sử hội thoại:
+{history_text}
+
+Câu hỏi hiện tại: {message}
+Câu hỏi độc lập:\
+"""
+
+
+class GeminiLLMService(LLMService):
+    _provider = "gemini"
+
+    def __init__(self, token_log: TokenLogService | None = None) -> None:
+        self._client = genai.Client(
+            api_key=settings.google_api_key,
+            http_options={"api_version": "v1beta"},
+        )
+        self._model = settings.gemini_model
+        self._token_log = token_log
+
+    async def _log(self, call_type: str, usage_metadata: object) -> None:
+        if self._token_log is None or usage_metadata is None:
+            return
+        prompt_tokens = getattr(usage_metadata, "prompt_token_count", 0) or 0
+        completion_tokens = getattr(usage_metadata, "candidates_token_count", 0) or 0
+        await self._token_log.log(self._provider, self._model, call_type, prompt_tokens, completion_tokens)
+
+    async def generate(
+        self,
+        system_prompt: str,
+        history: list[dict],
+        user_message: str,
+        temperature: float = 0.3,
+    ) -> str:
+        gemini_history = [
+            types.Content(
+                role="user" if msg["role"] == "user" else "model",
+                parts=[types.Part(text=msg["content"])],
+            )
+            for msg in history
+        ]
+        chat = self._client.chats.create(
+            model=self._model,
+            history=gemini_history,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=temperature,
+                max_output_tokens=2048,
+            ),
+        )
+        response = chat.send_message(user_message)
+        await self._log("generate", response.usage_metadata)
+        return response.text
+
+    async def generate_answer(self, question: str, context: str) -> str:
+        prompt = ANSWER_GENERATION_PROMPT.format(question=question, context=context)
+        response = self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=2048),
+        )
+        await self._log("generate_answer", response.usage_metadata)
+        return response.text
+
+    async def extract_entities_and_relations(self, chunk_text: str) -> dict:
+        prompt = ENTITY_EXTRACTION_PROMPT.format(chunk_text=chunk_text)
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=_GEMINI_JSON_CONFIG,
+            )
+            await self._log("extract_entities", response.usage_metadata)
+            return json.loads(response.text)
+        except Exception as e:
+            logger.warning("entity_extraction_failed", error=str(e))
+            return {"entities": [], "relations": []}
+
+    async def generate_community_summary(
+        self,
+        nodes_data: list[dict],
+        edges_data: list[tuple],
+    ) -> str:
+        nodes_text = "\n".join(
+            f"- {n.get('name', '')} ({n.get('type', '')}): {n.get('description', '')}"
+            for n in nodes_data[:30]
+        )
+        edges_text = "\n".join(
+            f"- {u} --[{data.get('relation', '')}]--> {v}"
+            for u, v, data in edges_data[:30]
+        )
+        prompt = COMMUNITY_SUMMARY_PROMPT.format(nodes_text=nodes_text, edges_text=edges_text)
+        response = self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=512),
+        )
+        await self._log("community_summary", response.usage_metadata)
+        return response.text
+
+    async def classify_query(self, question: str) -> str:
+        prompt = QUERY_CLASSIFICATION_PROMPT.format(question=question)
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=_GEMINI_JSON_CONFIG,
+            )
+            await self._log("classify_query", response.usage_metadata)
+            data = json.loads(response.text)
+            return data.get("query_type", "LOCAL")
+        except Exception:
+            return "LOCAL"
+
+    async def rewrite_query(self, history: list[dict], message: str) -> str:
+        if not history:
+            return message
+        history_text = "\n".join(
+            f"{'Người dùng' if m['role'] == 'user' else 'Trợ lý'}: {m['content']}"
+            for m in history[-6:]
+        )
+        prompt = _QUERY_REWRITE_PROMPT.format(history_text=history_text, message=message)
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=256),
+            )
+            await self._log("rewrite_query", response.usage_metadata)
+            return response.text.strip() or message
+        except Exception:
+            return message
+
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
+        prompt = ANSWER_VERIFICATION_PROMPT.format(
+            question=question,
+            context=context[:4000],
+            answer=answer,
+        )
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config=_GEMINI_JSON_CONFIG,
+            )
+            await self._log("verify_answer", response.usage_metadata)
+            data = json.loads(response.text)
+            confidence = max(1, min(5, int(data.get("confidence", 3))))
+            return VerificationResult(
+                is_grounded=bool(data.get("is_grounded", True)),
+                confidence=confidence,
+                issues=data.get("issues", []),
+            )
+        except Exception as e:
+            logger.warning("answer_verification_failed", error=str(e))
+            return VerificationResult(is_grounded=True, confidence=5, issues=[])
+
+
+class OpenAILLMService(LLMService):
+    _provider = "openai"
+
+    def __init__(self, token_log: TokenLogService | None = None) -> None:
+        self._client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self._model = settings.openai_model
+        self._token_log = token_log
+
+    async def _log(self, call_type: str, usage: object) -> None:
+        if self._token_log is None or usage is None:
+            return
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        await self._token_log.log(self._provider, self._model, call_type, prompt_tokens, completion_tokens)
+
+    async def generate(
+        self,
+        system_prompt: str,
+        history: list[dict],
+        user_message: str,
+        temperature: float = 0.3,
+    ) -> str:
+        messages: list[dict] = [{"role": "system", "content": system_prompt}]
+        for msg in history:
+            role = "assistant" if msg["role"] == "assistant" else "user"
+            messages.append({"role": role, "content": msg["content"]})
+        messages.append({"role": "user", "content": user_message})
+
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=2048,
+        )
+        await self._log("generate", response.usage)
+        return response.choices[0].message.content or ""
+
+    async def generate_answer(self, question: str, context: str) -> str:
+        prompt = ANSWER_GENERATION_PROMPT.format(question=question, context=context)
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=2048,
+        )
+        await self._log("generate_answer", response.usage)
+        return response.choices[0].message.content or ""
+
+    async def extract_entities_and_relations(self, chunk_text: str) -> dict:
+        prompt = ENTITY_EXTRACTION_PROMPT.format(chunk_text=chunk_text)
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            await self._log("extract_entities", response.usage)
+            return json.loads(response.choices[0].message.content or "{}")
+        except Exception as e:
+            logger.warning("entity_extraction_failed", error=str(e))
+            return {"entities": [], "relations": []}
+
+    async def generate_community_summary(
+        self,
+        nodes_data: list[dict],
+        edges_data: list[tuple],
+    ) -> str:
+        nodes_text = "\n".join(
+            f"- {n.get('name', '')} ({n.get('type', '')}): {n.get('description', '')}"
+            for n in nodes_data[:30]
+        )
+        edges_text = "\n".join(
+            f"- {u} --[{data.get('relation', '')}]--> {v}"
+            for u, v, data in edges_data[:30]
+        )
+        prompt = COMMUNITY_SUMMARY_PROMPT.format(nodes_text=nodes_text, edges_text=edges_text)
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=512,
+        )
+        await self._log("community_summary", response.usage)
+        return response.choices[0].message.content or ""
+
+    async def classify_query(self, question: str) -> str:
+        prompt = QUERY_CLASSIFICATION_PROMPT.format(question=question)
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            await self._log("classify_query", response.usage)
+            data = json.loads(response.choices[0].message.content or "{}")
+            return data.get("query_type", "LOCAL")
+        except Exception:
+            return "LOCAL"
+
+    async def rewrite_query(self, history: list[dict], message: str) -> str:
+        if not history:
+            return message
+        history_text = "\n".join(
+            f"{'Người dùng' if m['role'] == 'user' else 'Trợ lý'}: {m['content']}"
+            for m in history[-6:]
+        )
+        prompt = _QUERY_REWRITE_PROMPT.format(history_text=history_text, message=message)
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=256,
+            )
+            await self._log("rewrite_query", response.usage)
+            return (response.choices[0].message.content or "").strip() or message
+        except Exception:
+            return message
+
+    async def verify_answer(self, question: str, context: str, answer: str) -> VerificationResult:
+        prompt = ANSWER_VERIFICATION_PROMPT.format(
+            question=question,
+            context=context[:4000],
+            answer=answer,
+        )
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                response_format={"type": "json_object"},
+            )
+            await self._log("verify_answer", response.usage)
+            data = json.loads(response.choices[0].message.content or "{}")
+            confidence = max(1, min(5, int(data.get("confidence", 3))))
+            return VerificationResult(
+                is_grounded=bool(data.get("is_grounded", True)),
+                confidence=confidence,
+                issues=data.get("issues", []),
+            )
+        except Exception as e:
+            logger.warning("answer_verification_failed", error=str(e))
+            return VerificationResult(is_grounded=True, confidence=5, issues=[])
+
+
+def create_llm_service(token_log: TokenLogService | None = None) -> LLMService:
+    provider = settings.llm_provider.lower()
+    if provider == "openai":
+        return OpenAILLMService(token_log=token_log)
+    if provider == "gemini":
+        return GeminiLLMService(token_log=token_log)
+    raise ValueError(f"Unknown LLM_PROVIDER: {settings.llm_provider!r} (expected 'gemini' or 'openai')")
