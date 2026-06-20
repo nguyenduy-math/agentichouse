@@ -26,3 +26,4 @@ labs/mcp/travel-assistant/backend/*.log
 rag-projects/graphrag-assistant/backend/data/token_logs.db
 rag-projects/new-rag-2026/backend/data/documents/*
 rag-projects/new-rag-2026/backend/graphrag_workspace/input/*
+labs/gcp-camel-springboot/target/*

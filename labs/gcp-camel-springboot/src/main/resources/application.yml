@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+camel:
+  springboot:
+    name: camel-pubsub-dlq-demo
+  component:
+    google-pubsub:
+      project: local-project
+      endpoint: localhost:8085
+    servlet:
+      mapping:
+        context-path: /api/*
+  rest:
+    component: servlet
+    binding-mode: json
+    context-path: /api
+    api-context-path: /api-docs
+    api-property:
+      api.title: "Camel Pub/Sub DLQ Demo API"
+      api.version: "1.0.0"
+      api.description: "Dead Letter Queue error handling demo using Apache Camel and Google Pub/Sub"
+
+app:
+  pubsub:
+    project-id: local-project
+    orders-topic: orders-topic
+    orders-subscription: orders-sub
+    dlq-topic: orders-dlq
+    dlq-subscription: orders-dlq-sub
+
+springdoc:
+  swagger-ui:
+    # Load Camel's generated OpenAPI spec (served by camel-openapi-java under the servlet mount)
+    url: /api/api-docs
+    disable-swagger-default-url: true
+  api-docs:
+    enabled: false  # disable springdoc's own spec; we use Camel's
+
+logging:
+  level:
+    com.dshouse.camel: DEBUG
+    org.apache.camel: INFO
