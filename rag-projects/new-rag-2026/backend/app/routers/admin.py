@@ -5,7 +5,8 @@ import logging
 from pathlib import Path
 
 import aiofiles
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import StreamingResponse
 
 from app.schemas import IndexRequest, IndexResponse, IndexStatusResponse, IngestResponse
 
@@ -16,17 +17,27 @@ router = APIRouter(prefix="/api/v1/admin")
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".doc", ".txt"}
 
 
+VALID_DOMAINS = {"hr", "benefits", "it", "finance", "compliance", "procedures", "general"}
+
+
 @router.post("/ingest", response_model=IngestResponse)
 async def ingest_document(
     request: Request,
     file: UploadFile = File(...),
+    domain: str = Form(...),
 ) -> IngestResponse:
     """
-    Upload a document and prepare it for GraphRAG indexing.
+    Upload a document into a specific domain's index.
 
     Accepts: PDF, DOCX, TXT
-    Saves to graphrag_workspace/input/ as pre-split article .txt files.
+    Saves chunks to graphrag_workspace/{domain}/input/ as pre-split article .txt files.
     """
+    if domain not in VALID_DOMAINS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid domain '{domain}'. Valid domains: {sorted(VALID_DOMAINS)}",
+        )
+
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -48,12 +59,12 @@ async def ingest_document(
         logger.error("Failed to save uploaded file: %s", exc)
         raise HTTPException(status_code=500, detail=f"Failed to save file: {exc}")
 
-    # Pre-process: parse + split into article chunks → graphrag_workspace/input/
+    # Pre-process: parse + split into article chunks → graphrag_workspace/{domain}/input/
     try:
         output_paths = await asyncio.to_thread(
-            indexing_svc.prepare_for_graphrag, upload_path
+            indexing_svc.prepare_for_graphrag, upload_path, domain
         )
-        message = f"Prepared {len(output_paths)} chunks from '{file.filename}'"
+        message = f"Prepared {len(output_paths)} chunks from '{file.filename}' → domain '{domain}'"
     except Exception as exc:
         logger.error("Document preparation failed: %s", exc)
         raise HTTPException(status_code=500, detail=f"Document preparation failed: {exc}")
@@ -62,6 +73,7 @@ async def ingest_document(
         filename=file.filename,
         status="uploaded",
         message=message,
+        domain=domain,
     )
 
 
@@ -80,8 +92,14 @@ async def trigger_indexing(
 
     Returns immediately; poll /admin/status to check progress.
     """
+    if body.domain not in VALID_DOMAINS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid domain '{body.domain}'. Valid domains: {sorted(VALID_DOMAINS)}",
+        )
+
     indexing_svc = request.app.state.indexing_service
-    started = await indexing_svc.start_indexing(reimport=body.reimport)
+    started = await indexing_svc.start_indexing(domain_key=body.domain, reimport=body.reimport)
 
     if not started:
         return IndexResponse(
@@ -91,7 +109,7 @@ async def trigger_indexing(
 
     return IndexResponse(
         status="started",
-        message="Indexing pipeline started. Poll /admin/status for progress.",
+        message=f"Indexing pipeline started for domain '{body.domain}'. Poll /admin/status for progress.",
     )
 
 
@@ -103,6 +121,36 @@ async def indexing_status(request: Request) -> IndexStatusResponse:
         status=indexing_svc.status,
         message=indexing_svc.message,
         last_completed_at=indexing_svc.last_completed_at,
+    )
+
+
+@router.get("/logs")
+async def stream_logs(request: Request, offset: int = 0) -> StreamingResponse:
+    """
+    Stream indexing log lines as Server-Sent Events.
+
+    Sends all buffered lines from `offset` immediately, then keeps the
+    connection open and pushes new lines as the pipeline runs.
+    Closes with a named 'done' SSE event when the pipeline finishes.
+
+    Clients that reconnect after navigating away pass their last-seen offset
+    to receive only the lines they missed (no duplicates).
+    """
+    indexing_svc = request.app.state.indexing_service
+
+    async def event_generator():
+        async for chunk in indexing_svc.stream_logs(offset=offset):
+            if await request.is_disconnected():
+                break
+            yield chunk
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

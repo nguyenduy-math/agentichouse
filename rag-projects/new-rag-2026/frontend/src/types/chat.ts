@@ -43,6 +43,15 @@ export interface AgentTraceResponse {
   agent_results: AgentResult[]
 }
 
+// ─── Pipeline progress events (SSE from /chat/{id}/progress) ─────────────────
+export type ProgressEvent =
+  | { type: 'step'; step: 'rewrite' | 'retrieve' | 'synthesize' | 'verify' }
+  | { type: 'classified'; domains: string[]; mode: 'local' | 'global' }
+  | { type: 'agent_start'; domain: string }
+  | { type: 'agent_done'; domain: string }
+  | { type: 'done' }
+  | { type: 'error'; message: string }
+
 // ─── Chat message (local state) ───────────────────────────────────────────────
 export interface ChatMessage {
   id: string

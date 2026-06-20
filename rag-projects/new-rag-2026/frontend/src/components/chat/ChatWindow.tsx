@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useChatStore } from '../../store'
 import MessageBubble from './MessageBubble'
+import AgentProgressPanel from './AgentProgressPanel'
 import { BrainCircuit } from 'lucide-react'
 import { getSessionTokens } from '../../api/tokenApi'
 import type { TurnBreakdown } from '../../types/token'
@@ -66,16 +67,7 @@ export default function ChatWindow() {
         )
       })}
 
-      {isLoading && (
-        <div className="flex items-center gap-2 text-slate-500 text-sm pl-2">
-          <span className="flex gap-1">
-            <span className="animate-bounce [animation-delay:0ms] text-blue-400">•</span>
-            <span className="animate-bounce [animation-delay:150ms] text-blue-400">•</span>
-            <span className="animate-bounce [animation-delay:300ms] text-blue-400">•</span>
-          </span>
-          Đang tìm kiếm trong đồ thị tri thức...
-        </div>
-      )}
+      {isLoading && <AgentProgressPanel />}
 
       <div ref={bottomRef} />
     </div>

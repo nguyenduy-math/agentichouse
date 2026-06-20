@@ -28,6 +28,7 @@ from langsmith import traceable
 
 from app.agents.base_agent import AgentResult, BaseDomainAgent
 from app.domains import DOMAIN_MAP, DOMAINS
+from app.services.progress_tracker import ProgressTracker
 from app.prompts.orchestrator_prompts import (
     CLASSIFICATION_PROMPT,
     QUERY_REWRITE_PROMPT,
@@ -78,7 +79,7 @@ class OrchestratorAgent:
     def __init__(
         self,
         llm: BaseChatModel,
-        graphrag: GraphRAGService,
+        graphrag_registry: dict[str, GraphRAGService],
         neo4j_store: Neo4jStore,
         agents: dict[str, BaseDomainAgent],
         rerank_service: RerankService,
@@ -89,7 +90,7 @@ class OrchestratorAgent:
         max_chunks: int = 8,
     ) -> None:
         self._llm = llm
-        self._graphrag = graphrag
+        self._graphrag_registry = graphrag_registry
         self._neo4j = neo4j_store
         self._agents = agents
         self._rerank = rerank_service
@@ -105,6 +106,7 @@ class OrchestratorAgent:
         question: str,
         session_history: str = "",
         config: RunnableConfig | None = None,
+        progress: ProgressTracker | None = None,
     ) -> OrchestratorResult:
         """
         Main entry point. Full 8-layer retrieval pipeline + multi-agent routing.
@@ -113,23 +115,28 @@ class OrchestratorAgent:
             question: User's original question (Vietnamese)
             session_history: Formatted conversation history for context
             config: LangChain RunnableConfig for LangSmith tracing propagation
+            progress: Optional ProgressTracker for SSE event streaming to the browser
 
         Returns:
             OrchestratorResult with final_answer, domain_keys, agent_results, sources
         """
         # Layer 1: Query rewriting
+        if progress:
+            progress.emit("step", step="rewrite")
         rewritten = await self._rewrite_query(question, session_history, config)
         logger.info("Rewritten query: %s", rewritten)
 
         # Classify → domain keys
         domain_keys = await self._classify(question, session_history, config)
         logger.info("Classified domains: %s", domain_keys)
-
-        # Determine search mode
         search_mode = SearchMode.GLOBAL if len(domain_keys) > 1 else SearchMode.LOCAL
+        if progress:
+            progress.emit("classified", domains=domain_keys, mode=search_mode.value)
 
-        # GraphRAG primary retrieval
-        graphrag_result = await self._graphrag.search(rewritten, search_mode)
+        # GraphRAG primary retrieval — search only the relevant domain indexes
+        if progress:
+            progress.emit("step", step="retrieve")
+        graphrag_result = await self._search_graphrag(rewritten, search_mode, domain_keys)
         graphrag_reply = graphrag_result.get("reply", "")
         raw_sources = graphrag_result.get("sources", [])
 
@@ -151,6 +158,8 @@ class OrchestratorAgent:
 
         # Route to domain agent(s)
         if len(domain_keys) == 1:
+            if progress:
+                progress.emit("agent_start", domain=domain_keys[0])
             result = await self._single_domain_route(
                 question=question,
                 rewritten=rewritten,
@@ -161,9 +170,14 @@ class OrchestratorAgent:
                 sources=final_sources,
                 config=config,
             )
+            if progress:
+                progress.emit("agent_done", domain=domain_keys[0])
             final_answer = result.answer
             agent_results = [result]
         else:
+            if progress:
+                for key in domain_keys:
+                    progress.emit("agent_start", domain=key)
             agent_results, final_answer = await self._multi_domain_route(
                 question=question,
                 rewritten=rewritten,
@@ -173,10 +187,16 @@ class OrchestratorAgent:
                 search_mode=search_mode.value,
                 sources=final_sources,
                 config=config,
+                progress=progress,
             )
 
-        # Level 2: Final verification
+        # Level 2: Final verification — include graph_context_str so the verifier sees the
+        # same knowledge base the agent used (fixes false-negative grounding failures).
+        if progress:
+            progress.emit("step", step="synthesize" if len(domain_keys) > 1 else "verify")
         combined_context = "\n\n".join(final_chunks[:5])
+        if graph_context_str:
+            combined_context = f"{combined_context}\n\n{graph_context_str[:2000]}"
         final_verification = await self._verifier.verify(
             question=question,
             context=combined_context,
@@ -188,6 +208,9 @@ class OrchestratorAgent:
             logger.warning("Final verification failed — using fallback answer.")
             final_answer = FALLBACK_ANSWER
 
+        if progress:
+            progress.emit("done")
+
         return OrchestratorResult(
             final_answer=final_answer,
             domain_keys=domain_keys,
@@ -197,6 +220,59 @@ class OrchestratorAgent:
             rewritten_query=rewritten if rewritten != question else None,
             verification=final_verification,
         )
+
+    async def _search_graphrag(
+        self,
+        query: str,
+        mode: SearchMode,
+        domain_keys: list[str],
+    ) -> dict[str, Any]:
+        """
+        Fan-out to per-domain GraphRAG services for the given domain keys.
+
+        Falls back to the "legacy" service (whole-corpus index) if no domain-specific
+        service has been indexed yet — preserves backward compatibility with existing
+        documents that were uploaded before per-domain indexing was introduced.
+        Merges results: concatenated sources, first non-empty reply wins.
+        """
+        # Collect ready services for the requested domains
+        services = [
+            self._graphrag_registry[k]
+            for k in domain_keys
+            if k in self._graphrag_registry and self._graphrag_registry[k].is_ready
+        ]
+
+        # Fall back to legacy whole-corpus index if no domain service is ready
+        if not services:
+            legacy = self._graphrag_registry.get("legacy")
+            if legacy and legacy.is_ready:
+                services = [legacy]
+
+        if not services:
+            logger.warning("No ready GraphRAG service found for domains %s", domain_keys)
+            return {"reply": "", "sources": []}
+
+        results = await asyncio.gather(
+            *[svc.search(query, mode) for svc in services],
+            return_exceptions=True,
+        )
+
+        merged_reply = ""
+        merged_sources: list[dict] = []
+        seen_ids: set[str] = set()
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning("GraphRAG search error: %s", r)
+                continue
+            if not merged_reply:
+                merged_reply = r.get("reply", "")
+            for s in r.get("sources", []):
+                sid = s.get("id", "")
+                if sid not in seen_ids:
+                    merged_sources.append(s)
+                    seen_ids.add(sid)
+
+        return {"reply": merged_reply, "sources": merged_sources}
 
     async def _rewrite_query(
         self,
@@ -386,8 +462,11 @@ class OrchestratorAgent:
             config=config,
         )
 
-        # Level 1 verification
+        # Level 1 verification — include graph_context so the verifier sees the same
+        # knowledge base the agent used to generate the answer.
         context_str = "\n\n".join(context_chunks[:5])
+        if graph_context:
+            context_str = f"{context_str}\n\n{graph_context[:2000]}"
         verification = await self._verifier.verify(
             question=question,
             context=context_str,
@@ -411,27 +490,35 @@ class OrchestratorAgent:
         search_mode: str,
         sources: list[dict],
         config: RunnableConfig | None,
+        progress: ProgressTracker | None = None,
     ) -> tuple[list[AgentResult], str]:
         """Fan-out to multiple domain agents in parallel, then synthesize."""
-        tasks = []
-        for key in domain_keys:
+
+        async def _run_agent(key: str) -> AgentResult:
             agent = self._agents.get(key) or self._agents.get("general")
-            if agent:
-                tasks.append(
-                    agent.answer(
-                        question=question,
-                        context_chunks=context_chunks,
-                        graph_context=graph_context,
-                        search_mode=search_mode,
-                        sources=sources,
-                        config=config,
-                    )
-                )
+            if agent is None:
+                from app.agents.base_agent import AgentResult as AR
+                return AR(domain_key=key, answer=FALLBACK_ANSWER, search_mode=search_mode)
+            result = await agent.answer(
+                question=question,
+                context_chunks=context_chunks,
+                graph_context=graph_context,
+                search_mode=search_mode,
+                sources=sources,
+                config=config,
+            )
+            if progress:
+                progress.emit("agent_done", domain=key)
+            return result
 
-        agent_results: list[AgentResult] = list(await asyncio.gather(*tasks))
+        agent_results: list[AgentResult] = list(
+            await asyncio.gather(*[_run_agent(k) for k in domain_keys])
+        )
 
-        # Level 1 verification per domain agent
+        # Level 1 verification per domain agent — include graph_context for same reason
         context_str = "\n\n".join(context_chunks[:5])
+        if graph_context:
+            context_str = f"{context_str}\n\n{graph_context[:2000]}"
         for result in agent_results:
             verification = await self._verifier.verify(
                 question=question,
@@ -444,6 +531,8 @@ class OrchestratorAgent:
                 logger.warning("Domain verification failed for '%s'.", result.domain_key)
                 result.answer = FALLBACK_ANSWER
 
+        if progress:
+            progress.emit("step", step="synthesize")
         final_answer = await self._synthesize(question, agent_results, config)
         return agent_results, final_answer
 

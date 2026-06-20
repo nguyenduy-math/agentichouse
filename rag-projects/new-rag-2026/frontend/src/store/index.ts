@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ChatMessage, Source, AgentTraceResponse } from '../types/chat'
+import type { ChatMessage, Source, AgentTraceResponse, ProgressEvent } from '../types/chat'
 
 // ─── Chat store ───────────────────────────────────────────────────────────────
 interface ChatStore {
@@ -8,11 +8,14 @@ interface ChatStore {
   activeSources: Source[]
   agentTrace: AgentTraceResponse | null
   traceOpen: boolean
+  progressEvents: ProgressEvent[]
   addMessage: (msg: ChatMessage) => void
   setLoading: (v: boolean) => void
   setActiveSources: (sources: Source[]) => void
   setAgentTrace: (trace: AgentTraceResponse | null) => void
   setTraceOpen: (v: boolean) => void
+  addProgressEvent: (ev: ProgressEvent) => void
+  clearProgress: () => void
   clearMessages: () => void
 }
 
@@ -22,13 +25,16 @@ export const useChatStore = create<ChatStore>((set) => ({
   activeSources: [],
   agentTrace: null,
   traceOpen: false,
+  progressEvents: [],
   addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
   setLoading: (v) => set({ isLoading: v }),
   setActiveSources: (sources) => set({ activeSources: sources }),
   setAgentTrace: (trace) => set({ agentTrace: trace }),
   setTraceOpen: (v) => set({ traceOpen: v }),
+  addProgressEvent: (ev) => set((s) => ({ progressEvents: [...s.progressEvents, ev] })),
+  clearProgress: () => set({ progressEvents: [] }),
   clearMessages: () =>
-    set({ messages: [], activeSources: [], agentTrace: null }),
+    set({ messages: [], activeSources: [], agentTrace: null, progressEvents: [] }),
 }))
 
 // ─── Session store ────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
+import { useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { sendMessage, getAgentTrace } from '../api/chatApi'
+import { sendMessage, getAgentTrace, openProgressStream } from '../api/chatApi'
 import { useChatStore, useSessionStore } from '../store'
 import type { ChatMessage, ChatResponse } from '../types/chat'
 
@@ -23,8 +24,11 @@ export function useChat() {
     setActiveSources,
     setAgentTrace,
     setTraceOpen,
+    addProgressEvent,
+    clearProgress,
   } = useChatStore()
   const { sessionId } = useSessionStore()
+  const closeStreamRef = useRef<(() => void) | null>(null)
 
   const send = async (text: string) => {
     if (!sessionId || !text.trim()) return
@@ -37,7 +41,17 @@ export function useChat() {
       sources: [],
     }
     addMessage(userMsg)
+    clearProgress()
     setLoading(true)
+
+    // Open the SSE progress stream BEFORE the POST so we don't miss the first events.
+    // The backend waits up to 5 s for the tracker if the SSE arrives slightly early.
+    closeStreamRef.current?.()
+    closeStreamRef.current = openProgressStream(
+      sessionId,
+      (ev) => addProgressEvent(ev),
+      () => { closeStreamRef.current = null },
+    )
 
     try {
       const response = await sendMessage({
@@ -48,7 +62,7 @@ export function useChat() {
       addMessage(buildAssistantMsg(response))
       setActiveSources(response.sources)
 
-      // If multi-domain, fetch agent trace automatically
+      // If multi-domain, fetch the full agent trace for the trace panel
       if (response.domain_keys && response.domain_keys.length > 1) {
         try {
           const trace = await getAgentTrace(sessionId)
@@ -69,6 +83,8 @@ export function useChat() {
       })
     } finally {
       setLoading(false)
+      closeStreamRef.current?.()
+      closeStreamRef.current = null
     }
   }
 

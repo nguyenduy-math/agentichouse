@@ -189,7 +189,7 @@ class GraphRAGService:
                             sources.append({
                                 "type": "text_unit",
                                 "id": str(row.get("id", "")),
-                                "text": str(row.get("text", ""))[:400],
+                                "text": str(row.get("text", ""))[:1500],
                                 "document": str(row.get("document_id", "")),
                             })
                         break
@@ -197,11 +197,13 @@ class GraphRAGService:
                 reports_df = context.get("reports")
                 if reports_df is not None and isinstance(reports_df, pd.DataFrame) and not reports_df.empty:
                     for _, row in reports_df.head(4).iterrows():
+                        # graphrag 2.x uses "content" in the context reports df, not "summary"
+                        body = row.get("content", row.get("summary", ""))
                         sources.append({
                             "type": "community_report",
                             "id": str(row.get("id", "")),
                             "title": str(row.get("title", "")),
-                            "summary": str(row.get("summary", ""))[:400],
+                            "summary": str(body)[:1500],
                         })
         except Exception as exc:
             logger.debug("Could not extract sources from context: %s", exc)

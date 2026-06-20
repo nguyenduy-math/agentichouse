@@ -61,7 +61,7 @@ def _build_orchestrator(app: FastAPI) -> None:
 
     app.state.orchestrator = OrchestratorAgent(
         llm=llm,
-        graphrag=app.state.graphrag_service,
+        graphrag_registry=app.state.graphrag_registry,
         neo4j_store=app.state.neo4j_store,
         agents=agents,
         rerank_service=rerank_svc,
@@ -71,8 +71,6 @@ def _build_orchestrator(app: FastAPI) -> None:
         rerank_pool_size=settings.RERANK_CANDIDATE_POOL,
         max_chunks=settings.MAX_LOCAL_CHUNKS,
     )
-
-    app.state.indexing_service.set_graphrag_service(app.state.graphrag_service)
     logger.info("OrchestratorAgent initialized with provider: %s", settings.LLM_PROVIDER)
 
 
@@ -89,19 +87,33 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("Neo4j connection failed (continuing without graph): %s", exc)
 
+    from app.domains import DOMAINS
     from app.services.graphrag_service import GraphRAGService
-    graphrag_svc = GraphRAGService(
-        workspace_root=settings.GRAPHRAG_ROOT,
-        neo4j_store=neo4j_store,
-    )
-    app.state.graphrag_service = graphrag_svc
 
-    output_dir = Path(settings.GRAPHRAG_ROOT) / "output"
-    if (output_dir / "entities.parquet").exists():
-        logger.info("Found existing artifacts -- loading GraphRAG search engines...")
-        await graphrag_svc.reload()
-    else:
-        logger.info("No artifacts found -- GraphRAG will load after first indexing run.")
+    graphrag_root = Path(settings.GRAPHRAG_ROOT)
+
+    # Build per-domain registry.  Each domain gets its own GraphRAGService pointing
+    # at graphrag_workspace/{domain_key}/.  A "legacy" service keeps backward
+    # compatibility with existing documents indexed before per-domain support.
+    graphrag_registry: dict[str, GraphRAGService] = {}
+
+    # Legacy whole-corpus service (documents uploaded before per-domain support)
+    legacy_svc = GraphRAGService(workspace_root=str(graphrag_root), neo4j_store=neo4j_store)
+    if (graphrag_root / "output" / "entities.parquet").exists():
+        logger.info("Loading legacy (whole-corpus) GraphRAG artifacts...")
+        await legacy_svc.reload()
+    graphrag_registry["legacy"] = legacy_svc
+
+    # Per-domain services — load artifacts if already indexed
+    for domain in DOMAINS:
+        workspace = graphrag_root / domain.key
+        svc = GraphRAGService(workspace_root=str(workspace), neo4j_store=neo4j_store)
+        if (workspace / "output" / "entities.parquet").exists():
+            logger.info("Loading GraphRAG artifacts for domain '%s'...", domain.key)
+            await svc.reload()
+        graphrag_registry[domain.key] = svc
+
+    app.state.graphrag_registry = graphrag_registry
 
     from app.services.indexing_service import IndexingService
     indexing_svc = IndexingService(
@@ -109,8 +121,8 @@ async def lifespan(app: FastAPI):
         neo4j_uri=settings.NEO4J_URI,
         neo4j_user=settings.NEO4J_USER,
         neo4j_password=settings.NEO4J_PASSWORD,
-        graphrag_service=graphrag_svc,
     )
+    indexing_svc.set_graphrag_registry(graphrag_registry)
     app.state.indexing_service = indexing_svc
     app.state.documents_dir = "./data/documents"
 
@@ -118,6 +130,10 @@ async def lifespan(app: FastAPI):
     session_svc = SessionService(ttl_minutes=settings.SESSION_TTL_MINUTES)
     session_svc.start_cleanup_loop()
     app.state.session_service = session_svc
+
+    # Per-turn progress trackers: session_id → ProgressTracker
+    # Created by POST /chat and consumed by GET /chat/{id}/progress (SSE).
+    app.state.progress_store: dict = {}
 
     from app.services.history_store import HistoryStore
     history_store = HistoryStore()

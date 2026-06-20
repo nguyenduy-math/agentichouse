@@ -77,9 +77,14 @@ class IngestResponse(BaseModel):
     filename: str
     status: str = "uploaded"
     message: str | None = None
+    domain: str | None = None
 
 
 class IndexRequest(BaseModel):
+    domain: str = Field(
+        ...,
+        description="Domain key to index (hr, benefits, it, finance, compliance, procedures, general)",
+    )
     reimport: bool = Field(
         False,
         description="If True, re-run import_to_neo4j.py even if artifacts exist",

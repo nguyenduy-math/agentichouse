@@ -8,6 +8,7 @@ import logging
 import os
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from langchain_core.runnables.config import RunnableConfig
 
 from app.config import settings
@@ -69,15 +70,28 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
 
     session_history = session.get_history_text(max_turns=6)
 
+    # Create a fresh ProgressTracker for this turn so the SSE endpoint can stream it
+    from app.services.progress_tracker import ProgressTracker
+    tracker = ProgressTracker()
+    request.app.state.progress_store[body.session_id] = tracker
+
     try:
         result = await orchestrator.run(
             question=body.message,
             session_history=session_history,
             config=config,
+            progress=tracker,
         )
     except Exception as exc:
+        tracker.emit("error", message=str(exc))
         logger.error("Orchestrator error for session %s: %s", body.session_id, exc, exc_info=True)
         raise HTTPException(status_code=500, detail=f"Processing error: {exc}")
+    finally:
+        # Keep the tracker alive for 10 s so slow SSE clients can drain the final events
+        async def _cleanup_tracker() -> None:
+            await asyncio.sleep(10)
+            request.app.state.progress_store.pop(body.session_id, None)
+        asyncio.create_task(_cleanup_tracker())
 
     session.add_message("user", body.message)
     session.add_message("assistant", result.final_answer)
@@ -134,6 +148,45 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
         asyncio.create_task(_save_and_backfill())
 
     return chat_response
+
+
+@router.get("/chat/{session_id}/progress")
+async def chat_progress(session_id: str, request: Request) -> StreamingResponse:
+    """
+    SSE stream of pipeline progress events for one chat turn.
+
+    The browser opens this endpoint before (or simultaneously with) POST /chat.
+    The server waits up to 5 s for the tracker to appear (handles the race where
+    the SSE connection is established before the POST starts processing), then
+    streams events until the pipeline emits 'done' or 'error'.
+
+    Event shape: JSON objects — see ProgressTracker docstring for the full schema.
+    """
+    # Wait up to 5 s for the tracker created by POST /chat to appear
+    tracker = None
+    for _ in range(10):
+        tracker = request.app.state.progress_store.get(session_id)
+        if tracker is not None:
+            break
+        await asyncio.sleep(0.5)
+
+    async def event_generator():
+        if tracker is None:
+            yield 'data: {"type": "done"}\n\n'
+            return
+        async for chunk in tracker.stream():
+            if await request.is_disconnected():
+                break
+            yield chunk
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/chat/{session_id}/agent_trace", response_model=AgentTraceResponse)
