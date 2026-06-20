@@ -4,13 +4,13 @@ server:
 camel:
   springboot:
     name: camel-pubsub-dlq-demo
+  servlet:
+    mapping:
+      context-path: /api/*
   component:
     google-pubsub:
       project: local-project
       endpoint: localhost:8085
-    servlet:
-      mapping:
-        context-path: /api/*
   rest:
     component: servlet
     binding-mode: json
@@ -34,8 +34,6 @@ springdoc:
     # Load Camel's generated OpenAPI spec (served by camel-openapi-java under the servlet mount)
     url: /api/api-docs
     disable-swagger-default-url: true
-  api-docs:
-    enabled: false  # disable springdoc's own spec; we use Camel's
 
 logging:
   level:
