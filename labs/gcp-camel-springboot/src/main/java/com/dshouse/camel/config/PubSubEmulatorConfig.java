@@ -1,6 +1,8 @@
 package com.dshouse.camel.config;
 
 import jakarta.annotation.PostConstruct;
+import org.apache.camel.CamelContext;
+import org.apache.camel.component.google.pubsub.GooglePubsubComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,12 +16,20 @@ public class PubSubEmulatorConfig {
     @Value("${camel.component.google-pubsub.endpoint}")
     private String emulatorEndpoint;
 
-    // The Camel Google Pub/Sub component reads PUBSUB_EMULATOR_HOST from the
-    // environment. We set it programmatically here so the app works without
-    // needing it pre-set in the shell.
+    // CamelContext is a Spring bean; GooglePubsubComponent lives inside it,
+    // not in the Spring application context, so it cannot be injected directly.
+    private final CamelContext camelContext;
+
+    public PubSubEmulatorConfig(CamelContext camelContext) {
+        this.camelContext = camelContext;
+    }
+
     @PostConstruct
     void configureEmulator() {
-        System.setProperty("PUBSUB_EMULATOR_HOST", emulatorEndpoint);
-        log.info("Pub/Sub emulator configured at {}", emulatorEndpoint);
+        GooglePubsubComponent component =
+                camelContext.getComponent("google-pubsub", GooglePubsubComponent.class);
+        component.setEndpoint(emulatorEndpoint);
+        component.setAuthenticate(false);
+        log.info("Pub/Sub emulator configured at {} (GCP authentication disabled)", emulatorEndpoint);
     }
 }

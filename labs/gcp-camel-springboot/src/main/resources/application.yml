@@ -11,6 +11,7 @@ camel:
     google-pubsub:
       project: local-project
       endpoint: localhost:8085
+      authenticate: false
   rest:
     component: servlet
     binding-mode: json
