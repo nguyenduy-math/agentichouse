@@ -1,0 +1,25 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic-settings==2.6.1
+python-multipart==0.0.12
+aiofiles==24.1.0
+
+# LLM & Embeddings
+google-genai==1.16.0
+
+# Retrieval
+rank_bm25==0.2.2
+chromadb>=0.6.0
+# numpy<2.0 and scipy<1.14 required because torch 2.2.2 (max on Intel Mac) was compiled against numpy 1.x
+numpy<2.0
+scipy<1.14
+
+# Reranker
+sentence-transformers==3.3.1
+
+# Document parsing
+pdfplumber==0.11.4
+python-docx==1.1.2
+
+# Logging
+structlog==24.4.0
