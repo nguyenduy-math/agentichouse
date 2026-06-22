@@ -207,6 +207,88 @@ When `is_out_of_scope: true`, `sources` is empty and `reply` is the polite refus
 
 ---
 
+## Evaluation (RAGAS)
+
+The `eval/` folder contains a RAGAS evaluation suite that measures answer quality using an OpenAI model as judge.
+
+### Prerequisites
+
+- An OpenAI API key (used only as the RAGAS judge — the backend still uses Gemini)
+- The hybrid-rag-assistant backend running on port 8000 with documents already ingested
+
+### Setup
+
+```bash
+cd eval
+pip install -r requirements.txt
+cp .env.example .env    # open .env and set OPENAI_API_KEY
+```
+
+### Question sets
+
+| Set | File | Questions | Purpose |
+|---|---|---|---|
+| **A** | `eval-sets/eval_questions.json` | 17 | Shared with graphrag-assistant — apples-to-apples comparison |
+| **B** | `eval-sets/hybrid_questions.json` | 15 | Hybrid-specific — stress-tests BM25, vector search, reranker, and out-of-scope refusal |
+| **Multi-turn** | `eval-sets/eval_conversation_sets.json` | 5 sets × 4 turns | Tests context retention across a conversation session |
+
+Set B tags each question with a `retrieval_challenge` label:
+
+| Label | Count | What it tests |
+|---|---|---|
+| `keyword_exact` | 4 | Exact Vietnamese terms — BM25 should rank first |
+| `semantic_paraphrase` | 4 | Rephrased questions — vector search must compensate |
+| `multi_hop_reasoning` | 4 | Facts spread across 2+ chunks — reranker precision |
+| `out_of_scope` | 3 | Off-topic questions — `is_out_of_scope=true` refusal |
+
+### Running evaluations
+
+```bash
+# Dry run — check backend connectivity, no OpenAI calls
+python hybrid_eval.py --dry-run
+
+# Set A only (17 questions)
+python hybrid_eval.py
+
+# Set B only (15 hybrid-specific questions)
+python hybrid_eval.py --set B
+
+# Both sets merged into one run
+python hybrid_eval.py --set all
+
+# Multi-turn conversation evaluation
+python hybrid_eval_multiturn.py
+
+# Single conversation set for debugging
+python hybrid_eval_multiturn.py --set CS-001 --dry-run
+
+# Override the judge model
+python hybrid_eval.py --model gpt-4o
+```
+
+### Metrics
+
+All metrics are on a [0, 1] scale — higher is better.
+
+| Metric | Measures |
+|---|---|
+| `faithfulness` | Are all claims grounded in retrieved chunks? (hallucination proxy) |
+| `answer_relevancy` | Is the answer on-topic and responsive to the question? |
+| `context_precision` | Are the most relevant chunks ranked at the top? |
+| `context_recall` | Do retrieved chunks cover all facts needed to answer? |
+| `answer_correctness` | Does the answer match the ground-truth summary? |
+
+### Output
+
+Results are saved as timestamped CSV files in `eval/results/`:
+
+- `hybrid_eval_A_<timestamp>.csv` — per-question scores for Set A
+- `hybrid_eval_B_<timestamp>.csv` — per-question scores for Set B (includes `retrieval_challenge` column)
+- `hybrid_eval_all_<timestamp>.csv` — both sets merged
+- `hybrid_eval_multiturn_<timestamp>.csv` — per-turn scores with per-set summary
+
+---
+
 ## Architecture
 
 ### Retrieval Pipeline

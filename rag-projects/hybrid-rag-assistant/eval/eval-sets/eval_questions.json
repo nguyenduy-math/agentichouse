@@ -1,0 +1,282 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-05-24",
+    "description": "Bộ câu hỏi đánh giá ngữ nghĩa (semantic eval) dùng để so sánh hiệu suất giữa các LLM (Gemini, OpenAI) trên hệ thống GraphRAG chính sách nội bộ Agentic House.",
+    "total_questions": 17,
+    "categories": ["nghỉ phép", "làm việc từ xa", "phúc lợi", "trang phục", "quy trình", "tổng hợp", "giờ làm việc", "lương thưởng", "onboarding"],
+    "query_types": ["LOCAL", "GLOBAL"],
+    "difficulty_levels": ["easy", "medium", "hard"]
+  },
+  "questions": [
+    {
+      "id": "SQ-001",
+      "question": "Một nhân viên vừa được tuyển và đang trong tháng đầu tiên thử việc có được đăng ký làm việc từ xa không?",
+      "category": "làm việc từ xa",
+      "query_type": "LOCAL",
+      "difficulty": "easy",
+      "reasoning_type": "factual_with_condition",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Không được phép làm việc từ xa",
+        "Chính sách chỉ áp dụng cho nhân viên chính thức đã hoàn thành thời gian thử việc",
+        "Thời gian thử việc tối thiểu là 2 tháng"
+      ],
+      "expected_answer_summary": "Không. Chính sách làm việc từ xa chỉ áp dụng cho nhân viên chính thức đã hoàn thành thời gian thử việc (ít nhất 2 tháng). Nhân viên đang trong tháng thử việc đầu tiên chưa đủ điều kiện."
+    },
+    {
+      "id": "SQ-002",
+      "question": "Nhân viên nữ vừa đi làm lại sau kỳ nghỉ thai sản, con đang được 8 tháng tuổi, có được hưởng quyền lợi nào đặc biệt trong giờ làm việc không?",
+      "category": "nghỉ phép",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "benefit_entitlement",
+      "source_docs": ["chinh_sach_nghi_phep.txt"],
+      "expected_key_facts": [
+        "Được nghỉ 60 phút mỗi ngày để cho con bú",
+        "Chia thành 2 lần, mỗi lần 30 phút",
+        "Hưởng nguyên lương trong thời gian đó",
+        "Áp dụng cho đến khi con đủ 12 tháng tuổi"
+      ],
+      "expected_answer_summary": "Có. Nhân viên nữ đang nuôi con dưới 12 tháng tuổi được nghỉ 60 phút/ngày (chia 2 lần 30 phút) trong giờ làm việc để cho con bú và vẫn hưởng nguyên lương. Con 8 tháng tuổi vẫn thuộc phạm vi áp dụng."
+    },
+    {
+      "id": "SQ-003",
+      "question": "Vào thứ Sáu, một Trưởng phòng Kinh doanh không có lịch tiếp khách. Anh ấy có thể mặc jeans và áo thun đến văn phòng không?",
+      "category": "trang phục",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "cross_rule_reasoning",
+      "source_docs": ["quy_dinh_trang_phuc.txt"],
+      "expected_key_facts": [
+        "Không được phép mặc casual",
+        "Ban Giám đốc và Trưởng phòng phải mặc Business Formal trong toàn bộ tuần làm việc",
+        "Chính sách Casual Friday không áp dụng cho quản lý cấp cao"
+      ],
+      "expected_answer_summary": "Không. Dù là thứ Sáu và không có tiếp khách, Trưởng phòng vẫn phải duy trì trang phục Business Formal trong toàn bộ tuần làm việc. Chính sách Casual Friday chỉ áp dụng cho nhân viên thông thường, không áp dụng cho Ban Giám đốc và quản lý cấp cao (Trưởng phòng, Phó phòng)."
+    },
+    {
+      "id": "SQ-004",
+      "question": "Một nhân viên Senior muốn đăng ký khóa học AWS trên Coursera trị giá 8 triệu đồng. Công ty hỗ trợ như thế nào và cần làm thủ tục gì?",
+      "category": "phúc lợi",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Nhân viên Senior có ngân sách đào tạo 10 triệu VNĐ/năm",
+        "8 triệu nằm trong ngân sách, được chi trả",
+        "Phải được Trưởng phòng phê duyệt trước khi chi tiêu",
+        "Nộp hóa đơn hoàn ứng trong vòng 30 ngày sau khi chi",
+        "Công ty cũng hỗ trợ 100% chi phí thi chứng chỉ AWS nếu đúng chuyên ngành"
+      ],
+      "expected_answer_summary": "Nhân viên Senior có ngân sách đào tạo 10 triệu VNĐ/năm, đủ để chi trả khóa học 8 triệu. Cần làm 2 bước: (1) xin phê duyệt Trưởng phòng trước khi đăng ký, (2) nộp hóa đơn cho Phòng Nhân sự/Kế toán hoàn ứng trong vòng 30 ngày. Ngoài ra, nếu muốn thi chứng chỉ AWS sau khóa học, công ty hỗ trợ 100% phí thi (nhưng phải cam kết làm ít nhất 1 năm sau khi đậu)."
+    },
+    {
+      "id": "SQ-005",
+      "question": "Điều gì xảy ra với quyền làm việc từ xa của một nhân viên nếu họ không đạt KPI hai kỳ liên tiếp và thường xuyên không phản hồi trong giờ cốt lõi?",
+      "category": "làm việc từ xa",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "consequence_inference",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Quyền làm việc từ xa bị tạm đình chỉ hoặc thu hồi",
+        "Không đạt KPI 2 kỳ liên tiếp là một trong các điều kiện thu hồi",
+        "Không phản hồi trong giờ cốt lõi nhiều lần là điều kiện thu hồi thứ hai",
+        "Thời gian thu hồi tối thiểu 3 tháng trước khi được xem xét lại"
+      ],
+      "expected_answer_summary": "Quyền làm việc từ xa sẽ bị tạm đình chỉ hoặc thu hồi, vì nhân viên vi phạm hai điều kiện: không đạt KPI 2 kỳ liên tiếp và không phản hồi trong giờ cốt lõi nhiều lần. Sau khi bị thu hồi, phải chờ tối thiểu 3 tháng mới được xem xét phục hồi quyền làm việc từ xa."
+    },
+    {
+      "id": "SQ-006",
+      "question": "Nhân viên muốn nghỉ phép 7 ngày liên tục để đi du lịch nước ngoài cần thực hiện những bước gì và đơn cần được ai phê duyệt?",
+      "category": "quy trình",
+      "query_type": "LOCAL",
+      "difficulty": "hard",
+      "reasoning_type": "multi_source_procedure",
+      "source_docs": ["chinh_sach_nghi_phep.txt", "quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Nghỉ 6 ngày trở lên phải nộp đơn ít nhất 14 ngày trước",
+        "Cần phê duyệt của Trưởng phòng (cấp 1) và Phòng Nhân sự (cấp 2)",
+        "Phải bàn giao công việc trước ngày nghỉ",
+        "Cập nhật trạng thái trên Jira/Asana",
+        "Cài đặt trả lời tự động email (Out of Office)"
+      ],
+      "expected_answer_summary": "Với 7 ngày nghỉ liên tục (thuộc nhóm từ 6 ngày trở lên): (1) nộp đơn trên hệ thống HRM ít nhất 14 ngày trước ngày nghỉ, (2) đơn cần được Trưởng phòng phê duyệt cấp 1 và Phòng Nhân sự xác nhận cấp 2. Trước ngày nghỉ còn phải: bàn giao công việc, cập nhật Jira/Asana, thông báo trên Teams, và cài auto-reply email với thông tin người phụ trách thay."
+    },
+    {
+      "id": "SQ-007",
+      "question": "So sánh chế độ bảo hiểm sức khỏe PTI Care giữa một nhân viên Junior và một Trưởng phòng khi cả hai phải nhập viện điều trị nội trú với chi phí 80 triệu đồng.",
+      "category": "phúc lợi",
+      "query_type": "LOCAL",
+      "difficulty": "hard",
+      "reasoning_type": "comparative_analysis",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Nhân viên Junior: gói cơ bản, nội trú tối đa 50 triệu VNĐ/năm",
+        "Trưởng phòng: gói nâng cao, nội trú tối đa 100 triệu VNĐ/năm",
+        "Với chi phí 80 triệu: nhân viên Junior chỉ được bảo hiểm chi trả 50 triệu, tự trả 30 triệu",
+        "Với chi phí 80 triệu: Trưởng phòng được chi trả toàn bộ 80 triệu",
+        "Cả hai đều do công ty đóng 100% phí bảo hiểm"
+      ],
+      "expected_answer_summary": "Với chi phí nội trú 80 triệu đồng: Nhân viên Junior chỉ được PTI Care chi trả 50 triệu (giới hạn gói cơ bản), phải tự trả 30 triệu còn lại. Trưởng phòng được chi trả toàn bộ 80 triệu (gói nâng cao có giới hạn 100 triệu). Gói nâng cao của Trưởng phòng còn bao gồm thêm nha khoa 5 triệu/năm. Phí bảo hiểm cả hai trường hợp đều do công ty chi trả 100%."
+    },
+    {
+      "id": "SQ-008",
+      "question": "Nhân viên bắt đầu làm việc chính thức từ ngày 15/07/2024. Đến kỳ thưởng Tết Nguyên Đán 2025 (dự kiến chi trả cuối tháng 01/2025), họ có đủ điều kiện nhận thưởng không?",
+      "category": "phúc lợi",
+      "query_type": "LOCAL",
+      "difficulty": "hard",
+      "reasoning_type": "date_calculation_reasoning",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Điều kiện: làm việc đủ 6 tháng tính đến thời điểm trả thưởng Tết",
+        "Từ 15/07/2024 đến cuối tháng 01/2025 là khoảng 6,5 tháng",
+        "Nhân viên đủ điều kiện nhận thưởng Tết tối thiểu 1 tháng lương"
+      ],
+      "expected_answer_summary": "Có, nhân viên đủ điều kiện nhận thưởng Tết. Từ ngày 15/07/2024 đến cuối tháng 01/2025 tính ra khoảng 6,5 tháng, vượt qua ngưỡng yêu cầu 6 tháng làm việc liên tục tính đến thời điểm chi trả thưởng Tết. Mức thưởng tối thiểu là 1 tháng lương."
+    },
+    {
+      "id": "SQ-009",
+      "question": "Nếu một nhân viên phải làm thêm giờ vào ngày Quốc khánh 2/9, quy trình phê duyệt cần đi qua bao nhiêu cấp và cụ thể là những ai?",
+      "category": "quy trình",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "procedural_lookup",
+      "source_docs": ["quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "3 cấp phê duyệt",
+        "Cấp 1: Trưởng phòng",
+        "Cấp 2: Phòng Nhân sự hoặc Kế toán (vì là OT ngày lễ)",
+        "Cấp 3: Ban Giám đốc (vì là ngày lễ Quốc khánh/Tết)",
+        "Mức lương OT ngày lễ là 300% lương giờ cơ bản"
+      ],
+      "expected_answer_summary": "Làm thêm giờ vào ngày Quốc khánh 2/9 cần 3 cấp phê duyệt: (1) Trưởng phòng, (2) Phòng Nhân sự hoặc Kế toán, (3) Ban Giám đốc (vì là ngày lễ Quốc khánh). Sau khi được duyệt, lương OT sẽ được tính ở mức 300% so với lương giờ cơ bản."
+    },
+    {
+      "id": "SQ-010",
+      "question": "Agentic House có những giá trị cốt lõi nào, và các chính sách về làm việc từ xa, phúc lợi đào tạo có phản ánh những giá trị đó không?",
+      "category": "tổng hợp",
+      "query_type": "GLOBAL",
+      "difficulty": "hard",
+      "reasoning_type": "cross_document_synthesis",
+      "source_docs": ["so_tay_nhan_vien.txt", "chinh_sach_lam_viec_tu_xa.txt", "chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "4 giá trị cốt lõi PACE: Professional, Agile, Collaborative, Ethical",
+        "Chính sách remote linh hoạt theo phòng ban phản ánh giá trị Agile",
+        "Ngân sách đào tạo và hỗ trợ chứng chỉ phản ánh Professional",
+        "Yêu cầu bàn giao công việc, dùng Teams/Jira phản ánh Collaborative",
+        "Quy định xử lý vi phạm rõ ràng, minh bạch phản ánh Ethical"
+      ],
+      "expected_answer_summary": "Agentic House có 4 giá trị cốt lõi PACE: Professional (Chuyên nghiệp), Agile (Linh hoạt), Collaborative (Hợp tác), Ethical (Đạo đức). Các chính sách phản ánh rõ ràng: (1) Agile — chính sách remote linh hoạt theo từng phòng ban và giờ cốt lõi; (2) Professional — ngân sách đào tạo (5–15 triệu/năm) và hỗ trợ 100% phí chứng chỉ chuyên môn; (3) Collaborative — quy trình bàn giao công việc bắt buộc và dùng Jira/Asana/Teams; (4) Ethical — quy định vi phạm rõ ràng và minh bạch trong xử lý kỷ luật."
+    },
+    {
+      "id": "SQ-011",
+      "question": "Nhân viên Phòng Kỹ thuật muốn bắt đầu làm việc lúc 9:30 sáng. Điều này có được phép không, và họ cần đảm bảo những điều kiện gì?",
+      "category": "giờ làm việc",
+      "query_type": "LOCAL",
+      "difficulty": "easy",
+      "reasoning_type": "factual_with_condition",
+      "source_docs": ["so_tay_nhan_vien.txt"],
+      "expected_key_facts": [
+        "Phòng Kỹ thuật được phép bắt đầu trong khung 08:00–10:00, tức 9:30 là hợp lệ",
+        "Phải làm đủ 8 tiếng trong ngày",
+        "Phải có mặt trong core hours từ 10:00 đến 17:00"
+      ],
+      "expected_answer_summary": "Có. Nhân viên Phòng Kỹ thuật được phép áp dụng lịch linh hoạt, bắt đầu trong khung 08:00–10:00, tức 9:30 là hợp lệ. Điều kiện: (1) làm đủ 8 tiếng trong ngày, (2) phải có mặt trong core hours từ 10:00 đến 17:00."
+    },
+    {
+      "id": "SQ-012",
+      "question": "Khi được phê duyệt làm việc từ xa, nhân viên nhận được phụ cấp hỗ trợ gì từ công ty về chi phí internet và được chi trả như thế nào?",
+      "category": "làm việc từ xa",
+      "query_type": "LOCAL",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Phụ cấp internet 200.000 VNĐ/tháng",
+        "Chi trả cùng lương tháng"
+      ],
+      "expected_answer_summary": "Nhân viên làm việc từ xa được nhận phụ cấp internet 200.000 VNĐ/tháng. Khoản phụ cấp này được thanh toán cùng với lương tháng."
+    },
+    {
+      "id": "SQ-013",
+      "question": "Một Trưởng phòng quyết định nghỉ việc. Họ phải thông báo trước bao lâu và cần hoàn thành những bước gì trong quá trình offboarding?",
+      "category": "onboarding",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["so_tay_nhan_vien.txt"],
+      "expected_key_facts": [
+        "Quản lý cấp Trưởng phòng trở lên phải thông báo ít nhất 45 ngày (nhân viên thông thường chỉ 30 ngày)",
+        "Checklist offboarding: bàn giao công việc, hoàn trả thiết bị, xóa tài khoản nội bộ",
+        "Sau offboarding sẽ nhận chứng nhận kinh nghiệm làm việc",
+        "Được thanh toán lương và ngày phép còn lại"
+      ],
+      "expected_answer_summary": "Trưởng phòng phải thông báo nghỉ việc ít nhất 45 ngày trước (so với 30 ngày cho nhân viên thông thường). Checklist offboarding gồm: bàn giao công việc, hoàn trả thiết bị, xóa tài khoản nội bộ. Sau khi hoàn tất sẽ nhận chứng nhận kinh nghiệm làm việc và được thanh toán toàn bộ lương cùng ngày phép còn lại."
+    },
+    {
+      "id": "SQ-014",
+      "question": "Nhân viên đạt xếp loại hiệu suất 'Tốt' với 87% KPI trong kỳ đánh giá cuối năm. Họ được nhận thưởng bao nhiêu tháng lương?",
+      "category": "lương thưởng",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "threshold_calculation",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Xếp loại 'Tốt' áp dụng cho nhân viên đạt 85–94% KPI",
+        "87% KPI nằm trong ngưỡng xếp loại Tốt",
+        "Mức thưởng xếp loại Tốt là 2–3 tháng lương gross"
+      ],
+      "expected_answer_summary": "Nhân viên đạt 87% KPI được xếp loại 'Tốt' (ngưỡng 85–94% KPI) và nhận thưởng hiệu suất cuối năm từ 2 đến 3 tháng lương gross. Mức cụ thể trong khoảng 2–3 tháng tùy thuộc vào quyết định của ban lãnh đạo."
+    },
+    {
+      "id": "SQ-015",
+      "question": "Nhân viên kỹ thuật làm thêm 6 tiếng vào thứ Bảy và đây là lần làm thêm đầu tiên trong tháng. Mức phụ cấp OT là bao nhiêu, cần phê duyệt những cấp nào, và có lựa chọn thay thế nào ngoài nhận tiền không?",
+      "category": "lương thưởng",
+      "query_type": "LOCAL",
+      "difficulty": "hard",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Cuối tuần: phụ cấp OT 200% lương giờ cơ bản",
+        "6 tiếng đầu tiên trong tháng không vượt ngưỡng 8 tiếng/tháng → chỉ cần Trưởng phòng phê duyệt cấp 1",
+        "Không phải ngày lễ → không cần phê duyệt cấp 2 và cấp 3",
+        "Có thể chọn nghỉ bù (comp-off day) thay vì nhận tiền, theo thỏa thuận với Trưởng phòng"
+      ],
+      "expected_answer_summary": "Thứ Bảy là cuối tuần nên phụ cấp OT là 200% lương giờ cơ bản. Vì đây là lần đầu trong tháng và chỉ 6 tiếng (chưa vượt 8 giờ/tháng) và không phải ngày lễ, chỉ cần Trưởng phòng phê duyệt cấp 1. Ngoài nhận tiền OT, nhân viên có thể thỏa thuận với Trưởng phòng để nghỉ bù (comp-off day) thay thế."
+    },
+    {
+      "id": "SQ-016",
+      "question": "Một nhân viên muốn đăng ký thi chứng chỉ Google Cloud (GCP) Professional. Công ty hỗ trợ như thế nào và có điều kiện gì kèm theo?",
+      "category": "phúc lợi",
+      "query_type": "LOCAL",
+      "difficulty": "medium",
+      "reasoning_type": "benefit_entitlement",
+      "source_docs": ["chinh_sach_phuc_loi.txt"],
+      "expected_key_facts": [
+        "Công ty hỗ trợ 100% chi phí thi chứng chỉ chuyên môn (AWS, Google Cloud, PMP, ACCA, v.v.)",
+        "Điều kiện: nhân viên phải đang làm việc đúng chuyên ngành liên quan",
+        "Phải cam kết làm việc tại công ty ít nhất 1 năm sau khi đậu chứng chỉ"
+      ],
+      "expected_answer_summary": "Công ty hỗ trợ 100% chi phí thi chứng chỉ Google Cloud Professional với hai điều kiện: (1) nhân viên đang làm việc đúng chuyên ngành liên quan đến chứng chỉ đó, (2) cam kết tiếp tục làm việc tại công ty ít nhất 1 năm sau khi đậu. Khoản hỗ trợ này tách biệt với ngân sách đào tạo hàng năm."
+    },
+    {
+      "id": "SQ-017",
+      "question": "Tóm tắt các quy định làm việc đặc thù dành riêng cho Phòng Kỹ thuật & CNTT so với các phòng ban khác, bao gồm giờ làm việc, giới hạn làm việc từ xa và công cụ làm việc.",
+      "category": "tổng hợp",
+      "query_type": "GLOBAL",
+      "difficulty": "hard",
+      "reasoning_type": "cross_document_synthesis",
+      "source_docs": ["so_tay_nhan_vien.txt", "chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Giờ linh hoạt: bắt đầu trong khung 08:00–10:00, đảm bảo đủ 8 tiếng và core hours 10:00–17:00",
+        "Giới hạn remote tối đa 3 ngày/tuần (Marketing & Kế toán chỉ được 2 ngày/tuần)",
+        "Công cụ quản lý công việc: Jira (các phòng khác dùng Asana)",
+        "Bắt buộc kết nối VPN khi làm việc từ xa và truy cập hệ thống nội bộ"
+      ],
+      "expected_answer_summary": "Phòng Kỹ thuật & CNTT có 4 điểm khác biệt so với các phòng ban khác: (1) Giờ linh hoạt — được phép bắt đầu trong khung 08:00–10:00 thay vì cố định 08:00, miễn đủ 8 tiếng và có mặt core hours 10:00–17:00. (2) Remote nhiều hơn — tối đa 3 ngày/tuần (Marketing & Kế toán chỉ 2 ngày/tuần). (3) Công cụ riêng — dùng Jira để quản lý công việc thay vì Asana. (4) Bảo mật — bắt buộc kết nối VPN công ty khi làm việc từ xa."
+    }
+  ]
+}
