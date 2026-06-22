@@ -31,10 +31,10 @@ from pathlib import Path
 import httpx
 import pandas as pd
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from openai import OpenAI
 from ragas import EvaluationDataset, RunConfig, SingleTurnSample, evaluate
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import embedding_factory
+from ragas.llms import llm_factory
 from ragas.metrics import (
     answer_correctness,
     answer_relevancy,
@@ -130,20 +130,17 @@ def build_dataset(
     return EvaluationDataset(samples=samples)
 
 
-def build_judge(model: str) -> tuple[LangchainLLMWrapper, LangchainEmbeddingsWrapper]:
-    llm = LangchainLLMWrapper(
-        ChatOpenAI(model=model, api_key=OPENAI_API_KEY, temperature=0)
-    )
-    embeddings = LangchainEmbeddingsWrapper(
-        OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
-    )
+def build_judge(model: str):
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    llm = llm_factory(model, client=client)
+    embeddings = embedding_factory("openai/text-embedding-3-small", client=client)
     return llm, embeddings
 
 
 def run_ragas(
     dataset: EvaluationDataset,
-    llm: LangchainLLMWrapper,
-    embeddings: LangchainEmbeddingsWrapper,
+    llm,
+    embeddings,
 ) -> pd.DataFrame:
     run_config = RunConfig(max_retries=5, max_wait=120, timeout=180, max_workers=2)
     result = evaluate(
