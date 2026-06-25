@@ -1,0 +1,166 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-06-24",
+    "description": "10 câu hỏi chọn ngẫu nhiên từ hybrid_questions.json, giữ nguyên phân bố theo retrieval_challenge.",
+    "total_questions": 10,
+    "sampled_from": "hybrid_questions.json",
+    "categories": {
+      "keyword_exact": "2 câu — HQ-001, HQ-003",
+      "semantic_paraphrase": "3 câu — HQ-005, HQ-006, HQ-008",
+      "multi_hop_reasoning": "3 câu — HQ-009, HQ-011, HQ-012",
+      "out_of_scope": "2 câu — HQ-013, HQ-015"
+    }
+  },
+  "questions": [
+    {
+      "id": "HQ-001",
+      "retrieval_challenge": "keyword_exact",
+      "question": "Quy định về 'giờ cốt lõi' (core hours) trong chính sách làm việc từ xa của Agentic House là gì?",
+      "category": "làm việc từ xa",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Giờ cốt lõi là khoảng thời gian nhân viên bắt buộc phải online và phản hồi",
+        "Khung giờ cốt lõi: 09:00 đến 17:00",
+        "Phản hồi trong vòng 15 phút khi được liên hệ qua kênh chính thức"
+      ],
+      "expected_answer_summary": "Giờ cốt lõi (core hours) trong chính sách làm việc từ xa là khung thời gian từ 09:00 đến 17:00, trong đó nhân viên bắt buộc phải online và phản hồi các liên lạc qua kênh chính thức trong vòng 15 phút."
+    },
+    {
+      "id": "HQ-003",
+      "retrieval_challenge": "keyword_exact",
+      "question": "Chính sách 'Casual Friday' tại Agentic House áp dụng cho những đối tượng nào và có ngoại lệ gì không?",
+      "category": "trang phục",
+      "difficulty": "easy",
+      "reasoning_type": "factual_with_exception",
+      "source_docs": ["quy_dinh_trang_phuc.txt"],
+      "expected_key_facts": [
+        "Casual Friday áp dụng cho nhân viên thông thường vào thứ Sáu",
+        "Không áp dụng cho Ban Giám đốc, Trưởng phòng, Phó phòng",
+        "Không áp dụng khi có lịch tiếp khách hoặc sự kiện chính thức"
+      ],
+      "expected_answer_summary": "Chính sách Casual Friday cho phép nhân viên thông thường mặc trang phục lịch sự nhưng không formal vào thứ Sáu. Có hai ngoại lệ: (1) Ban Giám đốc và quản lý cấp cao (Trưởng phòng, Phó phòng) phải duy trì Business Formal suốt tuần, (2) Bất kỳ nhân viên nào có lịch tiếp khách hoặc sự kiện chính thức cũng không được áp dụng Casual Friday."
+    },
+    {
+      "id": "HQ-005",
+      "retrieval_challenge": "semantic_paraphrase",
+      "question": "Khi nào thì quyền làm việc ngoài văn phòng của tôi có thể bị tước bỏ?",
+      "category": "làm việc từ xa",
+      "difficulty": "medium",
+      "reasoning_type": "consequence_inference",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt"],
+      "expected_key_facts": [
+        "Không đạt KPI hai kỳ đánh giá liên tiếp",
+        "Không phản hồi trong giờ cốt lõi nhiều lần",
+        "Vi phạm bảo mật thông tin khi làm việc từ xa",
+        "Hiệu suất giảm sút rõ rệt theo đánh giá của Trưởng phòng"
+      ],
+      "expected_answer_summary": "Quyền làm việc từ xa (ngoài văn phòng) có thể bị tạm đình chỉ hoặc thu hồi trong 4 trường hợp: (1) không đạt KPI hai kỳ liên tiếp, (2) thường xuyên không phản hồi trong giờ cốt lõi, (3) vi phạm quy định bảo mật thông tin khi làm việc từ xa, (4) hiệu suất giảm sút rõ rệt được Trưởng phòng ghi nhận chính thức."
+    },
+    {
+      "id": "HQ-006",
+      "retrieval_challenge": "semantic_paraphrase",
+      "question": "Tôi vừa có em bé. Tôi được nghỉ bao lâu và được trả lương ra sao trong thời gian đó?",
+      "category": "nghỉ phép",
+      "difficulty": "easy",
+      "reasoning_type": "benefit_entitlement",
+      "source_docs": ["chinh_sach_nghi_phep.txt"],
+      "expected_key_facts": [
+        "Nhân viên nữ: nghỉ thai sản 6 tháng theo luật BHXH",
+        "Nhân viên nam: nghỉ 5 ngày làm việc (con đầu hoặc con thứ hai sinh thường), 7 ngày nếu sinh đôi/mổ",
+        "Hưởng 100% lương từ BHXH trong thời gian nghỉ thai sản"
+      ],
+      "expected_answer_summary": "Nếu là nhân viên nữ, được nghỉ thai sản 6 tháng và hưởng 100% lương từ BHXH. Nếu là nhân viên nam, được nghỉ 5 ngày làm việc (sinh thường, con đầu hoặc thứ hai) hoặc 7 ngày (sinh đôi hoặc sinh mổ), cũng hưởng chế độ BHXH tương ứng."
+    },
+    {
+      "id": "HQ-008",
+      "retrieval_challenge": "semantic_paraphrase",
+      "question": "Nếu tôi làm thêm ngoài giờ hành chính thì được tính thêm tiền không? Mức là bao nhiêu?",
+      "category": "lương thưởng",
+      "difficulty": "easy",
+      "reasoning_type": "factual_lookup",
+      "source_docs": ["quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Ngày thường: 150% lương giờ cơ bản",
+        "Cuối tuần (thứ Bảy, Chủ nhật): 200%",
+        "Ngày lễ: 300%"
+      ],
+      "expected_answer_summary": "Có, làm thêm giờ (OT) được trả phụ cấp theo từng loại ngày: ngày làm việc bình thường là 150% lương giờ cơ bản, cuối tuần (thứ Bảy/Chủ nhật) là 200%, và ngày lễ quốc gia là 300%. Ngoài ra có thể thỏa thuận nghỉ bù thay vì nhận tiền."
+    },
+    {
+      "id": "HQ-009",
+      "retrieval_challenge": "multi_hop_reasoning",
+      "question": "Một nhân viên vừa hết thử việc 2 tháng, muốn đăng ký làm remote ngay. Họ cần chuẩn bị gì và quy trình phê duyệt đi qua những bước nào?",
+      "category": "làm việc từ xa",
+      "difficulty": "hard",
+      "reasoning_type": "multi_step_procedure",
+      "source_docs": ["chinh_sach_lam_viec_tu_xa.txt", "quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Đã hết thử việc 2 tháng — đủ điều kiện cơ bản",
+        "Cần có xếp loại hiệu suất kỳ gần nhất ít nhất 'Đạt'",
+        "Không có cảnh cáo kỷ luật trong 6 tháng gần nhất",
+        "Nộp đơn đăng ký qua hệ thống HRM",
+        "Phê duyệt cấp 1: Trưởng phòng xác nhận vị trí phù hợp",
+        "Phê duyệt cấp 2: Phòng Nhân sự"
+      ],
+      "expected_answer_summary": "Nhân viên vừa hết thử việc 2 tháng đủ điều kiện cơ bản để đăng ký remote. Quy trình: (1) Kiểm tra đủ điều kiện bổ sung: xếp loại hiệu suất ít nhất 'Đạt' kỳ gần nhất và không có cảnh cáo trong 6 tháng; (2) Nộp đơn qua hệ thống HRM; (3) Trưởng phòng phê duyệt cấp 1 (xác nhận vị trí phù hợp với remote); (4) Phòng Nhân sự xác nhận cấp 2. Nếu được duyệt, số ngày remote phụ thuộc vào phòng ban (Kỹ thuật tối đa 3 ngày/tuần, các phòng khác tùy chính sách)."
+    },
+    {
+      "id": "HQ-011",
+      "retrieval_challenge": "multi_hop_reasoning",
+      "question": "Nhân viên có 3 năm thâm niên bị ốm 3 ngày liên tục. Họ cần làm thủ tục gì và ngày nghỉ này được tính vào loại phép nào?",
+      "category": "nghỉ phép",
+      "difficulty": "medium",
+      "reasoning_type": "multi_source_procedure",
+      "source_docs": ["chinh_sach_nghi_phep.txt", "quy_trinh_xin_phep.txt"],
+      "expected_key_facts": [
+        "Nghỉ ốm được tính vào phép ốm hưởng BHXH (không trừ phép năm nếu có giấy khám bệnh)",
+        "Phải thông báo cho Trưởng phòng ngay ngày đầu nghỉ",
+        "Cần nộp giấy xác nhận của bác sĩ/bệnh viện trong vòng 5 ngày làm việc sau khi đi làm lại",
+        "3 ngày ốm vẫn được hưởng BHXH nếu đã đóng đủ số tháng quy định"
+      ],
+      "expected_answer_summary": "Khi bị ốm 3 ngày: (1) Thông báo ngay cho Trưởng phòng vào ngày đầu nghỉ qua Teams hoặc điện thoại; (2) Sau khi đi làm lại, nộp giấy xác nhận của bác sĩ/cơ sở y tế trong vòng 5 ngày làm việc. 3 ngày nghỉ ốm này được tính vào phép ốm theo BHXH (không bị trừ vào phép năm) với điều kiện có giấy xác nhận y tế hợp lệ."
+    },
+    {
+      "id": "HQ-012",
+      "retrieval_challenge": "multi_hop_reasoning",
+      "question": "So sánh số ngày nghỉ phép năm giữa một nhân viên 2 năm thâm niên và một nhân viên 12 năm thâm niên. Nếu cả hai đều chưa dùng phép nào và muốn nghỉ hết vào cuối năm, phép của ai sẽ bị giới hạn chuyển sang năm sau?",
+      "category": "nghỉ phép",
+      "difficulty": "hard",
+      "reasoning_type": "comparative_analysis",
+      "source_docs": ["chinh_sach_nghi_phep.txt"],
+      "expected_key_facts": [
+        "2 năm thâm niên: 12 ngày phép năm",
+        "12 năm thâm niên: 16 ngày phép năm (từ 10 năm trở lên)",
+        "Giới hạn chuyển phép tối đa 5 ngày sang năm sau",
+        "Nhân viên 2 năm: nếu không dùng phép nào, có thể chuyển 5 ngày, mất 7 ngày",
+        "Nhân viên 12 năm: nếu không dùng phép nào, có thể chuyển 5 ngày, mất 11 ngày"
+      ],
+      "expected_answer_summary": "Nhân viên 2 năm được 12 ngày/năm; nhân viên 12 năm được 16 ngày/năm. Cả hai đều bị giới hạn chuyển tối đa 5 ngày sang năm sau. Nếu không dùng phép nào: nhân viên 2 năm mất 7 ngày (12 - 5), nhân viên 12 năm mất 11 ngày (16 - 5). Phép của nhân viên 12 năm bị giới hạn nhiều hơn tuyệt đối."
+    },
+    {
+      "id": "HQ-013",
+      "retrieval_challenge": "out_of_scope",
+      "question": "Lãi suất vay mua nhà tại ngân hàng Vietcombank hiện tại là bao nhiêu phần trăm?",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "reasoning_type": "out_of_corpus",
+      "source_docs": [],
+      "expected_key_facts": [],
+      "expected_answer_summary": "Câu hỏi về lãi suất ngân hàng không thuộc phạm vi tài liệu nội bộ Agentic House. Hệ thống nên từ chối trả lời lịch sự và gợi ý người dùng liên hệ ngân hàng trực tiếp."
+    },
+    {
+      "id": "HQ-015",
+      "retrieval_challenge": "out_of_scope",
+      "question": "Bạn có thể giải thích thuật toán quicksort và viết code Python cho tôi không?",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "reasoning_type": "out_of_corpus",
+      "source_docs": [],
+      "expected_key_facts": [],
+      "expected_answer_summary": "Câu hỏi về thuật toán lập trình không liên quan đến tài liệu chính sách nội bộ Agentic House. Hệ thống nên từ chối lịch sự và nhắc người dùng rằng hệ thống chỉ hỗ trợ các câu hỏi về chính sách và quy trình nội bộ công ty."
+    }
+  ]
+}

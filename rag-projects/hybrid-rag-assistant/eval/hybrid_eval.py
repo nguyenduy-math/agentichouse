@@ -15,6 +15,7 @@ Usage:
   python hybrid_eval.py                     # Set A (17 questions)
   python hybrid_eval.py --set B             # Set B (15 questions)
   python hybrid_eval.py --set all           # both sets merged
+  python hybrid_eval.py --file eval-sets/hybrid_questions_sample10.json  # custom file
   python hybrid_eval.py --dry-run           # collect responses only, skip RAGAS
   python hybrid_eval.py --model gpt-4o      # override judge model
 """
@@ -31,7 +32,6 @@ from pathlib import Path
 import httpx
 import pandas as pd
 from dotenv import load_dotenv
-from openai import OpenAI
 from ragas import EvaluationDataset, RunConfig, SingleTurnSample, evaluate
 from ragas.embeddings import embedding_factory
 from ragas.llms import llm_factory
@@ -131,9 +131,8 @@ def build_dataset(
 
 
 def build_judge(model: str):
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    llm = llm_factory(model, client=client)
-    embeddings = embedding_factory("openai/text-embedding-3-small", client=client)
+    llm = llm_factory(model)
+    embeddings = embedding_factory("text-embedding-3-small")
     return llm, embeddings
 
 
@@ -221,7 +220,15 @@ def save_and_print(
     audit_failures(df, metric_cols)
 
 
-def load_questions(set_flag: str) -> tuple[list[dict], str]:
+def load_questions(set_flag: str, custom_file: str | None = None) -> tuple[list[dict], str]:
+    if custom_file:
+        path = Path(custom_file)
+        if not path.is_absolute():
+            path = Path(__file__).parent / custom_file
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data["questions"], path.stem
+
     if set_flag == "A":
         with open(QUESTIONS_FILE_A, encoding="utf-8") as f:
             data = json.load(f)
@@ -258,12 +265,17 @@ def parse_args() -> argparse.Namespace:
         default=os.getenv("OPENAI_JUDGE_MODEL", "gpt-4o-mini"),
         help="OpenAI model used as RAGAS judge (default: gpt-4o-mini)",
     )
+    parser.add_argument(
+        "--file",
+        default=None,
+        help="Path to a custom question JSON file (relative to eval/ or absolute). Overrides --set.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    questions, set_label = load_questions(args.set)
+    questions, set_label = load_questions(args.set, args.file)
     print(f"Loaded {len(questions)} questions (Set {set_label})\n")
 
     print("Step 1/3: Querying hybrid-rag-assistant...")

@@ -319,6 +319,33 @@ User question
 | RRF | Combines both signals without hand-tuned weights |
 | Cross-encoder | Full query-chunk scoring for final precision |
 
+### Document Indexing Pipeline
+
+Triggered by `POST /api/admin/ingest?domain=<key>` with a PDF, DOCX, or TXT file upload.
+
+```
+File upload (PDF / DOCX / TXT)
+      │
+      ▼
+ Parse                   pdfplumber (per page) | python-docx | UTF-8 decode
+ + NFC normalize         fixes garbled Vietnamese diacritics from some PDFs
+      │
+      ▼
+ split_by_article()      3-tier chunker (see Chunking Strategy below)
+ max ~2800 chars/chunk
+      │
+      ▼
+ Gemini embed_content    batch call, task_type=RETRIEVAL_DOCUMENT → 3072-dim vectors
+      │
+      ├── ChromaDB upsert   per-domain collection, cosine space, persisted to storage/chroma/
+      │
+      └── BM25 full rebuild  reads all docs from ChromaDB → BM25Okapi → storage/bm25_<domain>.json
+```
+
+Each domain has an isolated ChromaDB collection (`chunks_<domain>`) and BM25 index file (`bm25_<domain>.json`). BM25 is rebuilt from scratch after every ingest to stay in sync with the vector store. You can also rebuild BM25 without re-ingesting via `POST /api/admin/index?domain=<key>`.
+
+---
+
 ### Chunking Strategy
 
 Documents are split with a 3-tier strategy from `app/utils/text_splitter.py`:
