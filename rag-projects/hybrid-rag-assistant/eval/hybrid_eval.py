@@ -1,5 +1,5 @@
 """
-RAGAS evaluation for hybrid-rag-assistant (OpenAI judge).
+RAGAS evaluation for hybrid-rag-assistant (Gemini judge).
 
 Two question sets:
   Set A — 17 shared questions from eval-v2 (apples-to-apples with graphrag-assistant)
@@ -7,17 +7,17 @@ Two question sets:
 
 Prerequisites:
   - hybrid-rag-assistant backend running (default: http://localhost:8000)
-  - eval/.env with OPENAI_API_KEY
+  - eval/.env with GEMINI_API_KEY
 
 Usage:
   pip install -r requirements.txt
-  cp .env.example .env          # fill in OPENAI_API_KEY
+  cp .env.example .env          # fill in GEMINI_API_KEY
   python hybrid_eval.py                     # Set A (17 questions)
   python hybrid_eval.py --set B             # Set B (15 questions)
   python hybrid_eval.py --set all           # both sets merged
   python hybrid_eval.py --file eval-sets/hybrid_questions_sample10.json  # custom file
   python hybrid_eval.py --dry-run           # collect responses only, skip RAGAS
-  python hybrid_eval.py --model gpt-4o      # override judge model
+  python hybrid_eval.py --model gemini-2.5-pro  # override judge model
 """
 
 import argparse
@@ -25,6 +25,7 @@ import asyncio
 import json
 import logging
 import os
+import warnings
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -32,15 +33,16 @@ from pathlib import Path
 import httpx
 import pandas as pd
 from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from ragas import EvaluationDataset, RunConfig, SingleTurnSample, evaluate
-from ragas.embeddings import embedding_factory
-from ragas.llms import llm_factory
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import (
-    answer_correctness,
-    answer_relevancy,
-    context_precision,
-    context_recall,
-    faithfulness,
+    AnswerCorrectness,
+    AnswerRelevancy,
+    ContextPrecision,
+    ContextRecall,
+    Faithfulness,
 )
 
 logging.basicConfig(
@@ -48,10 +50,13 @@ logging.basicConfig(
     format="%(levelname)s [%(name)s] %(message)s",
 )
 logging.getLogger("ragas").setLevel(logging.WARNING)
+# LangchainLLMWrapper is the only viable Gemini path in ragas 0.4.x;
+# llm_factory only supports OpenAI clients.
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*Langchain.*Wrapper.*")
 
 load_dotenv()
 
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 HYBRID_API_URL = os.getenv("HYBRID_API_URL", "http://localhost:8000")
 SESSION_ENDPOINT = f"{HYBRID_API_URL}/api/session"
 CHAT_ENDPOINT = f"{HYBRID_API_URL}/api/chat"
@@ -62,11 +67,11 @@ QUESTIONS_FILE_B = EVAL_DIR / "hybrid_questions.json"
 RESULTS_DIR = Path(__file__).parent / "results"
 
 METRICS = [
-    faithfulness,
-    answer_relevancy,
-    context_precision,
-    context_recall,
-    answer_correctness,
+    Faithfulness(),
+    AnswerRelevancy(),
+    ContextPrecision(),
+    ContextRecall(),
+    AnswerCorrectness(),
 ]
 
 
@@ -131,8 +136,14 @@ def build_dataset(
 
 
 def build_judge(model: str):
-    llm = llm_factory(model)
-    embeddings = embedding_factory("text-embedding-3-small")
+    llm = LangchainLLMWrapper(
+        ChatGoogleGenerativeAI(model=model, google_api_key=GEMINI_API_KEY, temperature=0.0)
+    )
+    embeddings = LangchainEmbeddingsWrapper(
+        GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001", google_api_key=GEMINI_API_KEY
+        )
+    )
     return llm, embeddings
 
 
@@ -141,7 +152,7 @@ def run_ragas(
     llm,
     embeddings,
 ) -> pd.DataFrame:
-    run_config = RunConfig(max_retries=5, max_wait=120, timeout=180, max_workers=2)
+    run_config = RunConfig(max_retries=5, max_wait=180, timeout=300, max_workers=1)
     result = evaluate(
         dataset=dataset,
         metrics=METRICS,
@@ -168,7 +179,7 @@ def audit_failures(df: pd.DataFrame, metric_cols: list[str]) -> None:
             preview = (q[:70] + "...") if len(q) > 70 else q
             print(f"      row {i}: {preview}")
     print(
-        "Common causes: OpenAI rate-limit after retries, judge JSON-parse error, "
+        "Common causes: Gemini rate-limit after retries, judge JSON-parse error, "
         "context exceeds model window.\n"
     )
 
@@ -195,7 +206,7 @@ def save_and_print(
     df.to_csv(out_path, index=False)
     print(f"\nResults saved to: {out_path}\n")
 
-    print(f"=== RAGAS Evaluation Summary (hybrid-rag-assistant / Set {set_label} / OpenAI judge) ===")
+    print(f"=== RAGAS Evaluation Summary (hybrid-rag-assistant / Set {set_label} / Gemini judge) ===")
     print(f"{'Metric':<28} {'Score':>8}  {'Coverage':>10}")
     print("-" * 52)
     for metric in metric_cols:
@@ -258,12 +269,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Collect RAG responses only; skip RAGAS scoring (no OpenAI calls)",
+        help="Collect RAG responses only; skip RAGAS scoring (no Gemini calls)",
     )
     parser.add_argument(
         "--model",
-        default=os.getenv("OPENAI_JUDGE_MODEL", "gpt-4o-mini"),
-        help="OpenAI model used as RAGAS judge (default: gpt-4o-mini)",
+        default=os.getenv("GEMINI_JUDGE_MODEL", "gemini-2.5-flash"),
+        help="Gemini model used as RAGAS judge (default: gemini-2.5-flash)",
     )
     parser.add_argument(
         "--file",

@@ -139,6 +139,28 @@
         "Nhân viên 12 năm: nếu không dùng phép nào, có thể chuyển 5 ngày, mất 11 ngày"
       ],
       "expected_answer_summary": "Nhân viên 2 năm được 12 ngày/năm; nhân viên 12 năm được 16 ngày/năm. Cả hai đều bị giới hạn chuyển tối đa 5 ngày sang năm sau. Nếu không dùng phép nào: nhân viên 2 năm mất 7 ngày (12 - 5), nhân viên 12 năm mất 11 ngày (16 - 5). Phép của nhân viên 12 năm bị giới hạn nhiều hơn tuyệt đối."
+    },
+    {
+      "id": "HQ-013",
+      "retrieval_challenge": "out_of_scope",
+      "question": "Lãi suất vay mua nhà tại ngân hàng Vietcombank hiện tại là bao nhiêu phần trăm?",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "reasoning_type": "out_of_corpus",
+      "source_docs": [],
+      "expected_key_facts": [],
+      "expected_answer_summary": "Câu hỏi về lãi suất ngân hàng không thuộc phạm vi tài liệu nội bộ Agentic House. Hệ thống nên từ chối trả lời lịch sự và gợi ý người dùng liên hệ ngân hàng trực tiếp."
+    },
+    {
+      "id": "HQ-015",
+      "retrieval_challenge": "out_of_scope",
+      "question": "Bạn có thể giải thích thuật toán quicksort và viết code Python cho tôi không?",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "reasoning_type": "out_of_corpus",
+      "source_docs": [],
+      "expected_key_facts": [],
+      "expected_answer_summary": "Câu hỏi về thuật toán lập trình không liên quan đến tài liệu chính sách nội bộ Agentic House. Hệ thống nên từ chối lịch sự và nhắc người dùng rằng hệ thống chỉ hỗ trợ các câu hỏi về chính sách và quy trình nội bộ công ty."
     }
   ]
 }

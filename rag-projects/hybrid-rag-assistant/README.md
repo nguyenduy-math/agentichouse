@@ -209,11 +209,11 @@ When `is_out_of_scope: true`, `sources` is empty and `reply` is the polite refus
 
 ## Evaluation (RAGAS)
 
-The `eval/` folder contains a RAGAS evaluation suite that measures answer quality using an OpenAI model as judge.
+The `eval/` folder contains a RAGAS evaluation suite that measures answer quality using Gemini as judge.
 
 ### Prerequisites
 
-- An OpenAI API key (used only as the RAGAS judge — the backend still uses Gemini)
+- A Google Gemini API key (same key as the backend — reuse `GEMINI_API_KEY` from `backend/.env`)
 - The hybrid-rag-assistant backend running on port 8000 with documents already ingested
 
 ### Setup
@@ -221,7 +221,7 @@ The `eval/` folder contains a RAGAS evaluation suite that measures answer qualit
 ```bash
 cd eval
 pip install -r requirements.txt
-cp .env.example .env    # open .env and set OPENAI_API_KEY
+cp .env.example .env    # open .env and set GEMINI_API_KEY
 ```
 
 ### Question sets
@@ -244,7 +244,7 @@ Set B tags each question with a `retrieval_challenge` label:
 ### Running evaluations
 
 ```bash
-# Dry run — check backend connectivity, no OpenAI calls
+# Dry run — check backend connectivity, no Gemini judge calls
 python hybrid_eval.py --dry-run
 
 # Set A only (17 questions)
@@ -263,7 +263,7 @@ python hybrid_eval_multiturn.py
 python hybrid_eval_multiturn.py --set CS-001 --dry-run
 
 # Override the judge model
-python hybrid_eval.py --model gpt-4o
+python hybrid_eval.py --model gemini-2.5-pro
 ```
 
 ### Metrics
