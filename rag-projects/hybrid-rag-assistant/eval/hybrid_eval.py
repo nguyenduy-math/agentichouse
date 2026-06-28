@@ -137,7 +137,7 @@ def build_dataset(
 
 def build_judge(model: str):
     llm = LangchainLLMWrapper(
-        ChatGoogleGenerativeAI(model=model, google_api_key=GEMINI_API_KEY, temperature=0.0)
+        ChatGoogleGenerativeAI(model=model, google_api_key=GEMINI_API_KEY, temperature=0.0, n=1)
     )
     embeddings = LangchainEmbeddingsWrapper(
         GoogleGenerativeAIEmbeddings(
